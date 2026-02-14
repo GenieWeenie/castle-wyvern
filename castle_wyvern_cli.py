@@ -33,6 +33,7 @@ from eyrie.api_server import CastleWyvernAPI
 from eyrie.web_dashboard import WebDashboard
 from eyrie.plugin_system import PluginManager
 from eyrie.monitoring import MonitoringService
+from eyrie.cli_improvements import CLIImprovements
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -117,6 +118,9 @@ class CastleWyvernCLI:
             grimoorum=self.grimoorum,
             plugins=self.plugin_manager
         )
+        
+        # Feature 16: CLI Improvements
+        self.cli_improvements = CLIImprovements()
         
         # Initialize clan members
         self.clan = {
@@ -330,6 +334,19 @@ class CastleWyvernCLI:
 - `/metrics` - Show system metrics
 - `/prometheus` - Export Prometheus metrics
 
+## CLI Improvements Commands (Feature 16)
+- `/alias <name> <command>` - Create command alias
+- `/alias-list` - List all aliases
+- `/alias-remove <name>` - Remove an alias
+- `/session-save <name>` - Save current session
+- `/session-load <name>` - Load a saved session
+- `/session-list` - List saved sessions
+- `/history-search <query>` - Search command history
+- `/history-clear` - Clear command history
+- `/config` - Run configuration wizard
+- `/export <file>` - Export all data
+- `/import <file>` - Import data
+
 ## System Commands
 - `status` - Show full dashboard
 - `health` - Check Phoenix Gate status
@@ -475,6 +492,15 @@ plan Design a microservices architecture for an e-commerce app
                 
                 if not user_input:
                     continue
+                
+                # Expand aliases (Feature 16)
+                original_input = user_input
+                user_input = self.cli_improvements.expand_command(user_input)
+                if user_input != original_input:
+                    self.console.print(f"[dim]↳ Expanded: {user_input}[/dim]")
+                
+                # Record in history (Feature 16)
+                self.cli_improvements.record_command(user_input)
                 
                 # Parse command
                 parts = user_input.split(maxsplit=1)
@@ -960,6 +986,122 @@ plan Design a microservices architecture for an e-commerce app
                     metrics_text = self.monitoring.metrics.export_prometheus()
                     self.console.print("\n[bold]# Prometheus Metrics Export[/bold]\n")
                     self.console.print(metrics_text)
+                
+                # ============ Feature 16: CLI Improvements Commands ============
+                elif command == "/alias":
+                    parts = args.split(maxsplit=1)
+                    if len(parts) >= 2:
+                        name, cmd = parts[0], parts[1]
+                        if self.cli_improvements.aliases.add(name, cmd):
+                            self.console.print(f"[green]✅ Alias '{name}' created[/green]")
+                            self.console.print(f"[dim]   '{name}' -> '{cmd}'[/dim]")
+                        else:
+                            self.console.print("[red]⚠️  Failed to create alias[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /alias <name> <command>[/yellow]")
+                
+                elif command == "/alias-list":
+                    aliases = self.cli_improvements.aliases.list_all()
+                    if aliases:
+                        table = Table(title="⚡ Command Aliases")
+                        table.add_column("Name", style="cyan")
+                        table.add_column("Command", style="dim")
+                        table.add_column("Description", style="dim")
+                        
+                        for alias in aliases:
+                            table.add_row(alias.name, alias.command[:50], alias.description[:30])
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No aliases defined[/dim]")
+                
+                elif command == "/alias-remove":
+                    if args:
+                        if self.cli_improvements.aliases.remove(args):
+                            self.console.print(f"[green]✅ Alias '{args}' removed[/green]")
+                        else:
+                            self.console.print(f"[red]⚠️  Alias '{args}' not found[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /alias-remove <name>[/yellow]")
+                
+                elif command == "/session-save":
+                    if args:
+                        # Get recent commands from history
+                        recent = self.cli_improvements.history.get_recent(20)
+                        commands = [cmd["command"] for cmd in recent]
+                        
+                        self.cli_improvements.sessions.save(args, commands)
+                        self.console.print(f"[green]✅ Session '{args}' saved ({len(commands)} commands)[/green]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /session-save <name>[/yellow]")
+                
+                elif command == "/session-load":
+                    if args:
+                        session = self.cli_improvements.sessions.load(args)
+                        if session:
+                            self.console.print(f"[green]✅ Loading session '{args}'[/green]")
+                            self.console.print(f"[dim]   {len(session.commands)} commands[/dim]")
+                            # Note: Actual execution would happen in main loop
+                        else:
+                            self.console.print(f"[red]⚠️  Session '{args}' not found[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /session-load <name>[/yellow]")
+                
+                elif command == "/session-list":
+                    sessions = self.cli_improvements.sessions.list_all()
+                    if sessions:
+                        table = Table(title="💾 Saved Sessions")
+                        table.add_column("Name", style="cyan")
+                        table.add_column("Commands")
+                        table.add_column("Created", style="dim")
+                        
+                        for session in sessions:
+                            table.add_row(
+                                session.name,
+                                str(len(session.commands)),
+                                session.created_at[:10]
+                            )
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No saved sessions[/dim]")
+                
+                elif command == "/history-search":
+                    if args:
+                        results = self.cli_improvements.history.search(args)
+                        if results:
+                            self.console.print(f"\n[bold]🔍 History search for '{args}':[/bold]\n")
+                            for cmd in results[-10:]:
+                                self.console.print(f"  {cmd['timestamp'][11:19]} {cmd['command'][:60]}")
+                        else:
+                            self.console.print("[dim]No matching commands found[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /history-search <query>[/yellow]")
+                
+                elif command == "/history-clear":
+                    self.cli_improvements.history.clear()
+                    self.console.print("[green]✅ Command history cleared[/green]")
+                
+                elif command == "/config":
+                    self.cli_improvements.config.run_wizard(self.console)
+                
+                elif command == "/export":
+                    if args:
+                        if self.cli_improvements.export_import.export_all(args):
+                            self.console.print(f"[green]✅ Data exported to {args}[/green]")
+                        else:
+                            self.console.print("[red]⚠️  Export failed[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /export <file.json>[/yellow]")
+                
+                elif command == "/import":
+                    if args:
+                        if self.cli_improvements.export_import.import_all(args):
+                            self.console.print(f"[green]✅ Data imported from {args}[/green]")
+                        else:
+                            self.console.print("[red]⚠️  Import failed[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /import <file.json>[/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

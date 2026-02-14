@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from eyrie.phoenix_gate import PhoenixGate
 from eyrie.intent_router import IntentRouter, IntentType
+from eyrie.document_ingestion import DocumentIngestion
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -84,6 +85,7 @@ class CastleWyvernCLI:
         self.intent_router = IntentRouter(use_ai_classification=True)
         self.grimoorum = GrimoorumV2()
         self.bmad = BMADWorkflow(self.console, self.phoenix_gate, self.grimoorum)
+        self.documents = DocumentIngestion()
         
         # Initialize clan members
         self.clan = {
@@ -252,6 +254,11 @@ class CastleWyvernCLI:
 - `/build <description>` - Implementation (Lexington + Broadway)
 - `/review <code>` - Code review (Xanatos + Demona)
 - `/brief <description>` - Full product brief (All clan)
+
+## Document Commands
+- `/ingest <filepath>` - Add a document to the library
+- `/docs` - List all ingested documents
+- `/search <query>` - Search document contents
 
 ## System Commands
 - `status` - Show full dashboard
@@ -450,6 +457,48 @@ plan Design a microservices architecture for an e-commerce app
                         self.bmad.product_brief(args)
                     else:
                         self.console.print("[yellow]⚠️  Please provide product description.[/yellow]")
+                
+                elif command == "/ingest":
+                    if args:
+                        try:
+                            doc_id = self.documents.ingest_file(args)
+                            self.console.print(f"[green]✅ Document ingested: {doc_id}[/green]")
+                        except Exception as e:
+                            self.console.print(f"[red]⚠️  Error: {str(e)}[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Please provide file path.[/yellow]")
+                
+                elif command == "/docs":
+                    docs = self.documents.list_documents()
+                    if docs:
+                        table = Table(title="📚 Ingested Documents")
+                        table.add_column("ID", style="dim")
+                        table.add_column("Filename")
+                        table.add_column("Type")
+                        table.add_column("Chunks")
+                        
+                        for doc in docs:
+                            table.add_row(doc['id'], doc['filename'], doc['type'], str(doc['chunks']))
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No documents ingested yet.[/dim]")
+                
+                elif command == "/search":
+                    if args:
+                        results = self.documents.search(args, top_k=5)
+                        if results:
+                            self.console.print(f"\n[bold]🔍 Search results for: {args}[/bold]\n")
+                            for r in results:
+                                self.console.print(Panel(
+                                    r['content'][:300] + "...",
+                                    title=f"📄 {r['document_name']} (score: {r['score']})",
+                                    border_style="blue"
+                                ))
+                        else:
+                            self.console.print("[dim]No results found.[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Please provide search query.[/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

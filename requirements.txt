@@ -4,6 +4,13 @@
 python-dotenv>=1.0.0
 requests>=2.31.0
 
+# Feature 11: Auto-Discovery (mDNS/Zeroconf)
+zeroconf>=0.131.0
+
+# Feature 12: REST API
+flask>=3.0.0
+flask-cors>=4.0.0
+
 # Optional: For local LLM
 # ollama>=0.1.0
 

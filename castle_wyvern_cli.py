@@ -28,6 +28,8 @@ from eyrie.phoenix_gate import PhoenixGate
 from eyrie.intent_router import IntentRouter, IntentType
 from eyrie.document_ingestion import DocumentIngestion
 from eyrie.node_manager import NodeManager
+from eyrie.auto_discovery import AutoDiscoveryService
+from eyrie.api_server import CastleWyvernAPI
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -88,6 +90,12 @@ class CastleWyvernCLI:
         self.bmad = BMADWorkflow(self.console, self.phoenix_gate, self.grimoorum)
         self.documents = DocumentIngestion()
         self.nodes = NodeManager()
+        
+        # Feature 11: Auto-Discovery
+        self.auto_discovery = None
+        
+        # Feature 12: REST API
+        self.api_server = None
         
         # Initialize clan members
         self.clan = {
@@ -266,6 +274,16 @@ class CastleWyvernCLI:
 - `/nodes` - List all Stone nodes
 - `/node-add <name> <host>` - Register a new node
 - `/tasks` - List distributed tasks
+
+## Auto-Discovery Commands (Feature 11)
+- `/discover-start` - Start mDNS node discovery
+- `/discover-stop` - Stop node discovery
+- `/discover-status` - Show discovered nodes
+
+## REST API Commands (Feature 12)
+- `/api-start` - Start REST API server (port 18791)
+- `/api-stop` - Stop API server
+- `/api-status` - Check API server status
 
 ## System Commands
 - `status` - Show full dashboard
@@ -571,6 +589,95 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No tasks created yet.[/dim]")
+                
+                # ============ Feature 11: Auto-Discovery Commands ============
+                elif command == "/discover-start":
+                    if not self.auto_discovery:
+                        self.auto_discovery = AutoDiscoveryService(
+                            node_name="Castle-Wyvern-Main",
+                            node_id="main-node",
+                            port=18790,
+                            capabilities=["cpu", "api"]
+                        )
+                    if self.auto_discovery.start():
+                        self.console.print("[green]✅ Auto-discovery started[/green]")
+                        self.console.print("[dim]   Broadcasting on mDNS...[/dim]")
+                    else:
+                        self.console.print("[red]⚠️  Failed to start auto-discovery[/red]")
+                        self.console.print("[dim]   Run: pip install zeroconf[/dim]")
+                
+                elif command == "/discover-stop":
+                    if self.auto_discovery:
+                        self.auto_discovery.stop()
+                        self.auto_discovery = None
+                        self.console.print("[green]✅ Auto-discovery stopped[/green]")
+                    else:
+                        self.console.print("[dim]Auto-discovery not running[/dim]")
+                
+                elif command == "/discover-status":
+                    if self.auto_discovery:
+                        status = self.auto_discovery.status()
+                        self.console.print(f"\n[bold]🔍 Auto-Discovery Status[/bold]")
+                        self.console.print(f"  Running: {status['running']}")
+                        self.console.print(f"  Advertising: {status['advertising']}")
+                        self.console.print(f"  Discovered nodes: {status['discovered_nodes']}")
+                        self.console.print(f"  Capabilities: {', '.join(status['capabilities'])}")
+                        
+                        nodes = self.auto_discovery.get_discovered_nodes()
+                        if nodes:
+                            self.console.print(f"\n[bold]Discovered Nodes:[/bold]")
+                            for node in nodes:
+                                self.console.print(f"  • {node.name} ({node.host}:{node.port})")
+                                self.console.print(f"    Capabilities: {', '.join(node.capabilities)}")
+                    else:
+                        self.console.print("[dim]Auto-discovery not running[/dim]")
+                        self.console.print("[dim]Run /discover-start to begin[/dim]")
+                
+                # ============ Feature 12: REST API Commands ============
+                elif command == "/api-start":
+                    if not self.api_server:
+                        try:
+                            self.api_server = CastleWyvernAPI(
+                                host="0.0.0.0",
+                                port=18791
+                            )
+                            # Start in background thread
+                            import threading
+                            api_thread = threading.Thread(
+                                target=self.api_server.run,
+                                kwargs={"debug": False},
+                                daemon=True
+                            )
+                            api_thread.start()
+                            self.console.print("[green]✅ REST API server started[/green]")
+                            self.console.print("[dim]   Listening on http://0.0.0.0:18791[/dim]")
+                            self.console.print("[dim]   Try: curl http://localhost:18791/health[/dim]")
+                        except Exception as e:
+                            self.console.print(f"[red]⚠️  Failed to start API: {e}[/red]")
+                            self.console.print("[dim]   Run: pip install flask flask-cors[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  API server already running[/yellow]")
+                
+                elif command == "/api-stop":
+                    # Flask doesn't have a clean shutdown from outside
+                    self.console.print("[yellow]⚠️  API server cannot be stopped gracefully[/yellow]")
+                    self.console.print("[dim]   Restart Castle Wyvern to stop API[/dim]")
+                    self.api_server = None
+                
+                elif command == "/api-status":
+                    if self.api_server:
+                        self.console.print("[green]✅ REST API is running[/green]")
+                        self.console.print("[dim]   Endpoint: http://localhost:18791[/dim]")
+                        self.console.print("\n[bold]Available Endpoints:[/bold]")
+                        self.console.print("  GET  /health       - Health check")
+                        self.console.print("  GET  /clan         - List clan members")
+                        self.console.print("  POST /clan/ask     - Ask the clan")
+                        self.console.print("  POST /clan/code    - Request code")
+                        self.console.print("  GET  /nodes        - List nodes")
+                        self.console.print("  POST /memory/search - Search memory")
+                    else:
+                        self.console.print("[dim]REST API not running[/dim]")
+                        self.console.print("[dim]Run /api-start to begin[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

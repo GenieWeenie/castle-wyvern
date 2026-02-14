@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from eyrie.phoenix_gate import PhoenixGate
 from eyrie.intent_router import IntentRouter, IntentType
 from grimoorum.memory_manager import GrimoorumV2
+from bmad.bmad_workflow import BMADWorkflow
 
 
 # Castle Wyvern Theme Configuration
@@ -82,6 +83,7 @@ class CastleWyvernCLI:
         self.phoenix_gate = PhoenixGate()
         self.intent_router = IntentRouter(use_ai_classification=True)
         self.grimoorum = GrimoorumV2()
+        self.bmad = BMADWorkflow(self.console, self.phoenix_gate, self.grimoorum)
         
         # Initialize clan members
         self.clan = {
@@ -244,6 +246,12 @@ class CastleWyvernCLI:
 - `review <description>` - Request code review from Xanatos
 - `summarize <text>` - Request summary from Broadway
 - `plan <description>` - Request architecture from Brooklyn
+
+## BMAD Workflow Commands
+- `/spec <description>` - Quick technical spec (Goliath + Brooklyn)
+- `/build <description>` - Implementation (Lexington + Broadway)
+- `/review <code>` - Code review (Xanatos + Demona)
+- `/brief <description>` - Full product brief (All clan)
 
 ## System Commands
 - `status` - Show full dashboard
@@ -418,6 +426,30 @@ plan Design a microservices architecture for an e-commerce app
                 
                 elif command == "memory":
                     self.show_memory_stats()
+                
+                elif command == "/spec":
+                    if args:
+                        self.bmad.quick_spec(args)
+                    else:
+                        self.console.print("[yellow]⚠️  Please provide a description for the spec.[/yellow]")
+                
+                elif command == "/build":
+                    if args:
+                        self.bmad.dev_story(args)
+                    else:
+                        self.console.print("[yellow]⚠️  Please provide what to build.[/yellow]")
+                
+                elif command == "/review":
+                    if args:
+                        self.bmad.code_review(args)
+                    else:
+                        self.console.print("[yellow]⚠️  Please provide code or description to review.[/yellow]")
+                
+                elif command == "/brief":
+                    if args:
+                        self.bmad.product_brief(args)
+                    else:
+                        self.console.print("[yellow]⚠️  Please provide product description.[/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

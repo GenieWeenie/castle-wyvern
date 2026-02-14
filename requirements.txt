@@ -1,0 +1,18 @@
+# Castle Wyvern Dependencies
+
+# Core
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Optional: For local LLM
+# ollama>=0.1.0
+
+# Optional: For RAG (Phase 3)
+# faiss-cpu>=1.7.4
+# chromadb>=0.4.0
+
+# Development
+# pytest>=7.4.0
+# pytest-cov>=4.1.0
+# black>=23.0.0
+# flake8>=6.0.0

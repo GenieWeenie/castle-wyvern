@@ -178,7 +178,7 @@ python bmad/commands/product_brief.py "build AI feature"
 
 ### Phase 4 (In Progress)
 - ✅ Plugin System (extensible architecture with hooks)
-- 🔄 Advanced Monitoring (planned)
+- ✅ Advanced Monitoring (metrics, health checks, alerts)
 - 🔄 CLI Improvements (planned)
 - 🔄 Integration APIs (planned)
 - 🔄 Security Enhancements (planned)
@@ -213,8 +213,8 @@ MIT License — see LICENSE for details.
 See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
 
 **Recent Commits:**
+- `e725128` Phase 4: Advanced Monitoring (Feature 15)
 - `9127c43` Phase 4: Plugin System (Feature 14)
 - `a054ae0` Phase 3: Web Dashboard (Feature 13)
 - `5f0872a` Phase 3: Auto-Discovery + REST API (Features 11 & 12)
 - `cb06bec` Phase 3: Multi-Node Distribution (Feature 10)
-- `2b7d861` Phase 3: Document Ingestion with RAG (Feature 9)

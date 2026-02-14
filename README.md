@@ -5,6 +5,10 @@
 
 > "One thousand years ago, superstition and the sword ruled. It was a time of darkness. It was a world of fear. It was the age of gargoyles."
 
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
+![Python](https://img.shields.io/badge/python-3.9+-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 ---
 
 ## 🏰 The Manhattan Clan
@@ -13,30 +17,74 @@ Castle Wyvern features a council of specialized AI agents, each with unique pers
 
 | Agent | Role | Specialty |
 |-------|------|-----------|
-| **Goliath** | Leader | High-level reasoning, orchestration |
-| **Lexington** | Technician | Code, automation, technical execution |
-| **Brooklyn** | Strategist | Multi-path planning, architecture |
-| **Broadway** | Chronicler | Documentation, summarization |
-| **Hudson** | Archivist | Historical context, long-term memory |
-| **Bronx** | Watchdog | Security monitoring, alerts |
-| **Elisa** | Bridge | Human context, ethics, legal |
-| **Xanatos** | Red Team | Adversarial testing, vulnerabilities |
-| **Demona** | Failsafe | Error prediction, worst-case scenarios |
+| 🦁 **Goliath** | Leader | High-level reasoning, orchestration |
+| 🔧 **Lexington** | Technician | Code, automation, technical execution |
+| 🎯 **Brooklyn** | Strategist | Multi-path planning, architecture |
+| 📜 **Broadway** | Chronicler | Documentation, summarization |
+| 📚 **Hudson** | Archivist | Historical context, long-term memory |
+| 🐕 **Bronx** | Watchdog | Security monitoring, alerts |
+| 🌉 **Elisa** | Bridge | Human context, ethics, legal |
+| 🎭 **Xanatos** | Red Team | Adversarial testing, vulnerabilities |
+| 🔥 **Demona** | Failsafe | Error prediction, worst-case scenarios |
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/GenieWeenie/castle-wyvern.git
+cd castle-wyvern
+
 # Install dependencies
 pip install -r requirements.txt
+pip install rich  # For beautiful CLI
 
 # Configure
- cp .env.example .env
-# Edit .env with your API keys
+cp .env.example .env
+# Edit .env with your API keys (Z.ai, OpenAI optional)
 
-# Awaken the clan
-python clan_wyvern.py
+# Awaken the clan (interactive CLI)
+python castle_wyvern_cli.py
+```
+
+---
+
+## 🎮 Using Castle Wyvern
+
+### Interactive CLI (New!)
+
+The Rich-powered CLI provides a beautiful interface to interact with the clan:
+
+```bash
+python castle_wyvern_cli.py
+```
+
+**Commands:**
+- `ask <question>` - Ask the clan anything
+- `code <description>` - Request code from Lexington
+- `review <code/description>` - Get code review from Xanatos
+- `summarize <text>` - Request summary from Broadway
+- `plan <description>` - Get architecture from Brooklyn
+- `status` - Show full dashboard
+- `health` - Check Phoenix Gate status
+- `members` - List clan members
+- `help` - Show all commands
+- `quit` - Exit Castle Wyvern
+
+**Example Session:**
+```
+🏰 CASTLE WYVERN v0.2.0
+
+👤 You: code Write a function to calculate fibonacci
+🎯 Intent: code (95% confidence)
+🛡️  Routed to: 🔧 Lexington
+
+🔧 Lexington:
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
 ```
 
 ---
@@ -52,25 +100,38 @@ Castle-Wyvern/
 │   └── workflows/          # Phase workflows
 ├── clan_members/           # Custom agent implementations
 ├── eyrie/                  # Connectivity & routing
-│   ├── phoenix_gate.py     # AI API gateway
-│   └── sentinel_ping.py    # Node health checker
+│   ├── phoenix_gate.py     # AI API gateway with retry/circuit breaker
+│   ├── intent_router.py    # Smart agent routing
+│   └── error_handler.py    # Error handling & logging
 ├── grimoorum/              # Memory & archives
 │   └── memory_manager.py   # Conversation persistence
 ├── prompts/                # Agent system prompts
 ├── spells/                 # Reusable prompt templates
+├── tests/                  # Test suite (31 tests)
+├── castle_wyvern_cli.py    # 🆕 Rich interactive CLI
 ├── clan_wyvern.py          # Main entry point
+├── pyproject.toml          # Package configuration
+├── install.sh              # Installation script
 ├── .env.example            # Configuration template
 └── README.md               # This file
 ```
 
 ---
 
-## 🛡️ Security & Privacy
+## 🧪 Running Tests
 
-- **Local-first:** Prioritizes local LLM processing
-- **Encrypted memory:** Conversations stored securely
-- **No data sharing:** Your data stays on your machines
-- **Audit logging:** Full transparency of system actions
+```bash
+# Install pytest
+pip install pytest pytest-cov
+
+# Run all tests
+pytest tests/test_castle_wyvern.py -v
+
+# Run with coverage
+pytest tests/test_castle_wyvern.py --cov=eyrie
+```
+
+**Current Status:** 31 tests passing ✅
 
 ---
 
@@ -90,14 +151,35 @@ python bmad/commands/product_brief.py "build AI feature"
 
 ---
 
+## 🛡️ Security & Privacy
+
+- **Local-first:** Prioritizes local LLM processing (Ollama)
+- **Circuit breakers:** Prevents cascading failures
+- **Automatic retry:** Exponential backoff for API calls
+- **Encrypted memory:** Conversations stored securely
+- **No data sharing:** Your data stays on your machines
+- **Audit logging:** Full transparency of system actions
+
+---
+
 ## 🌟 Features
 
-- ✅ Multi-agent council with distinct personalities
-- ✅ BMAD Method workflow integration
-- ✅ Hybrid local/cloud AI routing
-- ✅ Persistent conversation memory
-- ✅ Security-focused architecture
-- ✅ Thematic Gargoyles design
+### Phase 1 ✅ Complete
+- ✅ Real AI API calls via Phoenix Gate (Z.ai/GLM-4-Plus)
+- ✅ Dependency management (pyproject.toml)
+- ✅ Error handling with retry logic & circuit breakers
+- ✅ Comprehensive logging
+
+### Phase 2 ✅ Complete
+- ✅ Intent-based routing (smart agent selection)
+- ✅ 31-test pytest suite
+- ✅ Rich CLI interface with beautiful dashboard
+- ✅ Live clan status monitoring
+
+### Phase 3 (Planned)
+- 🔄 Document ingestion (RAG)
+- 🔄 Memory improvements (Grimoorum upgrades)
+- 🔄 Multi-node distribution
 
 ---
 
@@ -105,9 +187,12 @@ python bmad/commands/product_brief.py "build AI feature"
 
 - **Python 3.9+**
 - **Local LLM:** Ollama
-- **Cloud Fallback:** OpenAI / Z.ai
+- **Cloud Primary:** Z.ai (GLM-4-Plus)
+- **Cloud Fallback:** OpenAI (GPT-3.5)
+- **CLI:** Rich (beautiful terminal UI)
+- **Testing:** pytest
 - **Memory:** JSON-based Grimoorum
-- **Dependencies:** Minimal (requests, python-dotenv)
+- **Routing:** Hybrid keyword + AI classification
 
 ---
 
@@ -118,3 +203,16 @@ MIT License — see LICENSE for details.
 ---
 
 *"We are defenders of the night! We are gargoyles!"*
+
+---
+
+## 🗺️ Roadmap
+
+See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
+
+**Recent Commits:**
+- `fd95d09` Phase 2: Rich CLI Interface (Awesome UI)
+- `d8fd427` Phase 2: Tests (Feature 6)
+- `0dcca3b` Phase 2: Intent-Based Routing (Feature 7)
+- `b71c00f` Phase 1: Enhanced Error Handling + Logging
+- `bab1933` Phase 1: Dependency Management

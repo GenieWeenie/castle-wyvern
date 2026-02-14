@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from eyrie.phoenix_gate import PhoenixGate
 from eyrie.intent_router import IntentRouter, IntentType
 from eyrie.document_ingestion import DocumentIngestion
+from eyrie.node_manager import NodeManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -86,6 +87,7 @@ class CastleWyvernCLI:
         self.grimoorum = GrimoorumV2()
         self.bmad = BMADWorkflow(self.console, self.phoenix_gate, self.grimoorum)
         self.documents = DocumentIngestion()
+        self.nodes = NodeManager()
         
         # Initialize clan members
         self.clan = {
@@ -259,6 +261,11 @@ class CastleWyvernCLI:
 - `/ingest <filepath>` - Add a document to the library
 - `/docs` - List all ingested documents
 - `/search <query>` - Search document contents
+
+## Node Commands
+- `/nodes` - List all Stone nodes
+- `/node-add <name> <host>` - Register a new node
+- `/tasks` - List distributed tasks
 
 ## System Commands
 - `status` - Show full dashboard
@@ -499,6 +506,71 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[dim]No results found.[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Please provide search query.[/yellow]")
+                
+                elif command == "/nodes":
+                    nodes = self.nodes.list_nodes()
+                    if nodes:
+                        table = Table(title="🌐 Stone Nodes (Network)")
+                        table.add_column("ID", style="dim", width=10)
+                        table.add_column("Name")
+                        table.add_column("Host")
+                        table.add_column("Status")
+                        table.add_column("Load")
+                        table.add_column("Capabilities")
+                        
+                        for node in nodes:
+                            status_color = "green" if node['status'] == 'online' else "red"
+                            table.add_row(
+                                node['id'][:8],
+                                node['name'],
+                                node['host'],
+                                f"[{status_color}]{node['status']}[/{status_color}]",
+                                f"{node['load']:.0%}",
+                                ", ".join(node['capabilities'])
+                            )
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No nodes registered.[/dim]")
+                
+                elif command == "/node-add":
+                    parts = args.split()
+                    if len(parts) >= 2:
+                        name, host = parts[0], parts[1]
+                        node_id = self.nodes.register_node(name, host)
+                        self.console.print(f"[green]✅ Node registered: {node_id}[/green]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /node-add <name> <host>[/yellow]")
+                
+                elif command == "/tasks":
+                    tasks = self.nodes.list_tasks()
+                    if tasks:
+                        table = Table(title="📋 Distributed Tasks")
+                        table.add_column("ID", style="dim", width=12)
+                        table.add_column("Type")
+                        table.add_column("Status")
+                        table.add_column("Priority")
+                        table.add_column("Assigned Node")
+                        
+                        for task in tasks[-10:]:  # Last 10
+                            status_color = {
+                                'completed': 'green',
+                                'failed': 'red',
+                                'running': 'yellow',
+                                'pending': 'dim'
+                            }.get(task['status'], 'white')
+                            
+                            table.add_row(
+                                task['id'][:12],
+                                task['type'],
+                                f"[{status_color}]{task['status']}[/{status_color}]",
+                                str(task['priority']),
+                                task.get('assigned_node', 'Unassigned')[:8] or "None"
+                            )
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No tasks created yet.[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

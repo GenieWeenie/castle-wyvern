@@ -1,0 +1,44 @@
+{
+  "3a80d27b": {
+    "id": "3a80d27b",
+    "name": "MacBookAir",
+    "host": "192.168.0.45",
+    "port": 18790,
+    "status": "online",
+    "capabilities": [
+      "cpu",
+      "ollama"
+    ],
+    "load": 0.0,
+    "last_seen": "2026-02-14T03:57:32.008144",
+    "metadata": {}
+  },
+  "ee3d800b": {
+    "id": "ee3d800b",
+    "name": "MacBook-Pro-Living-Room",
+    "host": "192.168.1.50",
+    "port": 18790,
+    "status": "online",
+    "capabilities": [
+      "cpu",
+      "gpu"
+    ],
+    "load": 0.0,
+    "last_seen": "2026-02-14T03:57:32.009459",
+    "metadata": {}
+  },
+  "0c45bf32": {
+    "id": "0c45bf32",
+    "name": "Ubuntu-Server-Office",
+    "host": "192.168.1.100",
+    "port": 18790,
+    "status": "online",
+    "capabilities": [
+      "cpu",
+      "ollama"
+    ],
+    "load": 0.0,
+    "last_seen": "2026-02-14T03:57:32.010059",
+    "metadata": {}
+  }
+}

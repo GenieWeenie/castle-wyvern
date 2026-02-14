@@ -1,0 +1,18 @@
+{
+  "c375d587-d40": {
+    "id": "c375d587-d40",
+    "type": "ai_call",
+    "payload": {
+      "prompt": "Write a Python function",
+      "model": "glm-4-plus"
+    },
+    "status": "completed",
+    "assigned_node": "3a80d27b",
+    "created_at": "2026-02-14T03:57:32.010814",
+    "started_at": "2026-02-14T03:57:32.011560",
+    "completed_at": "2026-02-14T03:57:32.012420",
+    "result": "def hello(): return 'world'",
+    "error": null,
+    "priority": 4
+  }
+}

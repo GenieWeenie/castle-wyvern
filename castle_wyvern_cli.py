@@ -35,6 +35,7 @@ from eyrie.plugin_system import PluginManager
 from eyrie.monitoring import MonitoringService
 from eyrie.cli_improvements import CLIImprovements
 from eyrie.integrations import IntegrationManager
+from eyrie.security import SecurityManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -125,6 +126,9 @@ class CastleWyvernCLI:
         
         # Feature 17: Integration Manager
         self.integrations = IntegrationManager()
+        
+        # Feature 18: Security Manager
+        self.security = SecurityManager()
         
         # Initialize clan members
         self.clan = {
@@ -360,6 +364,17 @@ class CastleWyvernCLI:
 - `/alert <message>` - Send alert to all channels
 - `/webhook-start` - Start webhook server (port 18793)
 - `/webhook-stop` - Stop webhook server
+
+## Security Commands (Feature 18)
+- `/security-status` - Show security status
+- `/audit-log` - View recent audit log
+- `/audit-search <query>` - Search audit log
+- `/audit-export <file>` - Export audit log
+- `/apikey-create <name>` - Create API key
+- `/apikey-list` - List API keys
+- `/apikey-revoke <key>` - Revoke API key
+- `/security-scan` - Run security scan
+- `/intrusion-check` - Check for intrusions
 
 ## System Commands
 - `status` - Show full dashboard
@@ -1208,6 +1223,114 @@ plan Design a microservices architecture for an e-commerce app
                 elif command == "/webhook-stop":
                     self.console.print("[yellow]⚠️  Webhook server cannot be stopped gracefully[/yellow]")
                     self.console.print("[dim]   Restart Castle Wyvern to stop[/dim]")
+                
+                # ============ Feature 18: Security Commands ============
+                elif command == "/security-status":
+                    status = self.security.get_status()
+                    
+                    table = Table(title="🔒 Security Status")
+                    table.add_column("Component", style="cyan")
+                    table.add_column("Status")
+                    
+                    table.add_row("Audit Logging", "✅ Enabled" if status["audit_enabled"] else "❌ Disabled")
+                    table.add_row("Encryption", "✅ Enabled" if status["encryption_enabled"] else "❌ Disabled")
+                    table.add_row("Intrusion Detection", "✅ Enabled" if status["intrusion_detection"] else "❌ Disabled")
+                    table.add_row("Audit Entries", str(status["audit_entries"]))
+                    table.add_row("API Keys", str(status["api_keys"]))
+                    
+                    self.console.print(table)
+                
+                elif command == "/audit-log":
+                    entries = self.security.audit.get_recent(20)
+                    if entries:
+                        table = Table(title="📋 Recent Audit Log")
+                        table.add_column("Time", style="dim", width=10)
+                        table.add_column("Level")
+                        table.add_column("Category", style="dim")
+                        table.add_column("Action")
+                        table.add_column("User", style="cyan")
+                        
+                        for entry in entries:
+                            time_str = entry.timestamp[11:19]
+                            table.add_row(time_str, entry.level, entry.category, entry.action, entry.user)
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No audit entries[/dim]")
+                
+                elif command == "/audit-search":
+                    if args:
+                        results = self.security.audit.search(**json.loads(args))
+                        self.console.print(f"\n[bold]🔍 Found {len(results)} matching entries[/bold]\n")
+                        for entry in results[-10:]:
+                            self.console.print(f"  {entry.timestamp[11:19]} [{entry.level}] {entry.category}: {entry.action}")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /audit-search <json_filters>[/yellow]")
+                
+                elif command == "/audit-export":
+                    if args:
+                        if self.security.audit.export(args):
+                            self.console.print(f"[green]✅ Audit log exported to {args}[/green]")
+                        else:
+                            self.console.print("[red]⚠️  Export failed[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /audit-export <file.json>[/yellow]")
+                
+                elif command == "/apikey-create":
+                    if args:
+                        key = self.security.api_keys.generate_key(args)
+                        self.console.print(f"[green]✅ API key created for: {args}[/green]")
+                        self.console.print(f"[dim]   Key: {key}[/dim]")
+                        self.console.print("\n[yellow]⚠️  Save this key - it won't be shown again![/yellow]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /apikey-create <name>[/yellow]")
+                
+                elif command == "/apikey-list":
+                    keys = self.security.api_keys.list_keys()
+                    if keys:
+                        table = Table(title="🔑 API Keys")
+                        table.add_column("Name", style="cyan")
+                        table.add_column("Created")
+                        table.add_column("Last Used", style="dim")
+                        
+                        for key in keys:
+                            table.add_row(key["name"], key["created_at"][:10], key.get("last_used", "Never")[:10] if key.get("last_used") else "Never")
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No API keys[/dim]")
+                
+                elif command == "/apikey-revoke":
+                    if args:
+                        if self.security.api_keys.revoke_key(args):
+                            self.console.print(f"[green]✅ API key revoked[/green]")
+                        else:
+                            self.console.print(f"[red]⚠️  API key not found[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /apikey-revoke <key>[/yellow]")
+                
+                elif command == "/security-scan":
+                    with self.console.status("[cyan]Running security scan...[/cyan]"):
+                        results = self.security.run_security_scan()
+                    
+                    self.console.print(f"\n[bold]🔒 Security Scan Results[/bold]")
+                    self.console.print(f"Issues found: {len(results['issues'])}")
+                    
+                    if results['issues']:
+                        for issue in results['issues']:
+                            icon = "🔴" if issue['severity'] == 'error' else "🟡" if issue['severity'] == 'warning' else "ℹ️"
+                            self.console.print(f"  {icon} [{issue['severity']}] {issue['message']}")
+                
+                elif command == "/intrusion-check":
+                    with self.console.status("[cyan]Checking for intrusions...[/cyan]"):
+                        detections = self.security.check_intrusions()
+                    
+                    if detections:
+                        self.console.print(f"\n[bold]🚨 {len(detections)} Potential Intrusions Detected[/bold]")
+                        for detection in detections:
+                            self.console.print(f"  🟡 {detection['pattern']}: {detection['count']} occurrences")
+                    else:
+                        self.console.print("[green]✅ No intrusions detected[/green]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

@@ -39,6 +39,7 @@ from eyrie.security import SecurityManager
 from eyrie.advanced_ai import AdvancedAIManager
 from eyrie.performance import PerformanceManager
 from eyrie.documentation import DocumentationGenerator
+from eyrie.mcp_server import CastleWyvernMCPServer
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -141,6 +142,9 @@ class CastleWyvernCLI:
         
         # Feature 21: Documentation Generator
         self.documentation = DocumentationGenerator()
+        
+        # MCP Server
+        self.mcp_server: Optional[CastleWyvernMCPServer] = None
         
         # Initialize clan members
         self.clan = {
@@ -395,6 +399,12 @@ class CastleWyvernCLI:
 - `/perf-optimize` - Run memory optimization
 - `/docs-generate` - Generate documentation
 - `/docs-export <file>` - Export docs to markdown
+
+## MCP Protocol (New!)
+- `/mcp-start` - Start MCP server
+- `/mcp-stop` - Stop MCP server
+- `/mcp-tools` - List MCP tools
+- `/mcp-install` - Install MCP in Claude/Cursor
 
 ## System Commands
 - `status` - Show full dashboard
@@ -1410,6 +1420,90 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[green]✅ Documentation exported to {args}[/green]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /docs-export <file.md>[/yellow]")
+                
+                # ============ MCP Protocol Commands ============
+                elif command == "/mcp-start":
+                    if not self.mcp_server:
+                        self.mcp_server = CastleWyvernMCPServer(castle_wyvern_cli=self)
+                        
+                        # Start in background thread
+                        import threading
+                        mcp_thread = threading.Thread(
+                            target=self.mcp_server.start,
+                            daemon=True
+                        )
+                        mcp_thread.start()
+                        
+                        self.console.print("[green]✅ MCP Server started[/green]")
+                        self.console.print("[dim]   The Manhattan Clan is now available via MCP![/dim]")
+                        self.console.print("[dim]   Tools available:[/dim]")
+                        for tool in self.mcp_server.list_tools():
+                            self.console.print(f"[dim]     • {tool['name']}: {tool['description'][:50]}...[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  MCP Server already running[/yellow]")
+                
+                elif command == "/mcp-stop":
+                    if self.mcp_server:
+                        self.mcp_server.stop()
+                        self.mcp_server = None
+                        self.console.print("[green]✅ MCP Server stopped[/green]")
+                    else:
+                        self.console.print("[dim]MCP Server not running[/dim]")
+                
+                elif command == "/mcp-tools":
+                    if self.mcp_server:
+                        table = Table(title="🔌 MCP Tools")
+                        table.add_column("Tool Name", style="cyan")
+                        table.add_column("Description")
+                        
+                        for tool in self.mcp_server.list_tools():
+                            table.add_row(tool['name'], tool['description'][:60])
+                        
+                        self.console.print(table)
+                    else:
+                        # Show what tools would be available
+                        temp_server = CastleWyvernMCPServer()
+                        table = Table(title="🔌 Available MCP Tools (Start server with /mcp-start)")
+                        table.add_column("Tool Name", style="cyan")
+                        table.add_column("Description")
+                        
+                        for tool in temp_server.list_tools():
+                            table.add_row(tool['name'], tool['description'][:60])
+                        
+                        self.console.print(table)
+                
+                elif command == "/mcp-install":
+                    self.console.print("[bold]📦 MCP Installation Guide[/bold]\n")
+                    self.console.print("To use Castle Wyvern with MCP clients:\n")
+                    
+                    self.console.print("[bold]1. Claude Desktop:[/bold]")
+                    self.console.print("   - Open Claude Desktop")
+                    self.console.print("   - Go to Settings > Developer > Edit Config")
+                    self.console.print("   - Add Castle Wyvern to claude_desktop_config.json:")
+                    self.console.print("""
+   {
+     "mcpServers": {
+       "castle-wyvern": {
+         "command": "python",
+         "args": ["-m", "eyrie.mcp_server"],
+         "cwd": "/path/to/castle-wyvern"
+       }
+     }
+   }
+""")
+                    
+                    self.console.print("[bold]2. Cursor:[/bold]")
+                    self.console.print("   - Open Cursor Settings")
+                    self.console.print("   - Find MCP settings")
+                    self.console.print("   - Add the same configuration as above")
+                    self.console.print("")
+                    
+                    self.console.print("[bold]3. Other MCP Clients:[/bold]")
+                    self.console.print("   - Configure with stdio transport")
+                    self.console.print("   - Command: python -m eyrie.mcp_server")
+                    self.console.print("")
+                    
+                    self.console.print("[green]✅ After installation, restart your MCP client![/green]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

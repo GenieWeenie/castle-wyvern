@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from eyrie.phoenix_gate import PhoenixGate
 from eyrie.intent_router import IntentRouter, IntentType
+from grimoorum.memory_manager import GrimoorumV2
 
 
 # Castle Wyvern Theme Configuration
@@ -80,6 +81,7 @@ class CastleWyvernCLI:
         self.console = Console()
         self.phoenix_gate = PhoenixGate()
         self.intent_router = IntentRouter(use_ai_classification=True)
+        self.grimoorum = GrimoorumV2()
         
         # Initialize clan members
         self.clan = {
@@ -248,6 +250,7 @@ class CastleWyvernCLI:
 - `health` - Check Phoenix Gate status
 - `members` - List all clan members
 - `history` - Show conversation history
+- `memory` - Show memory system statistics
 - `help` - Show this help
 - `quit` / `exit` - Leave Castle Wyvern
 
@@ -305,6 +308,16 @@ plan Design a microservices architecture for an e-commerce app
         )
         self.console.print(response_panel)
         
+        # Save to memory (NEW)
+        self.grimoorum.record(
+            user_input=user_input,
+            agent_name=agent_key,
+            agent_response=response,
+            intent=match.intent.value,
+            importance=3 if match.intent != IntentType.CHAT else 2,
+            session_id="main_session"
+        )
+        
         # Update agent status back to ready
         agent.set_ready()
         
@@ -332,16 +345,36 @@ plan Design a microservices architecture for an e-commerce app
         return prompts.get(agent_key, prompts["goliath"])
     
     def show_history(self):
-        """Display conversation history."""
-        if not self.command_history:
+        """Display conversation history from memory."""
+        memories = self.grimoorum.get_recent_memories(limit=10)
+        
+        if not memories:
             self.console.print("[dim]No history yet. Start a conversation![/dim]")
             return
         
         self.console.print("\n[bold]📜 Conversation History[/bold]\n")
-        for i, entry in enumerate(self.command_history[-10:], 1):  # Last 10
-            time_str = entry["timestamp"].strftime("%H:%M:%S")
-            self.console.print(f"[dim]{time_str}[/dim] You: {entry['input'][:60]}...")
-            self.console.print(f"[dim]     → {entry['agent']}: {entry['response'][:60]}...[/dim]\n")
+        for mem in memories:
+            time_str = mem["timestamp"][11:19]  # Extract HH:MM:SS
+            agent_emoji = self.clan.get(mem["agent_name"], {}).emoji if mem["agent_name"] in self.clan else "🎭"
+            self.console.print(f"[dim]{time_str}[/dim] You: {mem['user_input'][:60]}...")
+            self.console.print(f"[dim]     → {agent_emoji} {mem['agent_name'].title()}: {mem['agent_response'][:60]}...[/dim]\n")
+    
+    def show_memory_stats(self):
+        """Show memory system statistics."""
+        stats = self.grimoorum.get_stats()
+        
+        self.console.print("\n[bold]🧠 Memory System Statistics[/bold]\n")
+        self.console.print(f"Total memories: {stats['total_memories']}")
+        self.console.print(f"Total threads: {stats['total_threads']}")
+        self.console.print(f"Agents with memories: {stats['agents_with_memories']}")
+        self.console.print(f"High importance memories: {stats['high_importance']}")
+        self.console.print(f"Storage size: {stats['storage_size_kb']} KB")
+        
+        if stats['agent_breakdown']:
+            self.console.print("\n[dim]Agent memory counts:[/dim]")
+            for agent, count in stats['agent_breakdown'].items():
+                self.console.print(f"  {agent}: {count}")
+        self.console.print()
     
     def run(self):
         """Main CLI loop."""
@@ -382,6 +415,9 @@ plan Design a microservices architecture for an e-commerce app
                 
                 elif command == "history":
                     self.show_history()
+                
+                elif command == "memory":
+                    self.show_memory_stats()
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

@@ -196,6 +196,38 @@ python bmad/commands/product_brief.py "build AI feature"
 - ✅ Performance Optimizations (caching, connection pooling, lazy loading, profiling)
 - ✅ Documentation Generator (auto-docs, API docs, architecture diagrams)
 
+### Post-Release Enhancements
+- ✅ **MCP Protocol Support** - Model Context Protocol server for integration with Claude Desktop, Cursor, and other MCP clients
+
+---
+
+## 🔌 MCP (Model Context Protocol)
+
+Castle Wyvern now implements Microsoft's **Model Context Protocol** — the emerging standard for AI agent interoperability!
+
+### What This Means
+Connect Castle Wyvern to any MCP-compatible client:
+- **Claude Desktop** - Use the Manhattan Clan directly in Claude
+- **Cursor IDE** - Get coding help from Lexington in your editor
+- **Any MCP client** - Universal compatibility
+
+### Available MCP Tools
+- `ask_goliath` - Strategic guidance from the leader
+- `ask_lexington` - Code generation and technical help
+- `ask_brooklyn` - Architecture and planning
+- `ask_xanatos` - Security reviews
+- `ask_broadway` - Documentation and summarization
+- `castle_wyvern_status` - System health check
+
+### Quick Start
+```bash
+# In Castle Wyvern CLI
+/mcp-install  # Show installation instructions
+/mcp-start    # Start MCP server
+```
+
+Then configure your MCP client to connect to Castle Wyvern!
+
 ---
 
 ## 🚀 Project Status

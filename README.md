@@ -176,10 +176,13 @@ python bmad/commands/product_brief.py "build AI feature"
 - ✅ Rich CLI interface with beautiful dashboard
 - ✅ Live clan status monitoring
 
-### Phase 3 (Planned)
-- 🔄 Document ingestion (RAG)
-- 🔄 Memory improvements (Grimoorum upgrades)
-- 🔄 Multi-node distribution
+### Phase 3 (In Progress)
+- ✅ Document ingestion (RAG)
+- ✅ Memory improvements (Grimoorum upgrades)
+- ✅ Multi-node distribution
+- ✅ Auto-discovery (mDNS/Zeroconf node discovery)
+- ✅ REST API Server (HTTP endpoints for all clan functions)
+- 🔄 Web dashboard (planned)
 
 ---
 
@@ -211,8 +214,8 @@ MIT License — see LICENSE for details.
 See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
 
 **Recent Commits:**
+- `5f0872a` Phase 3: Auto-Discovery + REST API (Features 11 & 12)
+- `cb06bec` Phase 3: Multi-Node Distribution (Feature 10)
+- `2b7d861` Phase 3: Document Ingestion with RAG (Feature 9)
 - `fd95d09` Phase 2: Rich CLI Interface (Awesome UI)
 - `d8fd427` Phase 2: Tests (Feature 6)
-- `0dcca3b` Phase 2: Intent-Based Routing (Feature 7)
-- `b71c00f` Phase 1: Enhanced Error Handling + Logging
-- `bab1933` Phase 1: Dependency Management

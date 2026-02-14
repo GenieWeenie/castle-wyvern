@@ -36,6 +36,9 @@ from eyrie.monitoring import MonitoringService
 from eyrie.cli_improvements import CLIImprovements
 from eyrie.integrations import IntegrationManager
 from eyrie.security import SecurityManager
+from eyrie.advanced_ai import AdvancedAIManager
+from eyrie.performance import PerformanceManager
+from eyrie.documentation import DocumentationGenerator
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -129,6 +132,15 @@ class CastleWyvernCLI:
         
         # Feature 18: Security Manager
         self.security = SecurityManager()
+        
+        # Feature 19: Advanced AI
+        self.advanced_ai = AdvancedAIManager()
+        
+        # Feature 20: Performance Manager
+        self.performance = PerformanceManager()
+        
+        # Feature 21: Documentation Generator
+        self.documentation = DocumentationGenerator()
         
         # Initialize clan members
         self.clan = {
@@ -375,6 +387,14 @@ class CastleWyvernCLI:
 - `/apikey-revoke <key>` - Revoke API key
 - `/security-scan` - Run security scan
 - `/intrusion-check` - Check for intrusions
+
+## Stretch Goals (Features 19-21)
+- `/ai-optimize <prompt>` - Optimize a prompt
+- `/ai-stats` - Advanced AI stats
+- `/perf-stats` - Performance statistics
+- `/perf-optimize` - Run memory optimization
+- `/docs-generate` - Generate documentation
+- `/docs-export <file>` - Export docs to markdown
 
 ## System Commands
 - `status` - Show full dashboard
@@ -1331,6 +1351,65 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"  🟡 {detection['pattern']}: {detection['count']} occurrences")
                     else:
                         self.console.print("[green]✅ No intrusions detected[/green]")
+                
+                # ============ Stretch Goals (Features 19-21) ============
+                elif command == "/ai-optimize":
+                    if args:
+                        optimized = self.advanced_ai.optimize_prompt(args)
+                        self.console.print(f"\n[bold]Original:[/bold] {args}")
+                        self.console.print(f"\n[bold]Optimized:[/bold] {optimized}")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /ai-optimize <prompt>[/yellow]")
+                
+                elif command == "/ai-stats":
+                    stats = self.advanced_ai.get_stats()
+                    table = Table(title="🧠 Advanced AI Stats")
+                    table.add_column("Metric", style="cyan")
+                    table.add_column("Value")
+                    
+                    table.add_row("Context Window Utilization", f"{stats['context_window'].get('utilization', 0):.1%}")
+                    table.add_row("Cached Prompts", str(stats['cached_prompts']))
+                    table.add_row("Code Executions", str(stats['executions']))
+                    table.add_row("Ensemble Models", str(stats['ensemble_models']))
+                    
+                    self.console.print(table)
+                
+                elif command == "/perf-stats":
+                    stats = self.performance.get_stats()
+                    table = Table(title="⚡ Performance Stats")
+                    table.add_column("Metric", style="cyan")
+                    table.add_column("Value")
+                    
+                    table.add_row("Uptime", f"{stats['uptime_seconds'] // 3600}h {(stats['uptime_seconds'] % 3600) // 60}m")
+                    table.add_row("Total Requests", str(stats['total_requests']))
+                    table.add_row("Cache Hit Rate", stats['cache'].get('hit_rate', 'N/A'))
+                    table.add_row("Cache Size", f"{stats['cache'].get('size', 0)}/{stats['cache'].get('max_size', 0)}")
+                    
+                    self.console.print(table)
+                
+                elif command == "/perf-optimize":
+                    with self.console.status("[cyan]Optimizing memory...[/cyan]"):
+                        result = self.performance.optimize_memory()
+                    
+                    self.console.print("[green]✅ Memory optimization complete[/green]")
+                    self.console.print(f"[dim]   Cache cleared: {result['cache_cleared']}[/dim]")
+                    self.console.print(f"[dim]   Pools cleared: {result['pools_cleared']}[/dim]")
+                
+                elif command == "/docs-generate":
+                    with self.console.status("[cyan]Generating documentation...[/cyan]"):
+                        output_file = self.documentation.export_markdown()
+                    
+                    self.console.print(f"[green]✅ Documentation generated[/green]")
+                    self.console.print(f"[dim]   Location: {output_file}[/dim]")
+                
+                elif command == "/docs-export":
+                    if args:
+                        with self.console.status("[cyan]Exporting documentation...[/cyan]"):
+                            output_file = self.documentation.export_markdown(args)
+                        
+                        self.console.print(f"[green]✅ Documentation exported to {args}[/green]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /docs-export <file.md>[/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

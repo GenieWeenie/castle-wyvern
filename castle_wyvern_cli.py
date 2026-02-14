@@ -31,6 +31,7 @@ from eyrie.node_manager import NodeManager
 from eyrie.auto_discovery import AutoDiscoveryService
 from eyrie.api_server import CastleWyvernAPI
 from eyrie.web_dashboard import WebDashboard
+from eyrie.plugin_system import PluginManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -100,6 +101,14 @@ class CastleWyvernCLI:
         
         # Feature 13: Web Dashboard
         self.web_dashboard = None
+        
+        # Feature 14: Plugin System
+        self.plugin_manager = PluginManager(
+            phoenix_gate=self.phoenix_gate,
+            grimoorum=self.grimoorum
+        )
+        # Auto-load plugins on startup
+        self.plugin_manager.load_all_plugins()
         
         # Initialize clan members
         self.clan = {
@@ -293,6 +302,16 @@ class CastleWyvernCLI:
 - `/web-start` - Start web dashboard (port 18792)
 - `/web-stop` - Stop web dashboard
 - `/web-status` - Check web dashboard status
+
+## Plugin System Commands (Feature 14)
+- `/plugins` - List all loaded plugins
+- `/plugin-load <name>` - Load a plugin
+- `/plugin-unload <name>` - Unload a plugin
+- `/plugin-reload <name>` - Reload a plugin
+- `/plugin-enable <name>` - Enable a plugin
+- `/plugin-disable <name>` - Disable a plugin
+- `/plugin-info <name>` - Show plugin details
+- `/hooks` - List available hooks
 
 ## System Commands
 - `status` - Show full dashboard
@@ -732,6 +751,100 @@ plan Design a microservices architecture for an e-commerce app
                     else:
                         self.console.print("[dim]Web Dashboard not running[/dim]")
                         self.console.print("[dim]Run /web-start to begin[/dim]")
+                
+                # ============ Feature 14: Plugin System Commands ============
+                elif command == "/plugins":
+                    plugins = self.plugin_manager.list_plugins()
+                    if plugins:
+                        table = Table(title="🔌 Loaded Plugins")
+                        table.add_column("Name", style="cyan")
+                        table.add_column("Version")
+                        table.add_column("Status")
+                        table.add_column("Description", style="dim")
+                        
+                        for p in plugins:
+                            status = "[green]enabled[/green]" if p["enabled"] else "[red]disabled[/red]"
+                            table.add_row(p["name"], p["version"], status, p.get("description", "")[:40])
+                        
+                        self.console.print(table)
+                        stats = self.plugin_manager.get_stats()
+                        self.console.print(f"\n[dim]Total: {stats['total_loaded']} loaded, {stats['total_discovered']} discovered[/dim]")
+                    else:
+                        self.console.print("[dim]No plugins loaded. Place plugins in the plugins/ directory[/dim]")
+                
+                elif command == "/plugin-load":
+                    if args:
+                        success = self.plugin_manager.load_plugin(args)
+                        if success:
+                            self.console.print(f"[green]✅ Plugin '{args}' loaded[/green]")
+                        else:
+                            self.console.print(f"[red]⚠️  Failed to load plugin '{args}'[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /plugin-load <name>[/yellow]")
+                
+                elif command == "/plugin-unload":
+                    if args:
+                        success = self.plugin_manager.unload_plugin(args)
+                        if success:
+                            self.console.print(f"[green]✅ Plugin '{args}' unloaded[/green]")
+                        else:
+                            self.console.print(f"[red]⚠️  Failed to unload plugin '{args}'[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /plugin-unload <name>[/yellow]")
+                
+                elif command == "/plugin-reload":
+                    if args:
+                        success = self.plugin_manager.reload_plugin(args)
+                        if success:
+                            self.console.print(f"[green]✅ Plugin '{args}' reloaded[/green]")
+                        else:
+                            self.console.print(f"[red]⚠️  Failed to reload plugin '{args}'[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /plugin-reload <name>[/yellow]")
+                
+                elif command == "/plugin-enable":
+                    if args:
+                        self.plugin_manager.enable_plugin(args)
+                        self.console.print(f"[green]✅ Plugin '{args}' enabled[/green]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /plugin-enable <name>[/yellow]")
+                
+                elif command == "/plugin-disable":
+                    if args:
+                        self.plugin_manager.disable_plugin(args)
+                        self.console.print(f"[yellow]⚠️  Plugin '{args}' disabled[/yellow]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /plugin-disable <name>[/yellow]")
+                
+                elif command == "/plugin-info":
+                    if args:
+                        info = self.plugin_manager.get_plugin_info(args)
+                        if info:
+                            self.console.print(f"\n[bold]🔌 {info['name']}[/bold]")
+                            self.console.print(f"Version: {info['version']}")
+                            self.console.print(f"Author: {info.get('author', 'Unknown')}")
+                            self.console.print(f"Status: {'enabled' if info['enabled'] else 'disabled'}")
+                            if info.get('description'):
+                                self.console.print(f"Description: {info['description']}")
+                        else:
+                            self.console.print(f"[red]⚠️  Plugin '{args}' not found[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /plugin-info <name>[/yellow]")
+                
+                elif command == "/hooks":
+                    hooks = self.plugin_manager.hooks
+                    if hooks:
+                        table = Table(title="🪝 Available Hooks")
+                        table.add_column("Name", style="cyan")
+                        table.add_column("Callbacks")
+                        table.add_column("Description", style="dim")
+                        
+                        for name, hook in sorted(hooks.items()):
+                            table.add_row(name, str(len(hook.callbacks)), hook.description[:50])
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No hooks registered[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

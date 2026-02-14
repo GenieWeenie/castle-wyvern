@@ -30,6 +30,7 @@ from eyrie.document_ingestion import DocumentIngestion
 from eyrie.node_manager import NodeManager
 from eyrie.auto_discovery import AutoDiscoveryService
 from eyrie.api_server import CastleWyvernAPI
+from eyrie.web_dashboard import WebDashboard
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -96,6 +97,9 @@ class CastleWyvernCLI:
         
         # Feature 12: REST API
         self.api_server = None
+        
+        # Feature 13: Web Dashboard
+        self.web_dashboard = None
         
         # Initialize clan members
         self.clan = {
@@ -284,6 +288,11 @@ class CastleWyvernCLI:
 - `/api-start` - Start REST API server (port 18791)
 - `/api-stop` - Stop API server
 - `/api-status` - Check API server status
+
+## Web Dashboard Commands (Feature 13)
+- `/web-start` - Start web dashboard (port 18792)
+- `/web-stop` - Stop web dashboard
+- `/web-status` - Check web dashboard status
 
 ## System Commands
 - `status` - Show full dashboard
@@ -678,6 +687,51 @@ plan Design a microservices architecture for an e-commerce app
                     else:
                         self.console.print("[dim]REST API not running[/dim]")
                         self.console.print("[dim]Run /api-start to begin[/dim]")
+                
+                # ============ Feature 13: Web Dashboard Commands ============
+                elif command == "/web-start":
+                    if not self.web_dashboard:
+                        try:
+                            self.web_dashboard = WebDashboard(
+                                host="0.0.0.0",
+                                port=18792
+                            )
+                            # Start in background thread
+                            import threading
+                            web_thread = threading.Thread(
+                                target=self.web_dashboard.run,
+                                kwargs={"debug": False},
+                                daemon=True
+                            )
+                            web_thread.start()
+                            self.console.print("[green]✅ Web Dashboard started[/green]")
+                            self.console.print("[dim]   URL: http://localhost:18792[/dim]")
+                            self.console.print("[dim]   Open your browser to view the dashboard[/dim]")
+                        except Exception as e:
+                            self.console.print(f"[red]⚠️  Failed to start Web Dashboard: {e}[/red]")
+                            self.console.print("[dim]   Run: pip install flask flask-cors[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Web Dashboard already running[/yellow]")
+                
+                elif command == "/web-stop":
+                    # Flask doesn't have clean shutdown from outside
+                    self.console.print("[yellow]⚠️  Web Dashboard cannot be stopped gracefully[/yellow]")
+                    self.console.print("[dim]   Restart Castle Wyvern to stop Web Dashboard[/dim]")
+                    self.web_dashboard = None
+                
+                elif command == "/web-status":
+                    if self.web_dashboard:
+                        self.console.print("[green]✅ Web Dashboard is running[/green]")
+                        self.console.print("[dim]   URL: http://localhost:18792[/dim]")
+                        self.console.print("\n[bold]Dashboard Features:[/bold]")
+                        self.console.print("  • Real-time clan status")
+                        self.console.print("  • Chat interface with clan members")
+                        self.console.print("  • Node monitoring")
+                        self.console.print("  • Memory viewer")
+                        self.console.print("  • System statistics")
+                    else:
+                        self.console.print("[dim]Web Dashboard not running[/dim]")
+                        self.console.print("[dim]Run /web-start to begin[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

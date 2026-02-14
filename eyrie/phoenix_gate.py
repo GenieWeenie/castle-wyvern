@@ -9,7 +9,7 @@ import logging
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
-from error_handler import (
+from eyrie.error_handler import (
     PhoenixGateError, ErrorSeverity,
     retry_on_error, validate_input,
     zai_circuit_breaker, openai_circuit_breaker

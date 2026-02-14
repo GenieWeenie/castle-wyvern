@@ -34,6 +34,7 @@ from eyrie.web_dashboard import WebDashboard
 from eyrie.plugin_system import PluginManager
 from eyrie.monitoring import MonitoringService
 from eyrie.cli_improvements import CLIImprovements
+from eyrie.integrations import IntegrationManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -121,6 +122,9 @@ class CastleWyvernCLI:
         
         # Feature 16: CLI Improvements
         self.cli_improvements = CLIImprovements()
+        
+        # Feature 17: Integration Manager
+        self.integrations = IntegrationManager()
         
         # Initialize clan members
         self.clan = {
@@ -346,6 +350,16 @@ class CastleWyvernCLI:
 - `/config` - Run configuration wizard
 - `/export <file>` - Export all data
 - `/import <file>` - Import data
+
+## Integration Commands (Feature 17)
+- `/integrations` - Show integration status
+- `/slack-config <webhook_url>` - Configure Slack
+- `/discord-config <webhook_url>` - Configure Discord
+- `/slack-test` - Test Slack notification
+- `/discord-test` - Test Discord notification
+- `/alert <message>` - Send alert to all channels
+- `/webhook-start` - Start webhook server (port 18793)
+- `/webhook-stop` - Stop webhook server
 
 ## System Commands
 - `status` - Show full dashboard
@@ -1102,6 +1116,98 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[red]⚠️  Import failed[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /import <file.json>[/yellow]")
+                
+                # ============ Feature 17: Integration Commands ============
+                elif command == "/integrations":
+                    status = self.integrations.get_status()
+                    
+                    table = Table(title="🔗 Integration Status")
+                    table.add_column("Service", style="cyan")
+                    table.add_column("Configured")
+                    table.add_column("Status")
+                    
+                    for name, info in status.items():
+                        if "configured" in info:
+                            icon = "✅" if info["configured"] else "❌"
+                            table.add_row(name, icon, "Ready" if info["configured"] else "Not configured")
+                        elif "running" in info:
+                            icon = "🟢" if info["running"] else "🔴"
+                            table.add_row(name, "-", icon + " Running" if info["running"] else "Stopped")
+                    
+                    self.console.print(table)
+                    
+                    self.console.print("\n[dim]Configure integrations with:[/dim]")
+                    self.console.print("  /slack-config <webhook_url>")
+                    self.console.print("  /discord-config <webhook_url>")
+                
+                elif command == "/slack-config":
+                    if args:
+                        self.integrations.configure_slack(args)
+                        self.console.print("[green]✅ Slack configured[/green]")
+                        self.console.print("[dim]   Test with: /slack-test[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /slack-config <webhook_url>[/yellow]")
+                        self.console.print("[dim]   Get webhook URL from: https://api.slack.com/messaging/webhooks[/dim]")
+                
+                elif command == "/discord-config":
+                    if args:
+                        self.integrations.configure_discord(args)
+                        self.console.print("[green]✅ Discord configured[/green]")
+                        self.console.print("[dim]   Test with: /discord-test[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /discord-config <webhook_url>[/yellow]")
+                        self.console.print("[dim]   Get webhook URL from: Server Settings > Integrations > Webhooks[/dim]")
+                
+                elif command == "/slack-test":
+                    success = self.integrations.slack.send_message(
+                        "🏰 Castle Wyvern test message!",
+                        username="Castle Wyvern"
+                    )
+                    if success:
+                        self.console.print("[green]✅ Test message sent to Slack[/green]")
+                    else:
+                        self.console.print("[red]⚠️  Failed to send Slack message[/red]")
+                        self.console.print("[dim]   Check your webhook URL with /integrations[/dim]")
+                
+                elif command == "/discord-test":
+                    success = self.integrations.discord.send_message(
+                        "🏰 Castle Wyvern test message!"
+                    )
+                    if success:
+                        self.console.print("[green]✅ Test message sent to Discord[/green]")
+                    else:
+                        self.console.print("[red]⚠️  Failed to send Discord message[/red]")
+                        self.console.print("[dim]   Check your webhook URL with /integrations[/dim]")
+                
+                elif command == "/alert":
+                    if args:
+                        results = self.integrations.send_alert(
+                            "Manual Alert",
+                            args,
+                            severity="info"
+                        )
+                        
+                        self.console.print("[bold]📤 Alert sent to:[/bold]")
+                        for channel, success in results.items():
+                            icon = "✅" if success else "❌"
+                            self.console.print(f"  {icon} {channel}")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /alert <message>[/yellow]")
+                
+                elif command == "/webhook-start":
+                    if self.integrations.start_webhook_server():
+                        self.console.print("[green]✅ Webhook server started[/green]")
+                        self.console.print("[dim]   Listening on http://localhost:18793[/dim]")
+                        self.console.print("[dim]   Endpoints:[/dim]")
+                        self.console.print("[dim]     POST /webhook/alerts[/dim]")
+                        self.console.print("[dim]     POST /webhook/commands[/dim]")
+                        self.console.print("[dim]     POST /webhook/events[/dim]")
+                    else:
+                        self.console.print("[red]⚠️  Failed to start webhook server[/red]")
+                
+                elif command == "/webhook-stop":
+                    self.console.print("[yellow]⚠️  Webhook server cannot be stopped gracefully[/yellow]")
+                    self.console.print("[dim]   Restart Castle Wyvern to stop[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

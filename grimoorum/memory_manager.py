@@ -72,7 +72,11 @@ class GrimoorumV2:
     - Session isolation (conversations don't bleed)
     """
     
-    def __init__(self, storage_dir: str = 'grimoorum'):
+    def __init__(self, storage_dir: str = None):
+        # Default to grimoorum/ directory relative to this file
+        if storage_dir is None:
+            storage_dir = os.path.dirname(os.path.abspath(__file__))
+        
         self.storage_dir = storage_dir
         self.memory_file = os.path.join(storage_dir, 'clan_memory_v2.json')
         self.threads_file = os.path.join(storage_dir, 'threads.json')

@@ -32,6 +32,7 @@ from eyrie.auto_discovery import AutoDiscoveryService
 from eyrie.api_server import CastleWyvernAPI
 from eyrie.web_dashboard import WebDashboard
 from eyrie.plugin_system import PluginManager
+from eyrie.monitoring import MonitoringService
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -109,6 +110,13 @@ class CastleWyvernCLI:
         )
         # Auto-load plugins on startup
         self.plugin_manager.load_all_plugins()
+        
+        # Feature 15: Monitoring Service
+        self.monitoring = MonitoringService(
+            phoenix_gate=self.phoenix_gate,
+            grimoorum=self.grimoorum,
+            plugins=self.plugin_manager
+        )
         
         # Initialize clan members
         self.clan = {
@@ -312,6 +320,15 @@ class CastleWyvernCLI:
 - `/plugin-disable <name>` - Disable a plugin
 - `/plugin-info <name>` - Show plugin details
 - `/hooks` - List available hooks
+
+## Monitoring Commands (Feature 15)
+- `/monitor-start` - Start monitoring service
+- `/monitor-stop` - Stop monitoring service
+- `/monitor-status` - Show monitoring status
+- `/health-check` - Run health checks
+- `/alerts` - Show active alerts
+- `/metrics` - Show system metrics
+- `/prometheus` - Export Prometheus metrics
 
 ## System Commands
 - `status` - Show full dashboard
@@ -845,6 +862,104 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No hooks registered[/dim]")
+                
+                # ============ Feature 15: Monitoring Commands ============
+                elif command == "/monitor-start":
+                    if not self.monitoring._running:
+                        self.monitoring.start(interval_seconds=30)
+                        self.console.print("[green]✅ Monitoring service started[/green]")
+                        self.console.print("[dim]   Collecting metrics every 30 seconds[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Monitoring service already running[/yellow]")
+                
+                elif command == "/monitor-stop":
+                    if self.monitoring._running:
+                        self.monitoring.stop()
+                        self.console.print("[green]✅ Monitoring service stopped[/green]")
+                    else:
+                        self.console.print("[dim]Monitoring service not running[/dim]")
+                
+                elif command == "/monitor-status":
+                    status = self.monitoring.get_status()
+                    self.console.print(f"\n[bold]📊 Monitoring Status[/bold]")
+                    self.console.print(f"Running: {status['running']}")
+                    self.console.print(f"Overall Health: {status['overall_health']}")
+                    self.console.print(f"Active Alerts: {status['active_alerts']}")
+                    self.console.print(f"Total Alerts: {status['total_alerts']}")
+                    self.console.print(f"Metrics Stored: {status['metrics_stored']}")
+                    
+                    if status['health_checks']:
+                        self.console.print(f"\n[bold]Health Checks:[/bold]")
+                        for name, check in status['health_checks'].items():
+                            icon = "🟢" if check['status'] == 'healthy' else "🟡" if check['status'] == 'degraded' else "🔴"
+                            self.console.print(f"  {icon} {name}: {check['message']}")
+                
+                elif command == "/health-check":
+                    with self.console.status("[cyan]Running health checks...[/cyan]"):
+                        results = self.monitoring.health.run_all_checks()
+                    
+                    table = Table(title="🏥 Health Check Results")
+                    table.add_column("Component", style="cyan")
+                    table.add_column("Status")
+                    table.add_column("Message", style="dim")
+                    
+                    for name, status in results.items():
+                        status_color = "green" if status.status == "healthy" else "yellow" if status.status == "degraded" else "red"
+                        table.add_row(name, f"[{status_color}]{status.status}[/{status_color}]", status.message)
+                    
+                    self.console.print(table)
+                
+                elif command == "/alerts":
+                    alerts = self.monitoring.get_active_alerts()
+                    if alerts:
+                        table = Table(title="🚨 Active Alerts")
+                        table.add_column("ID", style="dim")
+                        table.add_column("Severity")
+                        table.add_column("Message")
+                        table.add_column("Time", style="dim")
+                        
+                        for alert in alerts[:10]:  # Show last 10
+                            sev_color = {
+                                "critical": "red",
+                                "error": "red",
+                                "warning": "yellow",
+                                "info": "blue"
+                            }.get(alert.severity.value, "white")
+                            
+                            table.add_row(
+                                alert.id[:20],
+                                f"[{sev_color}]{alert.severity.value}[/{sev_color}]",
+                                alert.message,
+                                alert.timestamp[11:19]
+                            )
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[green]✅ No active alerts[/green]")
+                
+                elif command == "/metrics":
+                    metrics = self.monitoring.metrics
+                    self.console.print(f"\n[bold]📈 System Metrics[/bold]\n")
+                    
+                    # Show latest values
+                    for name in ["system.cpu.percent", "system.memory.percent", "system.disk.percent"]:
+                        latest = metrics.get_latest(name)
+                        if latest:
+                            self.console.print(f"{name}: {latest.value:.1f}%")
+                    
+                    # Show stats
+                    self.console.print(f"\n[bold]Last 5 Minutes:[/bold]")
+                    for name in ["system.cpu.percent", "system.memory.percent"]:
+                        stats = metrics.get_stats(name, minutes=5)
+                        if stats:
+                            self.console.print(f"\n{name}:")
+                            self.console.print(f"  Mean: {stats.get('mean', 0):.1f}%")
+                            self.console.print(f"  Max: {stats.get('max', 0):.1f}%")
+                
+                elif command == "/prometheus":
+                    metrics_text = self.monitoring.metrics.export_prometheus()
+                    self.console.print("\n[bold]# Prometheus Metrics Export[/bold]\n")
+                    self.console.print(metrics_text)
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

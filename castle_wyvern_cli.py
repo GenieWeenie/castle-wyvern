@@ -49,6 +49,8 @@ from eyrie.docker_sandbox import DockerSandbox, SafeCodeExecutor
 from eyrie.goal_agent import GoalBasedAgent
 from eyrie.workflow_nodes import NODE_TYPES
 from eyrie.function_builder import FunctionBuilder
+from eyrie.clan_backstories import CLAN_BACKSTORIES, get_clan_backstory
+from eyrie.llama_cpp_client import LlamaCppClient, LocalLLM
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -185,6 +187,10 @@ class CastleWyvernCLI:
         
         # Function Builder (BabyAGI-inspired)
         self.function_builder = FunctionBuilder()
+        
+        # llama.cpp Client (for local LLM)
+        self.llama_client = LlamaCppClient()
+        self.local_llm = LocalLLM()
         
         # Initialize clan members
         self.clan = {
@@ -473,6 +479,14 @@ class CastleWyvernCLI:
 - `/function-packs` - List function packs
 - `/function-search <query>` - Search functions
 - `/function-show <name>` - Show function code
+
+## llama.cpp Integration (New!)
+- `/llama-status` - Check llama.cpp server status
+- `/llama-models` - List available models
+
+## Clan Backstories (CrewAI-inspired!)
+- `/backstory <member>` - Show member's backstory
+- `/personalities` - List all clan personalities
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -2162,6 +2176,65 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]❌ Function '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /function-show <name>[/yellow]")
+                
+                # ============ llama.cpp Commands ============
+                elif command == "/llama-status":
+                    status = self.local_llm.status()
+                    table = Table(title="🦙 llama.cpp Status")
+                    table.add_column("Property", style="cyan")
+                    table.add_column("Value")
+                    
+                    table.add_row("Preferred Backend", status['preferred_backend'])
+                    table.add_row("llama.cpp Available", "✅ Yes" if status['llama_cpp_available'] else "❌ No")
+                    table.add_row("Models Loaded", str(len(status['models'])))
+                    
+                    self.console.print(table)
+                    
+                    if not status['llama_cpp_available']:
+                        self.console.print("\n[yellow]To start llama.cpp server:[/yellow]")
+                        self.console.print("[dim]  llama-server -m model.gguf --port 8080[/dim]")
+                
+                elif command == "/llama-models":
+                    models = self.llama_client.get_models()
+                    if models:
+                        self.console.print("[bold]🦙 Available Models:[/bold]")
+                        for model in models:
+                            self.console.print(f"  • {model}")
+                    else:
+                        self.console.print("[dim]No models loaded. Start llama.cpp server with a model.[/dim]")
+                
+                # ============ Clan Backstories Commands ============
+                elif command == "/backstory":
+                    if args:
+                        backstory_data = get_clan_backstory(args)
+                        if backstory_data:
+                            self.console.print(f"\n[bold]📖 {args.title()} - {backstory_data['role']}[/bold]\n")
+                            self.console.print(backstory_data['backstory'])
+                            self.console.print(f"\n[bold]Personality:[/bold] {backstory_data['personality']}")
+                        else:
+                            self.console.print(f"[red]❌ Clan member '{args}' not found[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /backstory <member_name>[/yellow]")
+                        self.console.print("[dim]   Example: /backstory goliath[/dim]")
+                        self.console.print(f"[dim]   Available: {', '.join(CLAN_BACKSTORIES.keys())}[/dim]")
+                
+                elif command == "/personalities":
+                    self.console.print("[bold]🎭 Clan Personalities:[/bold]\n")
+                    
+                    table = Table()
+                    table.add_column("Member", style="cyan")
+                    table.add_column("Role", style="bright_blue")
+                    table.add_column("Personality", max_width=50)
+                    
+                    for name, data in CLAN_BACKSTORIES.items():
+                        emoji = self.clan.get(name, ClanMember(name, "👤", "Unknown", "white")).emoji
+                        table.add_row(
+                            f"{emoji} {name.title()}",
+                            data['role'],
+                            data['personality']
+                        )
+                    
+                    self.console.print(table)
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

@@ -53,6 +53,7 @@ from eyrie.clan_backstories import CLAN_BACKSTORIES, get_clan_backstory
 from eyrie.llama_cpp_client import LlamaCppClient, LocalLLM
 from eyrie.nanogpt_integration import NanoGPTTrainer, ClanModelManager
 from eyrie.knowledge_graph import KnowledgeGraph
+from eyrie.omni_parser import VisualAutomation, VisualBrowserAgent
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -200,6 +201,10 @@ class CastleWyvernCLI:
         
         # Knowledge Graph (KAG Integration)
         self.knowledge_graph = KnowledgeGraph()
+        
+        # OmniParser Visual Automation
+        self.visual_automation = VisualAutomation()
+        self.visual_browser = VisualBrowserAgent()
         
         # Initialize clan members
         self.clan = {
@@ -511,6 +516,15 @@ class CastleWyvernCLI:
 - `/kg-reason <question>` - Logical reasoning over graph
 - `/kg-extract <text>` - Extract entities from text
 - `/kg-visualize` - Show graph structure
+
+## Visual Automation (OmniParser - Experimental!)
+- `/visual-status` - Check visual automation status
+- `/visual-scan` - Analyze current screen
+- `/visual-click <target>` - Click element by description
+- `/visual-type <text> [target]` - Type text into field
+- `/visual-browser-start` - Start visual browser session
+- `/visual-browser-task <task>` - Execute visual task
+- `/visual-browser-end` - End visual browser session
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -2477,6 +2491,100 @@ plan Design a microservices architecture for an e-commerce app
                     self.console.print(f"\n[bold]Relationship Types:[/bold]")
                     for rel_type, count in stats['relation_types'].items():
                         self.console.print(f"  • {rel_type}: {count} relationships")
+                
+                # ============ Visual Automation Commands (OmniParser) ============
+                elif command == "/visual-status":
+                    status = self.visual_automation.get_status()
+                    
+                    table = Table(title="👁️ Visual Automation (OmniParser)")
+                    table.add_column("Property", style="cyan")
+                    table.add_column("Value")
+                    
+                    table.add_row("Available", "✅ Yes" if status['available'] else "❌ No")
+                    table.add_row("Screen Analyzed", "✅ Yes" if status['current_screen'] else "❌ No")
+                    table.add_row("Elements on Screen", str(status['elements_on_screen']))
+                    table.add_row("Action History", str(status['action_history']))
+                    
+                    self.console.print(table)
+                    
+                    self.console.print("\n[dim]Visual automation enables GUI control through screenshots.[/dim]")
+                    self.console.print("[dim]Start with /visual-scan to analyze the current screen.[/dim]")
+                
+                elif command == "/visual-scan":
+                    with self.console.status("[cyan]Analyzing screen with OmniParser...[/cyan]"):
+                        screen = self.visual_automation.analyze_screen()
+                    
+                    self.console.print(f"[green]✅ Screen analyzed![/green]")
+                    self.console.print(f"[dim]   Elements found: {len(screen.elements)}[/dim]")
+                    self.console.print(f"[dim]   Interactive: {len(screen.get_interactive_elements())}[/dim]")
+                    
+                    # Show summary
+                    self.console.print("\n" + self.visual_automation.get_element_summary())
+                
+                elif command == "/visual-click":
+                    if args:
+                        with self.console.status(f"[cyan]Clicking '{args}'...[/cyan]"):
+                            result = self.visual_automation.click(args)
+                        
+                        if result['success']:
+                            self.console.print(f"[green]✅ {result['message']}[/green]")
+                        else:
+                            self.console.print(f"[red]❌ {result['error']}[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /visual-click <target>[/yellow]")
+                        self.console.print("[dim]   Example: /visual-click 'submit button'[/dim]")
+                
+                elif command == "/visual-type":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        text = parts[0]
+                        target = parts[1] if len(parts) > 1 else None
+                        
+                        with self.console.status(f"[cyan]Typing text...[/cyan]"):
+                            result = self.visual_automation.type_text(text, target)
+                        
+                        if result['success']:
+                            self.console.print(f"[green]✅ {result['message']}[/green]")
+                        else:
+                            self.console.print(f"[red]❌ {result['error']}[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /visual-type <text> [target][/yellow]")
+                        self.console.print("[dim]   Example: /visual-type 'username' 'username field'[/dim]")
+                
+                elif command == "/visual-browser-start":
+                    with self.console.status("[cyan]Starting visual browser session...[/cyan]"):
+                        result = self.visual_browser.start_session()
+                    
+                    if result['success']:
+                        self.console.print(f"[green]✅ Visual browser session started![/green]")
+                        self.console.print(f"[dim]   Elements detected: {result['elements_detected']}[/dim]")
+                        self.console.print("\n" + result['summary'])
+                    else:
+                        self.console.print(f"[red]❌ Failed to start session[/red]")
+                
+                elif command == "/visual-browser-task":
+                    if args:
+                        with self.console.status(f"[cyan]Executing: {args}[/cyan]"):
+                            result = self.visual_browser.execute_task(args)
+                        
+                        if result['success']:
+                            self.console.print(f"[green]✅ Task executed![/green]")
+                            if 'message' in result:
+                                self.console.print(f"[dim]   {result['message']}[/dim]")
+                        else:
+                            self.console.print(f"[red]❌ {result.get('error', 'Task failed')}[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /visual-browser-task <task>[/yellow]")
+                        self.console.print("[dim]   Example: /visual-browser-task 'Click the login button'[/dim]")
+                
+                elif command == "/visual-browser-end":
+                    result = self.visual_browser.end_session()
+                    
+                    if result['success']:
+                        self.console.print(f"[green]✅ Visual browser session ended![/green]")
+                        self.console.print(f"[dim]   Actions performed: {result['actions_performed']}[/dim]")
+                    else:
+                        self.console.print(f"[red]❌ Failed to end session[/red]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

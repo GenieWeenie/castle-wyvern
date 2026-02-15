@@ -44,6 +44,7 @@ from eyrie.a2a_protocol import A2AIntegration
 from eyrie.workflow_builder import WorkflowManager, WorkflowExecutor
 from eyrie.enhanced_memory import EnhancedGrimoorum
 from eyrie.browser_agent import BrowserAgent
+from eyrie.clan_creator import ClanCreator
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -163,6 +164,10 @@ class CastleWyvernCLI:
         
         # Browser Agent (Competitive Research Feature)
         self.browser = BrowserAgent()
+        
+        # Clan Creator (Competitive Research Feature)
+        self.clan_creator = ClanCreator(existing_members=list(self.clan.keys()))
+        self.pending_clan_creation = None  # Store preview before confirmation
         
         # Initialize clan members
         self.clan = {
@@ -424,6 +429,11 @@ class CastleWyvernCLI:
 - `/research <topic>` - Deep research on a topic
 - `/browser-history` - Show browsing history
 - `/browser-clear` - Clear browsing history
+
+## Clan Creator (New!)
+- `/clan-create <description>` - Preview new clan member
+- `/clan-create-confirm` - Confirm and create pending member
+- `/clan-create-cancel` - Cancel pending creation
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -1782,6 +1792,72 @@ plan Design a microservices architecture for an e-commerce app
                 elif command == "/browser-clear":
                     self.browser.clear_history()
                     self.console.print("[green]✅ Browser history cleared[/green]")
+                
+                # ============ Clan Creator Commands ============
+                elif command == "/clan-create":
+                    if args:
+                        self.console.print("[cyan]🎭 Generating clan member...[/cyan]")
+                        
+                        # Update existing members list
+                        self.clan_creator.existing_members = list(self.clan.keys())
+                        
+                        # Generate preview
+                        preview = self.clan_creator.preview_creation(args)
+                        self.console.print(preview)
+                        
+                        # Store for confirmation
+                        self.pending_clan_creation = self.clan_creator.create_from_description(args)
+                        
+                        if self.pending_clan_creation:
+                            self.console.print(f"\n[cyan]Use /clan-create-confirm to add {self.pending_clan_creation.name} to the clan![/cyan]")
+                        else:
+                            self.console.print("[red]❌ Failed to generate clan member[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /clan-create <description>[/yellow]")
+                        self.console.print("[dim]   Example: /clan-create A DevOps expert who knows Kubernetes[/dim]")
+                        self.console.print("[dim]   Example: /clan-create Security specialist for penetration testing[/dim]")
+                
+                elif command == "/clan-create-confirm":
+                    if self.pending_clan_creation:
+                        template = self.pending_clan_creation
+                        
+                        # Create the clan member
+                        new_member = ClanMember(
+                            name=template.name,
+                            emoji=template.emoji,
+                            role=template.role,
+                            color=template.color
+                        )
+                        
+                        # Add to clan (use lowercase name as key)
+                        member_key = template.name.lower()
+                        self.clan[member_key] = new_member
+                        
+                        self.console.print(f"\n[green]✅ {template.emoji} {template.name} has joined the clan![/green]")
+                        self.console.print(f"[dim]   Role: {template.role}[/dim]")
+                        self.console.print(f"[dim]   Specialty: {template.specialty.title()}[/dim]")
+                        self.console.print("\n[bold]Example tasks:[/bold]")
+                        for task in template.example_tasks:
+                            self.console.print(f"  • {task}")
+                        
+                        # Clear pending
+                        self.pending_clan_creation = None
+                        
+                        # Update clan creator's list
+                        self.clan_creator.existing_members = list(self.clan.keys())
+                        
+                        self.console.print(f"\n[cyan]The clan now has {len(self.clan)} members! 🏰[/cyan]")
+                    else:
+                        self.console.print("[yellow]⚠️  No pending clan member creation[/yellow]")
+                        self.console.print("[dim]   Use /clan-create first to preview a new member[/dim]")
+                
+                elif command == "/clan-create-cancel":
+                    if self.pending_clan_creation:
+                        name = self.pending_clan_creation.name
+                        self.pending_clan_creation = None
+                        self.console.print(f"[dim]❌ Cancelled creation of {name}[/dim]")
+                    else:
+                        self.console.print("[dim]No pending creation to cancel[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

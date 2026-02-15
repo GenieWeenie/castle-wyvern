@@ -65,10 +65,9 @@ tmp/
 temp/
 *.tmp
 
-# Images (keep locally, don't commit)
-*.png
+# Images (keep locally, don't commit) - EXCEPT brand image
 *.jpg
 *.jpeg
 *.gif
 *.bmp
-*.svg
+# *.png - Brand Image.png is allowed for README display

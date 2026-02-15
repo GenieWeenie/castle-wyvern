@@ -62,6 +62,9 @@ from eyrie.visual_automation_utils import (
     SessionRecorder, VisualMacro, ElementHighlighter, VisualDebugger
 )
 from eyrie.agent_coordination import ClanCoordinationManager
+from eyrie.agent_coordination_utils import (
+    CoordinationAnalytics, TeamOptimizer, CoordinationReport
+)
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -223,6 +226,9 @@ class CastleWyvernCLI:
         
         # Agent Coordination Loops
         self.coordination = ClanCoordinationManager()
+        self.coord_analytics = CoordinationAnalytics(self.coordination.coordination)
+        self.coord_optimizer = TeamOptimizer(self.coordination.coordination)
+        self.coord_report = CoordinationReport(self.coordination.coordination)
         
         # Initialize clan members
         self.clan = {
@@ -557,6 +563,10 @@ class CastleWyvernCLI:
 - `/coord-run <description> [req1,req2,...]` - Run coordination loop
 - `/coord-agents` - List all agents with stats
 - `/coord-agent <name>` - Show specific agent stats
+- `/coord-analytics` - Show coordination analytics
+- `/coord-optimize <task> [reqs]` - Get optimized team
+- `/coord-report [file]` - Generate comprehensive report
+- `/coord-compare <team1> <team2>` - Compare two teams
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -2856,6 +2866,77 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]❌ Agent '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /coord-agent <agent_name>[/yellow]")
+                
+                elif command == "/coord-analytics":
+                    with self.console.status("[cyan]Calculating analytics...[/cyan]"):
+                        metrics = self.coord_analytics.calculate_metrics()
+                    
+                    self.console.print("[bold]📊 Coordination Analytics[/bold]\n")
+                    
+                    self.console.print(f"Total Tasks: {metrics.total_tasks}")
+                    self.console.print(f"Success Rate: {metrics.successful_tasks / metrics.total_tasks * 100:.1f}%" if metrics.total_tasks > 0 else "N/A")
+                    self.console.print(f"Avg Team Size: {metrics.avg_team_size:.2f}")
+                    self.console.print(f"Avg Execution Time: {metrics.avg_execution_time:.2f}s\n")
+                    
+                    if metrics.best_performing_agents:
+                        self.console.print("[bold]Top Performing Agents:[/bold]")
+                        for name, score in metrics.best_performing_agents:
+                            self.console.print(f"  • {name}: {score:.2f}")
+                    
+                    if metrics.most_collaborative_pairs:
+                        self.console.print("\n[bold]Most Collaborative Pairs:[/bold]")
+                        for (a1, a2), score in metrics.most_collaborative_pairs:
+                            name1 = self.coordination.coordination.agents[a1].name if a1 in self.coordination.coordination.agents else a1
+                            name2 = self.coordination.coordination.agents[a2].name if a2 in self.coordination.coordination.agents else a2
+                            self.console.print(f"  • {name1} + {name2}: {score:.2f}")
+                
+                elif command == "/coord-optimize":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        task = parts[0]
+                        requirements = parts[1].split(',') if len(parts) > 1 else ["general"]
+                        
+                        with self.console.status("[cyan]Optimizing team...[/cyan]"):
+                            optimal_team = self.coord_optimizer.optimize_team(requirements)
+                        
+                        self.console.print(f"[green]✅ Optimized team for '{task}':[/green]")
+                        for agent_id in optimal_team:
+                            agent = self.coordination.coordination.agents[agent_id]
+                            self.console.print(f"  • {agent.name} ({agent.specialization})")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /coord-optimize <task> [req1,req2,...][/yellow]")
+                
+                elif command == "/coord-report":
+                    output_file = args if args else "coordination_report.md"
+                    
+                    with self.console.status("[cyan]Generating report...[/cyan]"):
+                        try:
+                            report = self.coord_report.generate_report()
+                            Path(output_file).write_text(report)
+                            self.console.print(f"[green]✅ Report generated: {output_file}[/green]")
+                        except Exception as e:
+                            self.console.print(f"[red]❌ Report generation failed: {str(e)}[/red]")
+                
+                elif command == "/coord-compare":
+                    if args:
+                        parts = args.split(maxsplit=2)
+                        if len(parts) >= 3:
+                            team1 = parts[0].split(',')
+                            team2 = parts[1].split(',')
+                            requirements = parts[2].split(',') if len(parts) > 2 else ["general"]
+                            
+                            comparison = self.coord_optimizer.compare_teams(team1, team2, requirements)
+                            
+                            self.console.print("[bold]📊 Team Comparison[/bold]\n")
+                            self.console.print(f"Team 1: {', '.join(comparison['team1']['agents'])} (Score: {comparison['team1']['score']:.2f})")
+                            self.console.print(f"Team 2: {', '.join(comparison['team2']['agents'])} (Score: {comparison['team2']['score']:.2f})")
+                            self.console.print(f"\nWinner: {comparison['winner']}")
+                            self.console.print(f"Difference: {comparison['difference']:.2f}")
+                        else:
+                            self.console.print("[yellow]⚠️  Usage: /coord-compare <team1_agents> <team2_agents> [reqs][/yellow]")
+                            self.console.print("[dim]   Example: /coord-compare lexington,xanatos brooklyn,hudson coding,security[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /coord-compare <team1> <team2> [requirements][/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

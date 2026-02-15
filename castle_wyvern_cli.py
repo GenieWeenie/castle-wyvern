@@ -66,6 +66,8 @@ from eyrie.agent_coordination_utils import (
     CoordinationAnalytics, TeamOptimizer, CoordinationReport
 )
 from eyrie.cli_enhancements import EnhancedPrompt, PROMPT_TOOLKIT_AVAILABLE
+from eyrie.logging_config import setup_logging, get_logger, set_debug_mode, log_audit
+from eyrie.error_handler import CastleWyvernError, ErrorSeverity
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -120,6 +122,11 @@ class CastleWyvernCLI:
     
     def __init__(self):
         self.console = Console()
+        
+        # Setup structured logging
+        self.logger = setup_logging(debug_mode=False)
+        self.logger.get_logger().info("Castle Wyvern CLI starting up...")
+        
         self.phoenix_gate = PhoenixGate()
         self.intent_router = IntentRouter(use_ai_classification=True)
         self.grimoorum = GrimoorumV2()
@@ -613,6 +620,9 @@ class CastleWyvernCLI:
 - `members` - List all clan members
 - `history` - Show conversation history
 - `memory` - Show memory system statistics
+- `/debug-on` - Enable debug mode (verbose logging)
+- `/debug-off` - Disable debug mode  
+- `/logs [type]` - View recent logs (error, audit, api)
 - `help` - Show this help
 - `quit` / `exit` - Leave Castle Wyvern
 
@@ -738,6 +748,41 @@ plan Design a microservices architecture for an e-commerce app
                 self.console.print(f"  {agent}: {count}")
         self.console.print()
     
+    def show_logs(self, log_type: str = None):
+        """Show recent log entries."""
+        from pathlib import Path
+        
+        log_dir = Path("~/.castle_wyvern/logs").expanduser()
+        
+        if not log_dir.exists():
+            self.console.print("[dim]No logs found. Run some commands first![/dim]")
+            return
+        
+        # Determine which log file to show
+        log_files = {
+            'error': log_dir / 'errors.log',
+            'audit': log_dir / 'audit.log',
+            'api': log_dir / 'api.log',
+            None: log_dir / 'castle_wyvern.log'
+        }
+        
+        log_file = log_files.get(log_type, log_files[None])
+        
+        if not log_file.exists():
+            self.console.print(f"[yellow]⚠️  {log_type or 'main'} log file not found[/yellow]")
+            return
+        
+        # Read last 20 lines
+        try:
+            lines = log_file.read_text().strip().split('\n')
+            recent_lines = lines[-20:] if len(lines) > 20 else lines
+            
+            self.console.print(f"[bold]📋 Recent {log_type or 'main'} log entries:[/bold]\n")
+            for line in recent_lines:
+                self.console.print(f"[dim]{line}[/dim]")
+        except Exception as e:
+            self.console.print(f"[red]❌ Error reading logs: {str(e)}[/red]")
+    
     def run(self):
         """Main CLI loop."""
         self.console.clear()
@@ -791,6 +836,18 @@ plan Design a microservices architecture for an e-commerce app
                 
                 elif command == "memory":
                     self.show_memory_stats()
+                
+                elif command == "/debug-on":
+                    set_debug_mode(True)
+                    self.console.print("[green]✅ Debug mode enabled - verbose logging active[/green]")
+                    self.console.print("[dim]   Check logs at ~/.castle_wyvern/logs/[/dim]")
+                
+                elif command == "/debug-off":
+                    set_debug_mode(False)
+                    self.console.print("[yellow]⚠️  Debug mode disabled[/yellow]")
+                
+                elif command == "/logs":
+                    self.show_logs(args)
                 
                 elif command == "/spec":
                     if args:
@@ -2972,7 +3029,20 @@ plan Design a microservices architecture for an e-commerce app
                 self.enhanced_prompt.save_history()
                 break
             except Exception as e:
-                self.console.print(f"\n[red]⚠️  Error: {str(e)}[/red]\n")
+                error_msg = str(e)
+                self.console.print(f"\n[red]⚠️  Error: {error_msg}[/red]")
+                
+                # Provide recovery suggestions
+                if "Connection" in error_msg or "connection" in error_msg:
+                    self.console.print("[dim]💡 Try: /api-start to start the API server[/dim]")
+                elif "Permission" in error_msg or "permission" in error_msg:
+                    self.console.print("[dim]💡 Check file permissions or run with appropriate access[/dim]")
+                elif "Module" in error_msg or "module" in error_msg:
+                    self.console.print("[dim]💡 Try: pip install -r requirements.txt[/dim]")
+                elif "Memory" in error_msg or "memory" in error_msg:
+                    self.console.print("[dim]💡 Try: /memory-consolidate to free up memory[/dim]")
+                
+                self.console.print()
 
 
 def main():

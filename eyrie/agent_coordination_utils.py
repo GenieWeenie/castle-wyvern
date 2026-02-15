@@ -246,13 +246,14 @@ class CoordinationReport:
         """Generate comprehensive markdown report."""
         metrics = self.analytics.calculate_metrics()
         
+        success_rate = metrics.successful_tasks / metrics.total_tasks * 100 if metrics.total_tasks > 0 else 0
         report = f"""# Agent Coordination Report
 Generated: {time.strftime('%Y-%m-%d %H:%M')}
 
 ## Overview
 
 - **Total Tasks**: {metrics.total_tasks}
-- **Success Rate**: {metrics.successful_tasks / metrics.total_tasks * 100:.1f}% if metrics.total_tasks > 0 else 0}%
+- **Success Rate**: {success_rate:.1f}%
 - **Average Team Size**: {metrics.avg_team_size:.2f}
 - **Average Execution Time**: {metrics.avg_execution_time:.2f}s
 

@@ -10,7 +10,7 @@ import socket
 import threading
 import time
 import json
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
@@ -52,8 +52,8 @@ class CastleWyvernListener:
     
     def __init__(self, on_node_discovered: Optional[Callable] = None, 
                  on_node_removed: Optional[Callable] = None):
-        self.zeroconf: Optional[Zeroconf] = None
-        self.browser: Optional[ServiceBrowser] = None
+        self.zeroconf: Optional[Any] = None
+        self.browser: Optional[Any] = None
         self.discovered_nodes: Dict[str, DiscoveredNode] = {}
         self.on_node_discovered = on_node_discovered
         self.on_node_removed = on_node_removed
@@ -89,15 +89,15 @@ class CastleWyvernListener:
             self.zeroconf.close()
         print("[Auto-Discovery] Stopped")
     
-    def _on_service_state_change(self, zeroconf: Zeroconf, service_type: str, 
-                                  name: str, state_change: ServiceStateChange):
+    def _on_service_state_change(self, zeroconf: Any, service_type: str, 
+                                  name: str, state_change: Any):
         """Handle service state changes."""
         if state_change is ServiceStateChange.Added:
             self._add_service(zeroconf, service_type, name)
         elif state_change is ServiceStateChange.Removed:
             self._remove_service(name)
     
-    def _add_service(self, zeroconf: Zeroconf, service_type: str, name: str):
+    def _add_service(self, zeroconf: Any, service_type: str, name: str):
         """Process a newly discovered service."""
         try:
             info = zeroconf.get_service_info(service_type, name)
@@ -174,8 +174,8 @@ class AutoDiscoveryService:
         self.node_id = node_id
         self.port = port
         self.capabilities = capabilities or ["cpu"]
-        self.zeroconf: Optional[Zeroconf] = None
-        self.service_info: Optional[ServiceInfo] = None
+        self.zeroconf: Optional[Any] = None
+        self.service_info: Optional[Any] = None
         self.listener = CastleWyvernListener()
         self._registered = False
         

@@ -26,6 +26,7 @@ Castle Wyvern features a council of specialized AI agents, each with unique pers
 | 🌉 **Elisa** | Bridge | Human context, ethics, legal |
 | 🎭 **Xanatos** | Red Team | Adversarial testing, vulnerabilities |
 | 🔥 **Demona** | Failsafe | Error prediction, worst-case scenarios |
+| 🌐 **Jade** | Web Surfer | Autonomous web browsing, research |
 
 ---
 
@@ -288,6 +289,217 @@ Semantic Search: "Python code" → finds "Flask web framework",
 
 ---
 
+## 🌐 Browser Agent (NEW!)
+
+Castle Wyvern now has **autonomous web browsing** capabilities!
+
+### Meet Jade 🌐
+Jade is the newest clan member — a web research specialist who can:
+- **Search the web** using DuckDuckGo (no API key needed)
+- **Fetch webpages** and extract readable content
+- **Deep research** — search + fetch multiple sources
+- **Track browsing history**
+
+### CLI Commands
+```bash
+# Search the web
+/search Python tutorials
+
+# Fetch a specific page
+/browse https://docs.python.org
+
+# Deep research on a topic
+/research machine learning basics
+
+# View browsing history
+/browser-history
+```
+
+### Example
+```
+/search latest Python release
+🔍 Search Results: 'latest Python release'
+  1. Python 3.13 Released
+  2. What's New in Python 3.13
+  3. Python Release Schedule
+
+/browse https://python.org/downloads
+🌐 Python Releases for macOS
+   Latest: Python 3.13.0
+   ...
+```
+
+---
+
+## 🎭 Natural Language Clan Creation (NEW!)
+
+Create new clan members by **describing them in plain English**!
+
+### How It Works
+```bash
+/clan-create "A DevOps expert who knows Kubernetes and AWS"
+```
+
+Castle Wyvern will:
+1. Detect specialty (devops, security, data, frontend, etc.)
+2. Generate appropriate name (from themed pools)
+3. Assign matching emoji and color
+4. Create system prompt with expertise
+5. Show preview for confirmation
+
+### Example Creation
+```
+/clan-create "Security specialist for penetration testing"
+
+🎭 NEW CLAN MEMBER PREVIEW
+═══════════════════════════
+Name:     Cipher
+Emoji:    🔒
+Role:     Security Specialist
+Specialty: Security
+
+System Prompt:
+You are Cipher, a cybersecurity specialist...
+
+Type /clan-create-confirm to create this member!
+```
+
+### Supported Specialties
+- **DevOps** ☁️ — Kubernetes, Docker, AWS, Terraform
+- **Security** 🔒 — Pentesting, vulnerabilities, compliance
+- **Data** 📊 — SQL, analytics, visualization
+- **Frontend** 🎨 — React, CSS, UI/UX
+- **Backend** ⚙️ — APIs, databases, architecture
+- **Mobile** 📱 — iOS, Android, cross-platform
+- **AI** 🧠 — Machine learning, LLMs, models
+
+---
+
+## 🐳 Docker Sandbox (NEW!)
+
+**Secure code execution** in isolated Docker containers!
+
+### Safety Features
+- 🔒 **Isolated containers** — Code runs in its own environment
+- 🔒 **Read-only filesystem** — Can't modify container
+- 🔒 **Network isolation** — Optional (can enable for web requests)
+- 🔒 **Resource limits** — CPU and memory constraints
+- 🔒 **Auto-cleanup** — Containers removed after execution
+- 🔒 **Time limits** — Prevents infinite loops
+
+### Supported Languages
+- Python (3.11)
+- JavaScript/Node (18)
+- Bash (Alpine)
+- Go (1.21)
+- Rust (1.70)
+- Java (OpenJDK 17)
+
+### CLI Commands
+```bash
+# Check Docker status
+/sandbox-status
+
+# Execute Python code
+/sandbox-exec "print('Hello World')"
+
+# Switch language
+/sandbox-lang javascript
+/sandbox-exec "console.log('Hello from Node')"
+
+# List running containers
+/sandbox-list
+
+# Clean up all containers
+/sandbox-cleanup
+```
+
+### Security Note
+Without Docker installed, code execution is **disabled** for security. Install Docker to enable sandbox execution.
+
+---
+
+## 🎯 Goal-Based Agent (NEW!)
+
+Give **high-level goals**, Castle Wyvern **plans and executes autonomously**!
+
+### The Difference
+| Traditional | Goal-Based |
+|-------------|------------|
+| `/code "Write a function"` | `/goal "Build a REST API for a todo app"` |
+| One task, one agent | Multiple tasks, multiple agents |
+| You break down work | AI breaks down work |
+
+### How It Works
+1. **Analyze** — Brooklyn analyzes the goal
+2. **Plan** — Creates subtasks with dependencies
+3. **Assign** — Routes to appropriate clan members
+4. **Execute** — Runs tasks sequentially/parallel
+5. **Report** — Shows completion summary
+
+### CLI Commands
+```bash
+# Create a goal
+/goal Build a REST API for a todo app
+
+# Execute autonomously
+/goal-execute <goal_id>
+
+# Check progress
+/goal-status <goal_id>
+
+# List all goals
+/goal-list
+```
+
+### Goal Types Auto-Detected
+- **API Projects** — Design → Schema → Implement → Secure → Test
+- **Web Projects** — Design → HTML → CSS → JS → Review
+- **Scripts** — Plan → Implement → Error handling → Security
+- **Research** — Scope → Gather → Analyze → Summarize
+
+---
+
+## 🔧 Extended Workflow Nodes (NEW!)
+
+Additional node types for the **Visual Workflow Builder**!
+
+### New Node Types
+| Node | Purpose |
+|------|---------|
+| **HTTP** | Make API requests to external services |
+| **Condition** | Branch workflow based on logic |
+| **Loop** | Iterate over collections |
+| **Delay** | Pause execution for N seconds |
+| **Transform** | Data mapping and transformation |
+| **Variable** | Store and retrieve workflow variables |
+
+### HTTP Node Example
+```json
+{
+  "type": "http",
+  "config": {
+    "method": "GET",
+    "url": "https://api.github.com/users/{username}",
+    "headers": {"Authorization": "Bearer {token}"}
+  }
+}
+```
+
+### Condition Node Example
+```json
+{
+  "type": "condition",
+  "config": {
+    "condition": "input.status_code == 200",
+    "true_output": "success_branch",
+    "false_output": "error_branch"
+  }
+}
+```
+
+---
+
 ## 🔌 MCP (Model Context Protocol)
 
 Castle Wyvern now implements Microsoft's **Model Context Protocol** — the emerging standard for AI agent interoperability!
@@ -319,19 +531,28 @@ Then configure your MCP client to connect to Castle Wyvern!
 
 ## 🚀 Project Status
 
-**🎉 ALL 21 FEATURES COMPLETE! 🎉**
+**🎉 30 FEATURES COMPLETE! 🎉**
 
-| Phase | Features | Status |
-|-------|----------|--------|
+| Category | Features | Status |
+|----------|----------|--------|
 | Phase 1 | 4/4 | ✅ 100% |
 | Phase 2 | 4/4 | ✅ 100% |
 | Phase 3 | 5/5 | ✅ 100% |
-| Phase 4 | 5/5 | ✅ 100% |
-| Stretch | 3/3 | ✅ 100% |
-| **TOTAL** | **21/21** | **✅ 100%** |
-| **Protocols** | MCP + A2A | **✅ Done** |
-| **Workflow Builder** | Visual Editor | **✅ Done** |
-| **Enhanced Memory** | Vector + Semantic | **✅ Done** |
+| Phase 4 | 8/8 | ✅ 100% |
+| **Research Improvements** | **4/5** | ✅ **Done** |
+| **Competitive Features** | **5/5** | ✅ **Done** |
+| **TOTAL** | **30/30** | **✅ 100%** |
+
+### Feature Categories
+- ✅ **Core** — Multi-agent routing, memory, workflows
+- ✅ **Distribution** — Multi-node, auto-discovery
+- ✅ **Interfaces** — REST API, Web Dashboard, CLI
+- ✅ **Integrations** — Slack, Discord, Email, Webhooks
+- ✅ **Protocols** — MCP, A2A
+- ✅ **Advanced** — Visual workflows, semantic memory
+- ✅ **Research** — Browser agent, clan creation, Docker sandbox, goals, extended nodes
+
+**41 commits on GitHub!**
 
 ## 🛠️ Tech Stack
 
@@ -403,6 +624,12 @@ MIT License — see LICENSE for details.
 See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
 
 **Recent Commits:**
+- `7b13a9e` 🎯 Add Goal-Based Agent + Extended Workflow Nodes (Features #4 & #5)
+- `b14712a` 🐳 Add Docker Sandbox - Secure code execution in containers
+- `7588f22` 🎭 Add Natural Language Clan Creation - Create members by describing them
+- `88b0259` 🌐 Add Browser Agent - Autonomous web browsing and research
+- `04c1fff` 📝 Final Polish - Configuration docs, tests, dependencies
+- `b65e879` 📚 Update README with Enhanced Memory documentation
 - `85ec49e` 🧠 Add Enhanced Memory - Vector embeddings + semantic search!
 - `c86f837` 🎨 Add Visual Workflow Builder - Drag-and-drop BMAD workflow editor!
 - `f269df9` 🔗 Add A2A Protocol Support - Inter-framework agent communication!

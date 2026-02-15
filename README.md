@@ -198,6 +198,7 @@ python bmad/commands/product_brief.py "build AI feature"
 
 ### Post-Release Enhancements
 - ✅ **MCP Protocol Support** - Model Context Protocol server for integration with Claude Desktop, Cursor, and other MCP clients
+- ✅ **A2A Protocol Support** - Agent-to-Agent protocol for communicating with other agent frameworks
 
 ---
 
@@ -242,6 +243,7 @@ Then configure your MCP client to connect to Castle Wyvern!
 | Phase 4 | 5/5 | ✅ 100% |
 | Stretch | 3/3 | ✅ 100% |
 | **TOTAL** | **21/21** | **✅ 100%** |
+| **Protocols** | MCP + A2A | **✅ Done** |
 
 ## 🛠️ Tech Stack
 
@@ -253,6 +255,48 @@ Then configure your MCP client to connect to Castle Wyvern!
 - **Testing:** pytest
 - **Memory:** JSON-based Grimoorum
 - **Routing:** Hybrid keyword + AI classification
+- **Protocols:** MCP, A2A
+
+---
+
+## 🔗 A2A (Agent-to-Agent Protocol)
+
+Castle Wyvern implements Google's **Agent-to-Agent Protocol** — enabling communication with other agent frameworks!
+
+### What This Means
+Castle Wyvern can now:
+- **Talk to CrewAI agents** - Delegate tasks to CrewAI agents
+- **Collaborate with LangGraph** - Integrate with LangGraph workflows
+- **Form agent swarms** - Create multi-framework agent networks
+- **Be discovered** - Other A2A agents can find and use Castle Wyvern
+
+### A2A Server Features
+- **Agent Discovery** - `/.well-known/agent.json` endpoint
+- **Task Management** - Create, monitor, cancel tasks
+- **Streaming Support** - Real-time response streaming
+- **5 Exposed Skills**:
+  - Strategic Leadership (Goliath)
+  - Technical Implementation (Lexington)
+  - Architecture Planning (Brooklyn)
+  - Security Review (Xanatos)
+  - Documentation (Broadway)
+
+### Quick Start
+```bash
+# Start A2A server
+/a2a-start
+
+# Discover other A2A agents
+/a2a-discover http://localhost:8080 http://localhost:9090
+
+# Delegate task to another agent
+/a2a-delegate crew-ai-agent "Analyze this codebase"
+```
+
+### A2A + MCP = Ecosystem Ready
+- **MCP** connects Castle Wyvern to clients (Claude, Cursor)
+- **A2A** connects Castle Wyvern to other agents (CrewAI, LangGraph)
+- Together: Full ecosystem interoperability!
 
 ---
 
@@ -271,8 +315,8 @@ MIT License — see LICENSE for details.
 See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
 
 **Recent Commits:**
+- `f269df9` 🔗 Add A2A Protocol Support - Inter-framework agent communication!
+- `825b75a` 🔌 Add MCP Protocol Support - Microsoft Model Context Protocol
 - `8361557` 🎉 ALL 21 FEATURES COMPLETE! (Features 19-21 - Stretch Goals)
 - `5c6b9fd` Phase 4 COMPLETE! (Feature 18 - Security Enhancements)
 - `5a221ab` Phase 4: Security Enhancements (Feature 18)
-- `a4ff9e7` Phase 4: Integration APIs (Feature 17)
-- `d8f83a5` Phase 4: CLI Improvements (Feature 16)

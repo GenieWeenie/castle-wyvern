@@ -42,6 +42,7 @@ from eyrie.documentation import DocumentationGenerator
 from eyrie.mcp_server import CastleWyvernMCPServer
 from eyrie.a2a_protocol import A2AIntegration
 from eyrie.workflow_builder import WorkflowManager, WorkflowExecutor
+from eyrie.enhanced_memory import EnhancedGrimoorum
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -99,6 +100,10 @@ class CastleWyvernCLI:
         self.phoenix_gate = PhoenixGate()
         self.intent_router = IntentRouter(use_ai_classification=True)
         self.grimoorum = GrimoorumV2()
+        
+        # Enhanced Memory (Improvement #4)
+        self.enhanced_memory = EnhancedGrimoorum(self.grimoorum)
+        
         self.bmad = BMADWorkflow(self.console, self.phoenix_gate, self.grimoorum)
         self.documents = DocumentIngestion()
         self.nodes = NodeManager()
@@ -400,6 +405,13 @@ class CastleWyvernCLI:
 - `/apikey-revoke <key>` - Revoke API key
 - `/security-scan` - Run security scan
 - `/intrusion-check` - Check for intrusions
+
+## Enhanced Memory (Improvement #4)
+- `/memory-add <content>` - Add memory with embedding
+- `/memory-search <query>` - Semantic search
+- `/memory-context <query>` - Get context for conversation
+- `/memory-stats` - Show memory statistics
+- `/memory-consolidate` - Consolidate old memories
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -1610,6 +1622,72 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[red]⚠️  A2A not initialized. Start with /a2a-start[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /a2a-delegate <agent_name> <message>[/yellow]")
+                
+                # ============ Enhanced Memory Commands ============
+                elif command == "/memory-add":
+                    if args:
+                        mem_id = self.enhanced_memory.add(
+                            content=args,
+                            importance=4
+                        )
+                        self.console.print(f"[green]✅ Memory added with embedding[/green]")
+                        self.console.print(f"[dim]   ID: {mem_id[:16]}...[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /memory-add <content>[/yellow]")
+                
+                elif command == "/memory-search":
+                    if args:
+                        results = self.enhanced_memory.search(args, use_semantic=True)
+                        if results:
+                            table = Table(title=f"🧠 Semantic Search: '{args}'")
+                            table.add_column("Memory", style="cyan", max_width=60)
+                            table.add_column("Similarity")
+                            
+                            for r in results:
+                                sim_pct = f"{r['similarity']*100:.1f}%"
+                                table.add_row(r['content'][:80], sim_pct)
+                            
+                            self.console.print(table)
+                        else:
+                            self.console.print("[dim]No similar memories found[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /memory-search <query>[/yellow]")
+                
+                elif command == "/memory-context":
+                    if args:
+                        context = self.enhanced_memory.get_context(args)
+                        if context:
+                            self.console.print(f"[bold]🧠 Context for:[/bold] {args}\n")
+                            self.console.print(context)
+                        else:
+                            self.console.print("[dim]No relevant context found[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /memory-context <query>[/yellow]")
+                
+                elif command == "/memory-stats":
+                    stats = self.enhanced_memory.get_stats()
+                    table = Table(title="🧠 Enhanced Memory Statistics")
+                    table.add_column("Metric", style="cyan")
+                    table.add_column("Value")
+                    
+                    vector_stats = stats.get('vector_memory', {})
+                    table.add_row("Total Memories", str(vector_stats.get('total_memories', 0)))
+                    table.add_row("Vector Dimension", str(vector_stats.get('dimension', 0)))
+                    table.add_row("High Importance", str(vector_stats.get('high_importance', 0)))
+                    table.add_row("Total Accesses", str(vector_stats.get('total_accesses', 0)))
+                    table.add_row("Consolidated", str(vector_stats.get('consolidated', 0)))
+                    
+                    self.console.print(table)
+                    self.console.print("[dim]Enhanced with vector embeddings for semantic search[/dim]")
+                
+                elif command == "/memory-consolidate":
+                    with self.console.status("[cyan]Consolidating old memories...[/cyan]"):
+                        consolidated = self.enhanced_memory.vector_store.consolidate_memories()
+                    
+                    if consolidated > 0:
+                        self.console.print(f"[green]✅ Consolidated {consolidated} memories[/green]")
+                    else:
+                        self.console.print("[dim]No memories needed consolidation[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

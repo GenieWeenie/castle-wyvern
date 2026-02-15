@@ -14,6 +14,12 @@ flask-cors>=4.0.0
 # Feature 15: Advanced Monitoring
 psutil>=5.9.0
 
+# Feature 19: Advanced AI
+numpy>=1.24.0
+
+# Feature 20: A2A Protocol
+aiohttp>=3.9.0
+
 # Optional: For local LLM
 # ollama>=0.1.0
 
@@ -22,7 +28,7 @@ psutil>=5.9.0
 # chromadb>=0.4.0
 
 # Development
-# pytest>=7.4.0
+pytest>=7.4.0
 # pytest-cov>=4.1.0
 # black>=23.0.0
 # flake8>=6.0.0

@@ -202,6 +202,47 @@ python bmad/commands/product_brief.py "build AI feature"
 
 ---
 
+## 🎨 Visual Workflow Builder
+
+Castle Wyvern includes a **drag-and-drop workflow editor** for creating BMAD workflows visually!
+
+### Features
+- **Visual Editor** - Drag and drop nodes to design workflows
+- **7 Node Types** - Start, End, Clan Member, BMAD Phase, Decision, Webhook, Delay
+- **3 Templates** - Pre-built workflows to get started quickly
+- **Live Execution** - Run workflows directly from the editor
+- **Import/Export** - Share workflows as JSON
+
+### Built-in Templates
+| Template | Description | Nodes |
+|----------|-------------|-------|
+| **BMAD Full** | Complete Build-Measure-Analyze-Deploy | 6 nodes |
+| **Code Review** | Multi-agent parallel review | 7 nodes |
+| **Security Audit** | Comprehensive security workflow | 6 nodes |
+
+### Quick Start
+```bash
+# Open the workflow builder
+/workflow-open
+
+# Or create from template
+/workflow-template bmad_full
+/workflow-template code_review
+/workflow-template security_audit
+
+# List workflows
+/workflow-list
+
+# Execute a workflow
+/workflow-run <workflow_id>
+```
+
+### Access
+- **URL**: http://localhost:18792/workflows (after `/web-start`)
+- **Features**: Drag-and-drop, node palette, templates, execution
+
+---
+
 ## 🔌 MCP (Model Context Protocol)
 
 Castle Wyvern now implements Microsoft's **Model Context Protocol** — the emerging standard for AI agent interoperability!
@@ -244,6 +285,7 @@ Then configure your MCP client to connect to Castle Wyvern!
 | Stretch | 3/3 | ✅ 100% |
 | **TOTAL** | **21/21** | **✅ 100%** |
 | **Protocols** | MCP + A2A | **✅ Done** |
+| **Workflow Builder** | Visual Editor | **✅ Done** |
 
 ## 🛠️ Tech Stack
 
@@ -315,6 +357,7 @@ MIT License — see LICENSE for details.
 See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
 
 **Recent Commits:**
+- `c86f837` 🎨 Add Visual Workflow Builder - Drag-and-drop BMAD workflow editor!
 - `f269df9` 🔗 Add A2A Protocol Support - Inter-framework agent communication!
 - `825b75a` 🔌 Add MCP Protocol Support - Microsoft Model Context Protocol
 - `8361557` 🎉 ALL 21 FEATURES COMPLETE! (Features 19-21 - Stretch Goals)

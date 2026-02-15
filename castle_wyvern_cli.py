@@ -58,6 +58,9 @@ from eyrie.knowledge_graph_utils import (
     QueryEngine, KnowledgeGraphExporter
 )
 from eyrie.omni_parser import VisualAutomation, VisualBrowserAgent
+from eyrie.visual_automation_utils import (
+    SessionRecorder, VisualMacro, ElementHighlighter, VisualDebugger
+)
 from eyrie.agent_coordination import ClanCoordinationManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
@@ -214,6 +217,9 @@ class CastleWyvernCLI:
         # OmniParser Visual Automation
         self.visual_automation = VisualAutomation()
         self.visual_browser = VisualBrowserAgent()
+        self.visual_macro = VisualMacro(self.visual_automation)
+        self.visual_debugger = VisualDebugger(self.visual_automation)
+        self.session_recorder = SessionRecorder()
         
         # Agent Coordination Loops
         self.coordination = ClanCoordinationManager()
@@ -540,6 +546,10 @@ class CastleWyvernCLI:
 - `/visual-browser-start` - Start visual browser session
 - `/visual-browser-task <task>` - Execute visual task
 - `/visual-browser-end` - End visual browser session
+- `/visual-macro-login <user> <pass>` - Execute login macro
+- `/visual-debug <target>` - Debug click on target
+- `/visual-sessions` - List recorded sessions
+- `/visual-replay <session_id>` - Replay recorded session
 
 ## Agent Coordination (Experimental!)
 - `/coord-status` - Show coordination system status
@@ -2690,6 +2700,92 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[dim]   Actions performed: {result['actions_performed']}[/dim]")
                     else:
                         self.console.print(f"[red]❌ Failed to end session[/red]")
+                
+                # ============ Enhanced Visual Automation Commands ============
+                elif command == "/visual-macro-login":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        if len(parts) >= 2:
+                            username, password = parts[0], parts[1]
+                            
+                            with self.console.status("[cyan]Executing login macro...[/cyan]"):
+                                result = self.visual_macro.login_sequence(username, password)
+                            
+                            if result['success']:
+                                self.console.print(f"[green]✅ Login macro completed successfully![/green]")
+                            else:
+                                self.console.print(f"[red]❌ Login macro failed[/red]")
+                            
+                            self.console.print(f"[dim]   Steps completed: {len(result['steps'])}[/dim]")
+                        else:
+                            self.console.print("[yellow]⚠️  Usage: /visual-macro-login <username> <password>[/yellow]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /visual-macro-login <username> <password>[/yellow]")
+                
+                elif command == "/visual-debug":
+                    if args:
+                        with self.console.status(f"[cyan]Debugging click on '{args}'...[/cyan]"):
+                            debug_info = self.visual_debugger.debug_click(args)
+                        
+                        self.console.print(f"[bold]🐛 Debug Info for '{args}':[/bold]\n")
+                        self.console.print(f"Screen analyzed: {debug_info['screen_analyzed']}")
+                        self.console.print(f"Total elements: {debug_info['total_elements']}")
+                        self.console.print(f"Interactive elements: {debug_info['interactive_elements']}")
+                        self.console.print(f"Matching elements: {len(debug_info['matching_elements'])}")
+                        
+                        if debug_info['matching_elements']:
+                            self.console.print(f"\n[bold]Matching elements:[/bold]")
+                            for match in debug_info['matching_elements']:
+                                self.console.print(f"  • {match['type']}: '{match['text']}' at {match['center']}")
+                        
+                        if debug_info['suggestions']:
+                            self.console.print(f"\n[bold]Suggestions:[/bold]")
+                            for sugg in debug_info['suggestions'][:3]:
+                                self.console.print(f"  • Try: '{sugg['text']}' ({sugg['type']})")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /visual-debug <target>[/yellow]")
+                        self.console.print("[dim]   Example: /visual-debug 'submit button'[/dim]")
+                
+                elif command == "/visual-sessions":
+                    sessions = self.session_recorder.list_sessions()
+                    
+                    if sessions:
+                        table = Table(title="📹 Recorded Sessions")
+                        table.add_column("Session ID", style="cyan")
+                        table.add_column("Duration", justify="right")
+                        table.add_column("Actions", justify="right")
+                        table.add_column("Success Rate", justify="right")
+                        
+                        for session in sessions[:10]:  # Show last 10
+                            duration = f"{session['duration']:.1f}s"
+                            success_rate = f"{session['success_rate']*100:.1f}%"
+                            table.add_row(
+                                session['id'][:20],
+                                duration,
+                                str(session['actions']),
+                                success_rate
+                            )
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No recorded sessions yet[/dim]")
+                        self.console.print("[dim]Use visual automation to record sessions[/dim]")
+                
+                elif command == "/visual-replay":
+                    if args:
+                        with self.console.status(f"[cyan]Replaying session {args}...[/cyan]"):
+                            result = self.session_recorder.replay_session(args, self.visual_automation)
+                        
+                        if result['success']:
+                            self.console.print(f"[green]✅ Session replayed![/green]")
+                            self.console.print(f"[dim]   Actions replayed: {result['actions_replayed']}[/dim]")
+                            self.console.print(f"[dim]   Succeeded: {result['actions_succeeded']}[/dim]")
+                            self.console.print(f"[dim]   Failed: {result['actions_failed']}[/dim]")
+                        else:
+                            self.console.print(f"[red]❌ Replay failed: {result.get('error', 'Unknown error')}[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /visual-replay <session_id>[/yellow]")
+                        self.console.print("[dim]   Use /visual-sessions to see available sessions[/dim]")
                 
                 # ============ Agent Coordination Commands ============
                 elif command == "/coord-status":

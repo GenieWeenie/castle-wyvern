@@ -41,6 +41,7 @@ from eyrie.performance import PerformanceManager
 from eyrie.documentation import DocumentationGenerator
 from eyrie.mcp_server import CastleWyvernMCPServer
 from eyrie.a2a_protocol import A2AIntegration
+from eyrie.workflow_builder import WorkflowManager, WorkflowExecutor
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -149,6 +150,10 @@ class CastleWyvernCLI:
         
         # A2A Protocol
         self.a2a: Optional[A2AIntegration] = None
+        
+        # Visual Workflow Builder
+        self.workflow_manager = WorkflowManager()
+        self.workflow_executor = WorkflowExecutor()
         
         # Initialize clan members
         self.clan = {
@@ -403,6 +408,16 @@ class CastleWyvernCLI:
 - `/perf-optimize` - Run memory optimization
 - `/docs-generate` - Generate documentation
 - `/docs-export <file>` - Export docs to markdown
+
+## Visual Workflow Builder (New!)
+- `/workflow-list` - List saved workflows
+- `/workflow-create <name>` - Create new workflow
+- `/workflow-open` - Open visual workflow builder in browser
+- `/workflow-run <id>` - Execute a workflow
+- `/workflow-delete <id>` - Delete a workflow
+- `/workflow-export <id> <file>` - Export workflow
+- `/workflow-import <file>` - Import workflow
+- `/workflow-template <name>` - Create from template (bmad_full, code_review, security_audit)
 
 ## MCP Protocol (New!)
 - `/mcp-start` - Start MCP server

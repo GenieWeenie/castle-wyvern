@@ -31,6 +31,7 @@ from eyrie.phoenix_gate import PhoenixGate
 from eyrie.intent_router import IntentRouter, IntentType
 from eyrie.node_manager import NodeManager
 from eyrie.auto_discovery import AutoDiscoveryService
+from eyrie.workflow_builder import WorkflowManager, WorkflowExecutor, WorkflowNode, WorkflowEdge
 from grimoorum.memory_manager import GrimoorumV2
 
 
@@ -54,6 +55,8 @@ class WebDashboard:
         self.intent_router = IntentRouter(use_ai_classification=True)
         self.grimoorum = GrimoorumV2()
         self.node_manager = NodeManager()
+        self.workflow_manager = WorkflowManager()
+        self.workflow_executor = WorkflowExecutor()
         
         # Create Flask app
         self.app = Flask(__name__, 
@@ -243,6 +246,87 @@ class WebDashboard:
                 return jsonify(stats)
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
+        
+        # ============ Workflow Builder API Routes ============
+        
+        @self.app.route("/workflows")
+        def workflows_page():
+            """Workflow builder page."""
+            return render_template("workflows.html")
+        
+        @self.app.route("/api/workflows", methods=["GET"])
+        def api_list_workflows():
+            """List all workflows."""
+            workflows = self.workflow_manager.list_workflows()
+            return jsonify({"workflows": workflows})
+        
+        @self.app.route("/api/workflows", methods=["POST"])
+        def api_create_workflow():
+            """Create a new workflow."""
+            data = request.get_json() or {}
+            name = data.get("name", "New Workflow")
+            description = data.get("description", "")
+            
+            wf = self.workflow_manager.create_workflow(name, description)
+            return jsonify(wf.to_dict()), 201
+        
+        @self.app.route("/api/workflows/<workflow_id>", methods=["GET"])
+        def api_get_workflow(workflow_id):
+            """Get a workflow by ID."""
+            wf = self.workflow_manager.get_workflow(workflow_id)
+            if wf:
+                return jsonify(wf.to_dict())
+            return jsonify({"error": "Workflow not found"}), 404
+        
+        @self.app.route("/api/workflows/<workflow_id>", methods=["PUT"])
+        def api_update_workflow(workflow_id):
+            """Update a workflow."""
+            wf = self.workflow_manager.get_workflow(workflow_id)
+            if not wf:
+                return jsonify({"error": "Workflow not found"}), 404
+            
+            data = request.get_json() or {}
+            wf.name = data.get("name", wf.name)
+            wf.description = data.get("description", wf.description)
+            wf.nodes = [WorkflowNode.from_dict(n) for n in data.get("nodes", [])]
+            wf.edges = [WorkflowEdge.from_dict(e) for e in data.get("edges", [])]
+            
+            self.workflow_manager.save_workflow(wf)
+            return jsonify(wf.to_dict())
+        
+        @self.app.route("/api/workflows/<workflow_id>", methods=["DELETE"])
+        def api_delete_workflow(workflow_id):
+            """Delete a workflow."""
+            if self.workflow_manager.delete_workflow(workflow_id):
+                return jsonify({"message": "Workflow deleted"})
+            return jsonify({"error": "Workflow not found"}), 404
+        
+        @self.app.route("/api/workflows/<workflow_id>/execute", methods=["POST"])
+        def api_execute_workflow(workflow_id):
+            """Execute a workflow."""
+            wf = self.workflow_manager.get_workflow(workflow_id)
+            if not wf:
+                return jsonify({"error": "Workflow not found"}), 404
+            
+            result = self.workflow_executor.execute_workflow(wf)
+            return jsonify(result)
+        
+        @self.app.route("/api/workflows/templates", methods=["GET"])
+        def api_list_templates():
+            """List workflow templates."""
+            templates = self.workflow_manager.get_templates()
+            return jsonify({"templates": templates})
+        
+        @self.app.route("/api/workflows/templates", methods=["POST"])
+        def api_create_from_template():
+            """Create workflow from template."""
+            data = request.get_json() or {}
+            template_id = data.get("template_id")
+            
+            wf = self.workflow_manager.create_from_template(template_id)
+            if wf:
+                return jsonify(wf.to_dict()), 201
+            return jsonify({"error": "Template not found"}), 400
     
     def _get_member_for_intent(self, intent: IntentType) -> str:
         """Map intent to clan member."""
@@ -762,6 +846,415 @@ class WebDashboard:
         
         with open(os.path.join(template_dir, "dashboard.html"), "w") as f:
             f.write(dashboard_html.strip())
+        
+        # Workflows HTML
+        workflows_html = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Castle Wyvern - Workflow Builder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #eee;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #e94560;
+        }
+        
+        .header h1 { font-size: 2em; margin-bottom: 5px; }
+        .header p { color: #aaa; font-style: italic; }
+        
+        .nav { 
+            background: rgba(0, 0, 0, 0.2); 
+            padding: 10px; 
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav a { 
+            color: #00ced1; 
+            text-decoration: none; 
+            margin: 0 15px;
+        }
+        .nav a:hover { text-decoration: underline; }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        .toolbar {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #e94560;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn:hover { background: #ff6b6b; }
+        .btn-secondary { background: #0f3460; }
+        .btn-secondary:hover { background: #1a4a7a; }
+        
+        .workflow-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 20px;
+            height: calc(100vh - 250px);
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+        }
+        
+        .panel h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(233, 69, 96, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .node-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .palette-item {
+            padding: 10px;
+            background: rgba(0, 206, 209, 0.2);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            border-radius: 8px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .palette-item:hover { background: rgba(0, 206, 209, 0.3); }
+        .palette-item .icon { font-size: 1.2em; }
+        
+        .canvas {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .workflow-node {
+            position: absolute;
+            width: 150px;
+            padding: 10px;
+            background: rgba(0, 206, 209, 0.2);
+            border: 2px solid #00ced1;
+            border-radius: 10px;
+            cursor: move;
+            text-align: center;
+        }
+        .workflow-node .emoji { font-size: 1.5em; }
+        .workflow-node .name { font-weight: bold; margin-top: 5px; }
+        .workflow-node .type { font-size: 0.8em; color: #aaa; }
+        
+        .workflow-list {
+            list-style: none;
+        }
+        .workflow-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .workflow-list li:hover { background: rgba(255, 255, 255, 0.1); }
+        .workflow-list li.active { background: rgba(0, 206, 209, 0.2); border-left: 3px solid #00ced1; }
+        
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .template-card {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .template-card:hover { background: rgba(255, 255, 255, 0.1); }
+        .template-card .icon { font-size: 2em; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏰 Castle Wyvern - Visual Workflow Builder</h1>
+        <p>Drag and drop to create BMAD workflows</p>
+    </div>
+    
+    <div class="nav">
+        <a href="/">← Back to Dashboard</a>
+        <a href="#" onclick="showTemplates()">Templates</a>
+        <a href="#" onclick="loadWorkflows()">My Workflows</a>
+    </div>
+    
+    <div class="container">
+        <div class="toolbar">
+            <button class="btn" onclick="createWorkflow()">+ New Workflow</button>
+            <button class="btn btn-secondary" onclick="saveWorkflow()">💾 Save</button>
+            <button class="btn btn-secondary" onclick="executeWorkflow()">▶️ Execute</button>
+            <button class="btn btn-secondary" onclick="exportWorkflow()">📤 Export</button>
+            <button class="btn btn-secondary" onclick="importWorkflow()">📥 Import</button>
+        </div>
+        
+        <div class="workflow-grid">
+            <div class="panel">
+                <h3>🧩 Node Palette</h3>
+                <div class="node-palette">
+                    <div class="palette-item" draggable="true" data-type="start">
+                        <span class="icon">🚀</span>
+                        <div>Start</div>
+                    </div>
+                    <div class="palette-item" draggable="true" data-type="clan_member">
+                        <span class="icon">🦁</span>
+                        <div>Clan Member</div>
+                    </div>
+                    <div class="palette-item" draggable="true" data-type="bmad_phase">
+                        <span class="icon">🔄</span>
+                        <div>BMAD Phase</div>
+                    </div>
+                    <div class="palette-item" draggable="true" data-type="decision">
+                        <span class="icon">❓</span>
+                        <div>Decision</div>
+                    </div>
+                    <div class="palette-item" draggable="true" data-type="webhook">
+                        <span class="icon">🔗</span>
+                        <div>Webhook</div>
+                    </div>
+                    <div class="palette-item" draggable="true" data-type="delay">
+                        <span class="icon">⏱️</span>
+                        <div>Delay</div>
+                    </div>
+                    <div class="palette-item" draggable="true" data-type="end">
+                        <span class="icon">🏁</span>
+                        <div>End</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel canvas" id="workflow-canvas">
+                <div style="text-align: center; margin-top: 40%; color: #666;">
+                    <p>Drag nodes here to build your workflow</p>
+                    <p style="font-size: 0.9em; margin-top: 10px;">Or select a template to get started</p>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>📋 Workflows</h3>
+                <ul class="workflow-list" id="workflow-list">
+                    <li class="active">
+                        <strong>New Workflow</strong>
+                        <div style="font-size: 0.85em; color: #aaa;">Unsaved</div>
+                    </li>
+                </ul>
+                
+                <h3 style="margin-top: 20px;">📊 Properties</h3>
+                <div style="color: #aaa; font-size: 0.9em;">
+                    <p>Select a node to edit properties</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Templates Modal -->
+        <div id="templates-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+            <div style="background: #1a1a2e; padding: 30px; border-radius: 15px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <h2 style="margin-bottom: 20px;">🎨 Workflow Templates</h2>
+                <div class="template-grid" id="template-grid">
+                    <!-- Templates loaded dynamically -->
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 20px;" onclick="hideTemplates()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentWorkflow = null;
+        let nodeCounter = 0;
+        
+        // Load templates
+        async function showTemplates() {
+            try {
+                const response = await fetch("/api/workflows/templates");
+                const data = await response.json();
+                
+                const grid = document.getElementById("template-grid");
+                grid.innerHTML = data.templates.map(t => `
+                    <div class="template-card" onclick="createFromTemplate('${t.id}')">
+                        <div class="icon">${t.icon}</div>
+                        <strong>${t.name}</strong>
+                        <p style="font-size: 0.85em; color: #aaa; margin-top: 5px;">${t.description}</p>
+                    </div>
+                `).join("");
+                
+                document.getElementById("templates-modal").style.display = "flex";
+            } catch (e) {
+                console.error("Failed to load templates:", e);
+            }
+        }
+        
+        function hideTemplates() {
+            document.getElementById("templates-modal").style.display = "none";
+        }
+        
+        async function createFromTemplate(templateId) {
+            try {
+                const response = await fetch("/api/workflows/templates", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ template_id: templateId })
+                });
+                
+                const workflow = await response.json();
+                currentWorkflow = workflow;
+                hideTemplates();
+                renderWorkflow(workflow);
+                loadWorkflows();
+                
+                alert(`Created workflow: ${workflow.name}`);
+            } catch (e) {
+                console.error("Failed to create from template:", e);
+            }
+        }
+        
+        async function loadWorkflows() {
+            try {
+                const response = await fetch("/api/workflows");
+                const data = await response.json();
+                
+                const list = document.getElementById("workflow-list");
+                list.innerHTML = data.workflows.map(w => `
+                    <li onclick="loadWorkflow('${w.id}')" class="${currentWorkflow && currentWorkflow.id === w.id ? 'active' : ''}">
+                        <strong>${w.name}</strong>
+                        <div style="font-size: 0.85em; color: #aaa;">${w.node_count} nodes • ${new Date(w.updated_at).toLocaleDateString()}</div>
+                    </li>
+                `).join("");
+            } catch (e) {
+                console.error("Failed to load workflows:", e);
+            }
+        }
+        
+        async function createWorkflow() {
+            const name = prompt("Workflow name:", "New Workflow");
+            if (!name) return;
+            
+            try {
+                const response = await fetch("/api/workflows", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, description: "" })
+                });
+                
+                const workflow = await response.json();
+                currentWorkflow = workflow;
+                renderWorkflow(workflow);
+                loadWorkflows();
+            } catch (e) {
+                console.error("Failed to create workflow:", e);
+            }
+        }
+        
+        function renderWorkflow(workflow) {
+            const canvas = document.getElementById("workflow-canvas");
+            canvas.innerHTML = "";
+            
+            workflow.nodes.forEach(node => {
+                const nodeEl = document.createElement("div");
+                nodeEl.className = "workflow-node";
+                nodeEl.style.left = node.position.x + "px";
+                nodeEl.style.top = node.position.y + "px";
+                nodeEl.innerHTML = `
+                    <div class="emoji">${getNodeEmoji(node.type)}</div>
+                    <div class="name">${node.name}</div>
+                    <div class="type">${node.type}</div>
+                `;
+                canvas.appendChild(nodeEl);
+            });
+        }
+        
+        function getNodeEmoji(type) {
+            const emojis = {
+                "start": "🚀", "end": "🏁", "clan_member": "🦁",
+                "bmad_phase": "🔄", "decision": "❓", "webhook": "🔗", "delay": "⏱️"
+            };
+            return emojis[type] || "📦";
+        }
+        
+        async function saveWorkflow() {
+            if (!currentWorkflow) {
+                alert("No workflow to save");
+                return;
+            }
+            
+            try {
+                await fetch(`/api/workflows/${currentWorkflow.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(currentWorkflow)
+                });
+                
+                alert("Workflow saved!");
+                loadWorkflows();
+            } catch (e) {
+                console.error("Failed to save workflow:", e);
+            }
+        }
+        
+        async function executeWorkflow() {
+            if (!currentWorkflow) {
+                alert("No workflow to execute");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/workflows/${currentWorkflow.id}/execute`, {
+                    method: "POST"
+                });
+                
+                const result = await response.json();
+                alert(`Workflow ${result.status}!\nLog entries: ${result.log.length}`);
+            } catch (e) {
+                console.error("Failed to execute workflow:", e);
+            }
+        }
+        
+        // Initialize
+        loadWorkflows();
+    </script>
+</body>
+</html>
+'''
+        
+        with open(os.path.join(template_dir, "workflows.html"), "w") as f:
+            f.write(workflows_html.strip())
     
     def run(self, debug: bool = False):
         """Start the web dashboard server."""

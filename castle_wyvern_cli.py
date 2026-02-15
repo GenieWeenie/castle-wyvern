@@ -40,6 +40,7 @@ from eyrie.advanced_ai import AdvancedAIManager
 from eyrie.performance import PerformanceManager
 from eyrie.documentation import DocumentationGenerator
 from eyrie.mcp_server import CastleWyvernMCPServer
+from eyrie.a2a_protocol import A2AIntegration
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -145,6 +146,9 @@ class CastleWyvernCLI:
         
         # MCP Server
         self.mcp_server: Optional[CastleWyvernMCPServer] = None
+        
+        # A2A Protocol
+        self.a2a: Optional[A2AIntegration] = None
         
         # Initialize clan members
         self.clan = {
@@ -405,6 +409,13 @@ class CastleWyvernCLI:
 - `/mcp-stop` - Stop MCP server
 - `/mcp-tools` - List MCP tools
 - `/mcp-install` - Install MCP in Claude/Cursor
+
+## A2A Protocol (New!)
+- `/a2a-start` - Start A2A server (port 18795)
+- `/a2a-stop` - Stop A2A server
+- `/a2a-discover <urls>` - Discover other A2A agents
+- `/a2a-agents` - List known A2A agents
+- `/a2a-delegate <agent> <message>` - Delegate task to agent
 
 ## System Commands
 - `status` - Show full dashboard
@@ -1504,6 +1515,86 @@ plan Design a microservices architecture for an e-commerce app
                     self.console.print("")
                     
                     self.console.print("[green]✅ After installation, restart your MCP client![/green]")
+                
+                # ============ A2A Protocol Commands ============
+                elif command == "/a2a-start":
+                    if not self.a2a:
+                        self.a2a = A2AIntegration(castle_wyvern_cli=self)
+                    
+                    if self.a2a.start_server():
+                        self.console.print("[green]✅ A2A Server started[/green]")
+                        self.console.print("[dim]   The Manhattan Clan can now talk to other A2A agents![/dim]")
+                        self.console.print("[dim]   Agent Card: http://localhost:18795/.well-known/agent.json[/dim]")
+                        self.console.print("[dim]   Skills available:[/dim]")
+                        for skill in ["goliath", "lexington", "brooklyn", "xanatos", "broadway"]:
+                            self.console.print(f"[dim]     • {skill}[/dim]")
+                    else:
+                        self.console.print("[red]⚠️  Failed to start A2A server[/red]")
+                
+                elif command == "/a2a-stop":
+                    self.console.print("[yellow]⚠️  A2A Server cannot be stopped gracefully[/yellow]")
+                    self.console.print("[dim]   Restart Castle Wyvern to stop[/dim]")
+                    self.a2a = None
+                
+                elif command == "/a2a-discover":
+                    if args:
+                        import asyncio
+                        urls = args.split()
+                        
+                        with self.console.status("[cyan]Discovering A2A agents...[/cyan]"):
+                            if not self.a2a:
+                                self.a2a = A2AIntegration()
+                            agents = asyncio.run(self.a2a.discover_agents(urls))
+                        
+                        if agents:
+                            self.console.print(f"\n[green]✅ Discovered {len(agents)} A2A agent(s):[/green]")
+                            for agent in agents:
+                                self.console.print(f"  • {agent.name} ({agent.url})")
+                                self.console.print(f"    {agent.description[:60]}...")
+                        else:
+                            self.console.print("[dim]No A2A agents found at provided URLs[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /a2a-discover <url1> [url2] ...[/yellow]")
+                        self.console.print("[dim]   Example: /a2a-discover http://localhost:8080 http://localhost:9090[/dim]")
+                
+                elif command == "/a2a-agents":
+                    if self.a2a:
+                        agents = self.a2a.get_known_agents()
+                        if agents:
+                            table = Table(title="🔗 Known A2A Agents")
+                            table.add_column("Agent", style="cyan")
+                            table.add_column("Skills")
+                            
+                            for agent in agents:
+                                skills = ", ".join([s['id'] for s in agent.get('skills', [])[:3]])
+                                table.add_row(agent.get('name', 'Unknown'), skills)
+                            
+                            self.console.print(table)
+                        else:
+                            self.console.print("[dim]No known A2A agents[/dim]")
+                            self.console.print("[dim]Use /a2a-discover to find agents[/dim]")
+                    else:
+                        self.console.print("[dim]A2A not initialized[/dim]")
+                
+                elif command == "/a2a-delegate":
+                    parts = args.split(maxsplit=1)
+                    if len(parts) >= 2:
+                        agent_name, message = parts[0], parts[1]
+                        
+                        if self.a2a:
+                            with self.console.status(f"[cyan]Delegating to {agent_name}...[/cyan]"):
+                                import asyncio
+                                response = asyncio.run(self.a2a.delegate_task(agent_name, message))
+                            
+                            if response:
+                                self.console.print(f"\n[bold]Response from {agent_name}:[/bold]")
+                                self.console.print(response)
+                            else:
+                                self.console.print(f"[red]⚠️  No response from {agent_name}[/red]")
+                        else:
+                            self.console.print("[red]⚠️  A2A not initialized. Start with /a2a-start[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /a2a-delegate <agent_name> <message>[/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

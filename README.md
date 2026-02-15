@@ -243,6 +243,51 @@ Castle Wyvern includes a **drag-and-drop workflow editor** for creating BMAD wor
 
 ---
 
+## 🧠 Enhanced Memory (NEW!)
+
+Castle Wyvern now features **vector-based semantic memory** with embedding search!
+
+### What Makes It Enhanced
+- **Vector Embeddings** - 384-dimensional semantic representations
+- **Semantic Search** - Find memories by meaning, not just keywords
+- **Context Awareness** - Automatic context retrieval for conversations
+- **Memory Consolidation** - Compress old, rarely-used memories
+- **Importance Scoring** - Prioritize high-value memories
+
+### How It Works
+```
+Traditional Search: "Python code" → finds "Python code"
+Semantic Search: "Python code" → finds "Flask web framework", 
+                                      "programming tutorials",
+                                      "REST API examples"
+```
+
+### CLI Commands
+```bash
+# Add a memory with embedding
+/memory-add "Machine learning is fascinating"
+
+# Search by semantic similarity
+/memory-search "Tell me about AI"
+
+# Get context for a conversation
+/memory-context "How do I build a web app?"
+
+# Show statistics
+/memory-stats
+
+# Consolidate old memories
+/memory-consolidate
+```
+
+### Technical Details
+- **384-dimensional embeddings** using hash-based generation
+- **Cosine similarity** for semantic matching
+- **Ready for upgrade** to OpenAI or sentence-transformers embeddings
+- **Persistent storage** in `~/.castle_wyvern/vector_memory/`
+
+---
+
 ## 🔌 MCP (Model Context Protocol)
 
 Castle Wyvern now implements Microsoft's **Model Context Protocol** — the emerging standard for AI agent interoperability!
@@ -286,6 +331,7 @@ Then configure your MCP client to connect to Castle Wyvern!
 | **TOTAL** | **21/21** | **✅ 100%** |
 | **Protocols** | MCP + A2A | **✅ Done** |
 | **Workflow Builder** | Visual Editor | **✅ Done** |
+| **Enhanced Memory** | Vector + Semantic | **✅ Done** |
 
 ## 🛠️ Tech Stack
 
@@ -357,6 +403,7 @@ MIT License — see LICENSE for details.
 See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
 
 **Recent Commits:**
+- `85ec49e` 🧠 Add Enhanced Memory - Vector embeddings + semantic search!
 - `c86f837` 🎨 Add Visual Workflow Builder - Drag-and-drop BMAD workflow editor!
 - `f269df9` 🔗 Add A2A Protocol Support - Inter-framework agent communication!
 - `825b75a` 🔌 Add MCP Protocol Support - Microsoft Model Context Protocol

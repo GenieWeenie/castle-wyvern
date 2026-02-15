@@ -53,6 +53,10 @@ from eyrie.clan_backstories import CLAN_BACKSTORIES, get_clan_backstory
 from eyrie.llama_cpp_client import LlamaCppClient, LocalLLM
 from eyrie.nanogpt_integration import NanoGPTTrainer, ClanModelManager
 from eyrie.knowledge_graph import KnowledgeGraph
+from eyrie.knowledge_graph_utils import (
+    KnowledgeGraphVisualizer, SmartEntityExtractor, 
+    QueryEngine, KnowledgeGraphExporter
+)
 from eyrie.omni_parser import VisualAutomation, VisualBrowserAgent
 from eyrie.agent_coordination import ClanCoordinationManager
 from grimoorum.memory_manager import GrimoorumV2
@@ -202,6 +206,10 @@ class CastleWyvernCLI:
         
         # Knowledge Graph (KAG Integration)
         self.knowledge_graph = KnowledgeGraph()
+        self.kg_visualizer = KnowledgeGraphVisualizer(self.knowledge_graph)
+        self.kg_extractor = SmartEntityExtractor(self.knowledge_graph)
+        self.kg_query = QueryEngine(self.knowledge_graph)
+        self.kg_exporter = KnowledgeGraphExporter(self.knowledge_graph)
         
         # OmniParser Visual Automation
         self.visual_automation = VisualAutomation()
@@ -520,6 +528,9 @@ class CastleWyvernCLI:
 - `/kg-reason <question>` - Logical reasoning over graph
 - `/kg-extract <text>` - Extract entities from text
 - `/kg-visualize` - Show graph structure
+- `/kg-export <format> [file]` - Export graph (dot, mermaid, png, json)
+- `/kg-path <start> <end>` - Find path between entities
+- `/kg-report [file]` - Generate comprehensive report
 
 ## Visual Automation (OmniParser - Experimental!)
 - `/visual-status` - Check visual automation status
@@ -2502,6 +2513,89 @@ plan Design a microservices architecture for an e-commerce app
                     self.console.print(f"\n[bold]Relationship Types:[/bold]")
                     for rel_type, count in stats['relation_types'].items():
                         self.console.print(f"  • {rel_type}: {count} relationships")
+                
+                elif command == "/kg-export":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        format_type = parts[0].lower()
+                        output_file = parts[1] if len(parts) > 1 else f"knowledge_graph.{format_type}"
+                        
+                        with self.console.status(f"[cyan]Exporting to {format_type}...[/cyan]"):
+                            try:
+                                if format_type == 'json':
+                                    content = self.kg_exporter.to_json()
+                                    Path(output_file).write_text(content)
+                                    self.console.print(f"[green]✅ Exported to {output_file}[/green]")
+                                
+                                elif format_type in ['dot', 'mermaid']:
+                                    result = self.kg_visualizer.export_to_file(output_file, format_type)
+                                    self.console.print(f"[green]✅ Exported to {result}[/green]")
+                                
+                                elif format_type in ['png', 'svg', 'pdf']:
+                                    result = self.kg_visualizer.export_to_file(output_file, format_type)
+                                    if result.startswith("Error"):
+                                        self.console.print(f"[red]❌ {result}[/red]")
+                                    else:
+                                        self.console.print(f"[green]✅ Exported to {result}[/green]")
+                                
+                                elif format_type == 'csv':
+                                    entities_csv, rels_csv = self.kg_exporter.to_csv()
+                                    entities_file = output_file.replace('.csv', '_entities.csv')
+                                    rels_file = output_file.replace('.csv', '_relationships.csv')
+                                    Path(entities_file).write_text(entities_csv)
+                                    Path(rels_file).write_text(rels_csv)
+                                    self.console.print(f"[green]✅ Exported to {entities_file} and {rels_file}[/green]")
+                                
+                                else:
+                                    self.console.print(f"[red]❌ Unsupported format: {format_type}[/red]")
+                                    self.console.print("[dim]   Supported: json, dot, mermaid, png, svg, pdf, csv[/dim]")
+                            
+                            except Exception as e:
+                                self.console.print(f"[red]❌ Export failed: {str(e)}[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /kg-export <format> [file][/yellow]")
+                        self.console.print("[dim]   Formats: json, dot, mermaid, png, svg, pdf, csv[/dim]")
+                        self.console.print("[dim]   Example: /kg-export json my_graph.json[/dim]")
+                
+                elif command == "/kg-path":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        if len(parts) >= 2:
+                            start, end = parts[0], parts[1]
+                            
+                            with self.console.status(f"[cyan]Finding path from {start} to {end}...[/cyan]"):
+                                paths = self.kg_query.find_path(start, end)
+                            
+                            if paths:
+                                self.console.print(f"[green]✅ Found {len(paths)} path(s):[/green]")
+                                for i, path in enumerate(paths[:5], 1):  # Show max 5
+                                    path_names = [self.knowledge_graph.entities[eid].name if eid in self.knowledge_graph.entities else eid for eid in path]
+                                    self.console.print(f"  Path {i}: {' → '.join(path_names)}")
+                            else:
+                                self.console.print("[dim]No path found between these entities[/dim]")
+                        else:
+                            self.console.print("[yellow]⚠️  Usage: /kg-path <start_entity> <end_entity>[/yellow]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /kg-path <start_entity> <end_entity>[/yellow]")
+                        self.console.print("[dim]   Example: /kg-path Lexington OAuth2[/dim]")
+                
+                elif command == "/kg-report":
+                    output_file = args if args else "knowledge_graph_report.md"
+                    
+                    with self.console.status("[cyan]Generating report...[/cyan]"):
+                        try:
+                            result = self.kg_exporter.export_report(output_file)
+                            self.console.print(f"[green]✅ Report generated: {result}[/green]")
+                            
+                            # Show summary
+                            summary = self.kg_visualizer.get_graph_summary()
+                            self.console.print(f"\n[dim]Report includes:[/dim]")
+                            self.console.print(f"  • {summary['total_nodes']} entities")
+                            self.console.print(f"  • {summary['total_edges']} relationships")
+                            self.console.print(f"  • {summary['avg_degree']:.2f} average connections")
+                        
+                        except Exception as e:
+                            self.console.print(f"[red]❌ Report generation failed: {str(e)}[/red]")
                 
                 # ============ Visual Automation Commands (OmniParser) ============
                 elif command == "/visual-status":

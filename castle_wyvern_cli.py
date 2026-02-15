@@ -51,6 +51,7 @@ from eyrie.workflow_nodes import NODE_TYPES
 from eyrie.function_builder import FunctionBuilder
 from eyrie.clan_backstories import CLAN_BACKSTORIES, get_clan_backstory
 from eyrie.llama_cpp_client import LlamaCppClient, LocalLLM
+from eyrie.nanogpt_integration import NanoGPTTrainer, ClanModelManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -191,6 +192,10 @@ class CastleWyvernCLI:
         # llama.cpp Client (for local LLM)
         self.llama_client = LlamaCppClient()
         self.local_llm = LocalLLM()
+        
+        # nanoGPT Integration (for custom model training)
+        self.nanogpt = NanoGPTTrainer()
+        self.clan_model_manager = ClanModelManager(self.nanogpt)
         
         # Initialize clan members
         self.clan = {
@@ -487,6 +492,12 @@ class CastleWyvernCLI:
 ## Clan Backstories (CrewAI-inspired!)
 - `/backstory <member>` - Show member's backstory
 - `/personalities` - List all clan personalities
+
+## nanoGPT Integration (New!)
+- `/nanogpt-create <member>` - Create training config for clan member
+- `/nanogpt-train <config>` - Train custom model
+- `/nanogpt-list` - List training configs
+- `/nanogpt-sample <model>` - Generate sample from model
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -2235,6 +2246,63 @@ plan Design a microservices architecture for an e-commerce app
                         )
                     
                     self.console.print(table)
+                
+                # ============ nanoGPT Commands ============
+                elif command == "/nanogpt-create":
+                    if args:
+                        result = self.clan_model_manager.create_clan_model(args)
+                        self.console.print(result)
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /nanogpt-create <member_name>[/yellow]")
+                        self.console.print("[dim]   Example: /nanogpt-create lexington[/dim]")
+                        self.console.print(f"[dim]   Available: {', '.join(self.clan_model_manager.SPECIALTIES.keys())}[/dim]")
+                
+                elif command == "/nanogpt-train":
+                    if args:
+                        dry_run = "--dry-run" in args
+                        config_name = args.replace("--dry-run", "").strip()
+                        
+                        with self.console.status(f"[cyan]Preparing training for {config_name}...[/cyan]"):
+                            result = self.nanogpt.train(config_name, dry_run=dry_run)
+                        
+                        self.console.print(result)
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /nanogpt-train <config_name> [--dry-run][/yellow]")
+                
+                elif command == "/nanogpt-list":
+                    configs = self.nanogpt.list_configs()
+                    if configs:
+                        table = Table(title="🧠 nanoGPT Training Configs")
+                        table.add_column("Name", style="cyan")
+                        table.add_column("Clan Member")
+                        table.add_column("Specialty")
+                        table.add_column("Base Model")
+                        
+                        for config in configs:
+                            table.add_row(
+                                config['name'],
+                                config.get('clan_member', 'N/A') or 'General',
+                                config.get('specialty', 'N/A') or 'General',
+                                config['base_model']
+                            )
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No training configs yet[/dim]")
+                        self.console.print("[dim]Create one with /nanogpt-create <member>[/dim]")
+                
+                elif command == "/nanogpt-sample":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        model_name = parts[0]
+                        prompt = parts[1] if len(parts) > 1 else "Hello"
+                        
+                        with self.console.status(f"[cyan]Generating from {model_name}...[/cyan]"):
+                            result = self.nanogpt.generate_sample(model_name, prompt)
+                        
+                        self.console.print(result)
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /nanogpt-sample <model> [prompt][/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

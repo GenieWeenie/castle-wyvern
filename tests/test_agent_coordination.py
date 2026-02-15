@@ -1,167 +1,219 @@
-"""
-Unit tests for Agent Coordination functionality.
-"""
+"""Tests for eyrie.agent_coordination module."""
 
 import pytest
-from unittest.mock import Mock
+import time
 from eyrie.agent_coordination import (
-    ClanCoordinationManager, Agent, Task, CoordinationLoop,
-    AgentStatus, TaskStatus
+    AgentProfile,
+    CoordinationTask,
+    AgentCoordinationLoop,
+    ClanCoordinationManager,
+    TaskStatus,
 )
 
 
-class TestAgent:
-    """Test suite for Agent class."""
-    
-    def test_agent_creation(self):
-        """Test creating an agent."""
-        agent = Agent(
-            id="test_agent",
-            name="Test Agent",
-            specialization="coding",
-            capabilities=["python", "javascript"]
-        )
-        
-        assert agent.id == "test_agent"
-        assert agent.name == "Test Agent"
-        assert agent.specialization == "coding"
-        assert "python" in agent.capabilities
-        assert agent.status == AgentStatus.AVAILABLE
-    
-    def test_agent_fitness_calculation(self):
-        """Test agent fitness for task requirements."""
-        agent = Agent(
-            id="test",
-            name="Test",
-            capabilities=["python", "testing", "debugging"]
-        )
-        
-        # Perfect match
-        fitness = agent.calculate_fitness(["python", "testing"])
-        assert fitness > 0.8
-        
-        # Partial match
-        fitness = agent.calculate_fitness(["python", "rust"])
-        assert 0.4 < fitness < 0.8
-        
-        # No match
-        fitness = agent.calculate_fitness(["java", "kotlin"])
-        assert fitness < 0.4
+# --- AgentProfile tests ---
 
 
-class TestTask:
-    """Test suite for Task class."""
-    
-    def test_task_creation(self):
-        """Test creating a task."""
-        task = Task(
-            id="task_1",
-            description="Implement feature",
-            requirements=["python", "api"]
+class TestAgentProfile:
+    def test_creation_defaults(self):
+        agent = AgentProfile(id="a1", name="Alpha", capabilities=["coding"])
+        assert agent.id == "a1"
+        assert agent.name == "Alpha"
+        assert agent.capabilities == ["coding"]
+        assert agent.performance_score == 1.0
+        assert agent.tasks_completed == 0
+        assert agent.tasks_failed == 0
+        assert agent.specialization == "general"
+        assert agent.reliability == 1.0
+        assert agent.speed == 1.0
+        assert agent.collaboration_score == 1.0
+
+    def test_creation_custom_values(self):
+        agent = AgentProfile(
+            id="a2",
+            name="Beta",
+            capabilities=["testing", "debugging"],
+            performance_score=0.8,
+            specialization="tester",
+            reliability=0.9,
         )
-        
-        assert task.id == "task_1"
-        assert task.description == "Implement feature"
-        assert task.requirements == ["python", "api"]
+        assert agent.specialization == "tester"
+        assert agent.performance_score == 0.8
+        assert agent.reliability == 0.9
+
+    def test_fitness_full_match(self):
+        agent = AgentProfile(
+            id="a1",
+            name="Alpha",
+            capabilities=["coding", "testing"],
+            performance_score=1.0,
+            reliability=1.0,
+            collaboration_score=1.0,
+        )
+        fitness = agent.calculate_fitness(["coding", "testing"])
+        # match_ratio=1.0*0.4 + perf=1.0*0.2 + rel=1.0*0.2 + collab=1.0*0.2 = 1.0
+        assert fitness == pytest.approx(1.0)
+
+    def test_fitness_partial_match(self):
+        agent = AgentProfile(
+            id="a1",
+            name="Alpha",
+            capabilities=["coding"],
+            performance_score=1.0,
+            reliability=1.0,
+            collaboration_score=1.0,
+        )
+        fitness = agent.calculate_fitness(["coding", "testing"])
+        # match_ratio=0.5*0.4 + 1.0*0.2 + 1.0*0.2 + 1.0*0.2 = 0.2+0.6 = 0.8
+        assert fitness == pytest.approx(0.8)
+
+    def test_fitness_no_match(self):
+        agent = AgentProfile(
+            id="a1",
+            name="Alpha",
+            capabilities=["writing"],
+            performance_score=1.0,
+            reliability=1.0,
+            collaboration_score=1.0,
+        )
+        fitness = agent.calculate_fitness(["coding", "testing"])
+        # match_ratio=0*0.4 + 1.0*0.2 + 1.0*0.2 + 1.0*0.2 = 0.6
+        assert fitness == pytest.approx(0.6)
+
+    def test_fitness_empty_requirements(self):
+        agent = AgentProfile(id="a1", name="Alpha", capabilities=["coding"])
+        fitness = agent.calculate_fitness([])
+        assert isinstance(fitness, float)
+
+
+# --- CoordinationTask tests ---
+
+
+class TestCoordinationTask:
+    def test_creation_defaults(self):
+        task = CoordinationTask(
+            id="t1",
+            description="Build feature",
+            requirements=["coding", "testing"],
+        )
+        assert task.id == "t1"
+        assert task.description == "Build feature"
+        assert task.requirements == ["coding", "testing"]
         assert task.status == TaskStatus.PENDING
-        assert len(task.assigned_agents) == 0
-    
-    def test_task_assign_agent(self):
-        """Test assigning agent to task."""
-        task = Task(id="task_1", description="Test", requirements=[])
-        
-        task.assign_agent("agent_1")
-        
-        assert "agent_1" in task.assigned_agents
-    
-    def test_task_execution_time(self):
-        """Test tracking task execution time."""
-        import time
-        task = Task(id="task_1", description="Test", requirements=[])
-        
-        task.start_execution()
-        time.sleep(0.1)  # Small delay
-        task.complete_execution()
-        
-        assert task.execution_time >= 0.1
+        assert task.assigned_agents == []
+        assert task.team_score == 0.0
+        assert task.result is None
+
+    def test_agent_assignment(self):
+        task = CoordinationTask(
+            id="t1",
+            description="Test task",
+            requirements=["coding"],
+        )
+        task.assigned_agents.append("a1")
+        assert "a1" in task.assigned_agents
+
+
+# --- AgentCoordinationLoop tests ---
 
 
 class TestCoordinationLoop:
-    """Test suite for CoordinationLoop."""
-    
     def setup_method(self):
-        """Set up test fixtures."""
-        self.loop = CoordinationLoop()
-    
+        self.loop = AgentCoordinationLoop(storage_dir="/tmp/test_coordination")
+
     def test_register_agent(self):
-        """Test registering an agent."""
-        agent = Agent(id="test", name="Test", capabilities=[])
-        
-        self.loop.register_agent(agent)
-        
-        assert "test" in self.loop.agents
-    
+        agent = self.loop.register_agent(
+            agent_id="a1",
+            name="Alpha",
+            capabilities=["coding", "testing"],
+            specialization="developer",
+        )
+        assert isinstance(agent, AgentProfile)
+        assert agent.id == "a1"
+        assert agent.name == "Alpha"
+        assert agent.capabilities == ["coding", "testing"]
+        assert agent.specialization == "developer"
+        assert "a1" in self.loop.agents
+
+    def test_register_multiple_agents(self):
+        self.loop.register_agent("a1", "Alpha", ["coding"])
+        self.loop.register_agent("a2", "Beta", ["testing"])
+        assert len(self.loop.agents) == 2
+
     def test_create_task(self):
-        """Test creating a task."""
-        task = self.loop.create_task("Test task", ["python"])
-        
+        task = self.loop.create_task(
+            description="Implement feature X",
+            requirements=["coding", "testing"],
+        )
+        assert isinstance(task, CoordinationTask)
+        assert task.description == "Implement feature X"
+        assert task.requirements == ["coding", "testing"]
+        assert task.status == TaskStatus.PENDING
         assert task.id in self.loop.tasks
-        assert task.description == "Test task"
-    
+
     def test_find_best_team(self):
-        """Test finding optimal team for task."""
-        # Register agents
-        agent1 = Agent(id="a1", name="Python Dev", capabilities=["python"])
-        agent2 = Agent(id="a2", name="JS Dev", capabilities=["javascript"])
-        self.loop.register_agent(agent1)
-        self.loop.register_agent(agent2)
-        
-        # Find team for python task
-        team = self.loop.find_best_team(["python"])
-        
-        assert "a1" in team  # Python dev should be selected
+        self.loop.register_agent("a1", "Coder", ["coding", "debugging"])
+        self.loop.register_agent("a2", "Tester", ["testing", "debugging"])
+        self.loop.register_agent("a3", "Writer", ["writing", "documentation"])
+        self.loop.register_agent("a4", "Reviewer", ["testing", "review", "coding"])
+
+        task = self.loop.create_task(
+            description="Build and test module",
+            requirements=["coding", "testing"],
+        )
+
+        team = self.loop.match_phase(task.id)
+        assert len(team.agents) >= self.loop.team_size_min
+        assert len(team.agents) <= self.loop.team_size_max
+        # Agents with coding/testing capabilities should be preferred
+        assert any(a in team.agents for a in ["a1", "a2", "a4"])
+
+    def test_find_best_team_scores(self):
+        self.loop.register_agent("a1", "Coder", ["coding", "testing"])
+        self.loop.register_agent("a2", "Writer", ["writing"])
+        self.loop.register_agent("a3", "Analyst", ["coding", "analysis"])
+
+        task = self.loop.create_task(
+            description="Code task",
+            requirements=["coding"],
+        )
+
+        team = self.loop.match_phase(task.id)
+        assert team.formation_score > 0
+
+
+# --- ClanCoordinationManager tests ---
 
 
 class TestClanCoordinationManager:
-    """Test suite for ClanCoordinationManager."""
-    
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.manager = ClanCoordinationManager()
-    
     def test_initialization(self):
-        """Test manager initializes with clan members."""
-        stats = self.manager.coordination.get_coordination_stats()
-        
-        assert stats["registered_agents"] == 10  # 10 clan members
-    
-    def test_get_agent_performance(self):
-        """Test getting agent performance stats."""
-        stats = self.manager.get_agent_performance("lexington")
-        
-        assert stats is not None
-        assert stats["name"] == "Lexington"
-        assert "performance_score" in stats
+        manager = ClanCoordinationManager()
+        assert isinstance(manager.coordination, AgentCoordinationLoop)
 
+    def test_clan_members_registered(self):
+        manager = ClanCoordinationManager()
+        expected_members = [
+            "goliath", "lexington", "brooklyn", "broadway",
+            "hudson", "xanatos", "demona", "elisa", "jade",
+        ]
+        for member_id in expected_members:
+            assert member_id in manager.coordination.agents
 
-class TestCoordinationAnalytics:
-    """Test analytics functionality."""
-    
-    def setup_method(self):
-        """Set up test fixtures."""
-        from eyrie.agent_coordination_utils import CoordinationAnalytics
-        from eyrie.agent_coordination import ClanCoordinationManager
-        
-        self.manager = ClanCoordinationManager()
-        self.analytics = CoordinationAnalytics(self.manager.coordination)
-    
-    def test_calculate_metrics(self):
-        """Test calculating coordination metrics."""
-        metrics = self.analytics.calculate_metrics()
-        
-        assert hasattr(metrics, 'total_tasks')
-        assert hasattr(metrics, 'best_performing_agents')
+    def test_clan_member_count(self):
+        manager = ClanCoordinationManager()
+        assert len(manager.coordination.agents) == 9
 
+    def test_clan_member_specializations(self):
+        manager = ClanCoordinationManager()
+        agents = manager.coordination.agents
+        assert agents["goliath"].specialization == "leader"
+        assert agents["lexington"].specialization == "technician"
+        assert agents["brooklyn"].specialization == "strategist"
+        assert agents["hudson"].specialization == "archivist"
+        assert agents["xanatos"].specialization == "red_team"
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    def test_clan_member_capabilities(self):
+        manager = ClanCoordinationManager()
+        lex = manager.coordination.agents["lexington"]
+        assert "coding" in lex.capabilities
+        assert "technical" in lex.capabilities

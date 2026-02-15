@@ -1,163 +1,172 @@
-# Testing & Quality — Castle Wyvern
-
-## Overview
-
-Castle Wyvern includes comprehensive test coverage for all major features. This document describes how to run tests and what's covered.
+# Testing Guide
 
 ## Running Tests
 
 ### Run All Tests
+
 ```bash
 pytest tests/ -v
 ```
 
-### Run Specific Test File
+### Run Specific Test Files
+
 ```bash
+pytest tests/test_phoenix_gate.py -v
+pytest tests/test_intent_router.py -v
 pytest tests/test_knowledge_graph.py -v
 pytest tests/test_visual_automation.py -v
 pytest tests/test_agent_coordination.py -v
+pytest tests/test_error_handler.py -v
 ```
 
-### Run with Coverage
+### Run a Single Test
+
 ```bash
-pytest tests/ --cov=eyrie --cov-report=html
+pytest tests/test_phoenix_gate.py::test_function_name -v
 ```
 
-## Test Coverage
+### Run Tests with Coverage
 
-### Core Features (tests/)
+```bash
+pytest tests/ -v --cov=. --cov-report=term-missing
+```
 
-| Test File | Features Covered | Test Count |
-|-----------|-----------------|------------|
-| `test_phoenix_gate.py` | API routing, health checks, error handling | 8 tests |
-| `test_intent_router.py` | Intent classification, routing, fallbacks | 9 tests |
-| `test_knowledge_graph.py` | Entities, relationships, queries, visualization | 10 tests |
-| `test_visual_automation.py` | UI elements, macros, session recording | 9 tests |
-| `test_agent_coordination.py` | Agents, tasks, coordination loops, analytics | 15 tests |
-| `test_error_handler.py` | Custom exceptions, retry logic, circuit breaker | 13 tests |
+## Test Coverage Summary
 
-**Total: 64 tests**
+| Test File | Tests | Description |
+|---|---|---|
+| `test_phoenix_gate.py` | 8 | Core Phoenix Gate functionality |
+| `test_intent_router.py` | 9 | Intent routing and classification |
+| `test_knowledge_graph.py` | 30 | Knowledge graph operations (Claude created) |
+| `test_visual_automation.py` | 19 | Visual automation workflows (Claude created) |
+| `test_agent_coordination.py` | 18 | Agent coordination and orchestration (Claude created) |
+| `test_error_handler.py` | 13 | Error handling and recovery |
+| **Total** | **97** | |
 
-### Test Categories
+## Best Practices for Writing Tests
 
-#### Unit Tests
-Test individual components in isolation:
-- Entity creation and manipulation
-- Relationship management
-- Agent capability matching
-- Task assignment algorithms
+### Structure
 
-#### Integration Tests
-Test component interactions:
-- Intent router → Phoenix Gate
-- Knowledge Graph → Visualization
-- Agent Coordination → Team formation
+- **One test file per module** — name it `test_<module>.py`
+- **One assertion per test** when possible for clear failure messages
+- **Use descriptive test names** — `test_router_handles_empty_input` over `test_router_1`
 
-#### Error Handling Tests
-Test failure scenarios:
-- Circuit breaker behavior
-- Retry logic with exponential backoff
-- Error recovery suggestions
+### Patterns
 
-## Writing New Tests
-
-### Test Structure
 ```python
 import pytest
-from eyrie.module import Component
 
-class TestComponent:
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.component = Component()
-    
-    def test_feature(self):
-        """Test specific feature."""
-        result = self.component.do_something()
-        assert result == expected_value
+class TestFeatureName:
+    """Group related tests in a class."""
+
+    def test_expected_behavior(self):
+        """Test the happy path."""
+        result = feature_function(valid_input)
+        assert result == expected_output
+
+    def test_edge_case(self):
+        """Test boundary conditions."""
+        result = feature_function(edge_input)
+        assert result is not None
+
+    def test_error_handling(self):
+        """Test that errors are raised appropriately."""
+        with pytest.raises(ValueError):
+            feature_function(invalid_input)
 ```
 
-### Best Practices
-1. Use descriptive test names
-2. One assertion per test (when possible)
-3. Use fixtures for common setup
-4. Mock external dependencies
-5. Test both success and failure cases
+### Guidelines
 
-## Continuous Integration
+- Use `@pytest.fixture` for shared setup instead of duplicating code
+- Use `@pytest.mark.parametrize` for testing multiple inputs against the same logic
+- Mock external dependencies (APIs, file I/O, network calls) with `unittest.mock`
+- Keep tests fast — avoid sleep calls and real network requests
+- Tests should be independent and not rely on execution order
 
-Tests are designed to run in CI/CD pipelines:
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+      - name: Run tests with coverage
+        run: pytest tests/ -v --cov=. --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage.xml
+```
+
+### Pre-commit Hook
+
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run tests
-pytest tests/ -v --tb=short
-
-# Check coverage
-pytest tests/ --cov=eyrie --cov-fail-under=80
+#!/bin/sh
+# .git/hooks/pre-commit
+pytest tests/ -q --tb=line
 ```
-
-## Test Data
-
-Tests use:
-- **Temporary files** (pytest tmp_path fixture)
-- **Mock objects** (unittest.mock)
-- **In-memory databases** (where applicable)
-
-No production data is used in tests.
-
-## Known Limitations
-
-Some features require manual testing:
-- Visual automation (requires screen capture)
-- Browser agent (requires browser control)
-- Multi-node distribution (requires network)
-
-These are tested via integration tests and manual QA.
-
-## Quality Metrics
-
-- **Test Coverage Target**: 80%+
-- **Test Execution Time**: < 30 seconds
-- **Flaky Tests**: 0 tolerance
-- **Documentation**: Every test file has module docstring
-
-## Contributing
-
-When adding features:
-1. Write tests FIRST (TDD approach)
-2. Ensure all tests pass
-3. Add to this documentation
-4. Update coverage metrics
 
 ## Troubleshooting
 
-### Tests Fail on Import
+### `ModuleNotFoundError`
+
+Ensure you're running from the project root and dependencies are installed:
+
 ```bash
-# Ensure you're in the project root
-cd ~/castle-wyvern
-
-# Install test dependencies
-pip install pytest pytest-cov
-
-# Run with Python path
-PYTHONPATH=. pytest tests/
+pip install -r requirements.txt
+pytest tests/ -v
 ```
 
-### Permission Errors
-Some tests create temporary files. Ensure:
-- Write access to `/tmp`
-- Write access to `~/.castle_wyvern/logs/`
+### Tests pass individually but fail together
 
-### Timeout Issues
-Tests have default 30s timeout. For slow tests:
+Tests may have shared state. Check for:
+- Global variables being mutated
+- Files written to disk without cleanup
+- Missing `teardown` or fixture `yield` cleanup
+
+### Slow tests
+
+Run with timing to identify bottlenecks:
+
 ```bash
-pytest tests/ --timeout=60
+pytest tests/ -v --durations=10
 ```
 
----
+### Fixture not found
 
-**Last Updated**: 2026-02-14
-**Test Count**: 64
-**Coverage**: 80%+
+Make sure fixtures are defined in `conftest.py` or in the same file where they're used. Fixtures in `conftest.py` are auto-discovered by pytest.
+
+### Mocking not working
+
+Patch where the object is **used**, not where it's **defined**:
+
+```python
+# If module_a imports func from module_b:
+# Patch "module_a.func", not "module_b.func"
+with patch("module_a.func") as mock_func:
+    mock_func.return_value = "mocked"
+```

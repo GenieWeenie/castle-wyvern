@@ -52,6 +52,7 @@ from eyrie.function_builder import FunctionBuilder
 from eyrie.clan_backstories import CLAN_BACKSTORIES, get_clan_backstory
 from eyrie.llama_cpp_client import LlamaCppClient, LocalLLM
 from eyrie.nanogpt_integration import NanoGPTTrainer, ClanModelManager
+from eyrie.knowledge_graph import KnowledgeGraph
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -196,6 +197,9 @@ class CastleWyvernCLI:
         # nanoGPT Integration (for custom model training)
         self.nanogpt = NanoGPTTrainer()
         self.clan_model_manager = ClanModelManager(self.nanogpt)
+        
+        # Knowledge Graph (KAG Integration)
+        self.knowledge_graph = KnowledgeGraph()
         
         # Initialize clan members
         self.clan = {
@@ -498,6 +502,15 @@ class CastleWyvernCLI:
 - `/nanogpt-train <config>` - Train custom model
 - `/nanogpt-list` - List training configs
 - `/nanogpt-sample <model>` - Generate sample from model
+
+## Clan Knowledge Graph (KAG - Experimental!)
+- `/kg-status` - Show knowledge graph statistics
+- `/kg-add-entity <name> <type>` - Add entity to graph
+- `/kg-add-rel <source> <relation> <target>` - Add relationship
+- `/kg-query <text>` - Query the knowledge graph
+- `/kg-reason <question>` - Logical reasoning over graph
+- `/kg-extract <text>` - Extract entities from text
+- `/kg-visualize` - Show graph structure
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -2303,6 +2316,167 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(result)
                     else:
                         self.console.print("[yellow]⚠️  Usage: /nanogpt-sample <model> [prompt][/yellow]")
+                
+                # ============ Knowledge Graph Commands (KAG) ============
+                elif command == "/kg-status":
+                    stats = self.knowledge_graph.get_stats()
+                    
+                    table = Table(title="🧠 Clan Knowledge Graph (KAG)")
+                    table.add_column("Metric", style="cyan")
+                    table.add_column("Value")
+                    
+                    table.add_row("Total Entities", str(stats['total_entities']))
+                    table.add_row("Total Relationships", str(stats['total_relationships']))
+                    
+                    # Entity types
+                    if stats['entity_types']:
+                        entity_summary = ", ".join([f"{k}: {v}" for k, v in stats['entity_types'].items()])
+                        table.add_row("Entity Types", entity_summary)
+                    
+                    # Relation types
+                    if stats['relation_types']:
+                        rel_summary = ", ".join([f"{k}: {v}" for k, v in stats['relation_types'].items()])
+                        table.add_row("Relation Types", rel_summary)
+                    
+                    self.console.print(table)
+                    
+                    if stats['total_entities'] == 0:
+                        self.console.print("\n[dim]Knowledge graph is empty. Start adding entities![/dim]")
+                        self.console.print("[dim]Try: /kg-add-entity 'Lexington' ClanMember[/dim]")
+                
+                elif command == "/kg-add-entity":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        if len(parts) >= 2:
+                            name = parts[0]
+                            type = parts[1]
+                            
+                            try:
+                                entity = self.knowledge_graph.add_entity(name, type)
+                                self.console.print(f"[green]✅ Added entity: {entity.name} ({entity.type})[/green]")
+                                self.console.print(f"[dim]   ID: {entity.id}[/dim]")
+                            except ValueError as e:
+                                self.console.print(f"[red]❌ Error: {e}[/red]")
+                        else:
+                            self.console.print("[yellow]⚠️  Usage: /kg-add-entity <name> <type>[/yellow]")
+                            self.console.print("[dim]   Types: ClanMember, Technology, Project, Decision, SecurityIssue, Task[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /kg-add-entity <name> <type>[/yellow]")
+                        self.console.print("[dim]   Example: /kg-add-entity 'Lexington' ClanMember[/dim]")
+                
+                elif command == "/kg-add-rel":
+                    if args:
+                        parts = args.split(maxsplit=2)
+                        if len(parts) >= 3:
+                            source, relation, target = parts
+                            
+                            try:
+                                rel = self.knowledge_graph.add_relationship(source, relation, target)
+                                self.console.print(f"[green]✅ Added relationship: {source} → {relation} → {target}[/green]")
+                            except (ValueError, KeyError) as e:
+                                self.console.print(f"[red]❌ Error: {e}[/red]")
+                        else:
+                            self.console.print("[yellow]⚠️  Usage: /kg-add-rel <source> <relation> <target>[/yellow]")
+                            self.console.print("[dim]   Relations: suggested, reviewed, implemented, involves, depends_on, discovered, leads[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /kg-add-rel <source> <relation> <target>[/yellow]")
+                        self.console.print("[dim]   Example: /kg-add-rel 'Lexington' suggested 'OAuth2'[/dim]")
+                
+                elif command == "/kg-query":
+                    if args:
+                        # Multi-hop query: /kg-query Lexington suggested Project
+                        parts = args.split()
+                        if len(parts) >= 2:
+                            start = parts[0]
+                            path = parts[1:]
+                            
+                            results = self.knowledge_graph.multi_hop_query(start, path)
+                            
+                            if results:
+                                self.console.print(f"[bold]🧠 Multi-hop query results:[/bold]\n")
+                                for i, path_result in enumerate(results, 1):
+                                    path_str = " → ".join([p[1].name if hasattr(p[1], 'name') else str(p[0]) for p in path_result])
+                                    self.console.print(f"  {i}. {path_str}")
+                            else:
+                                self.console.print("[dim]No paths found matching the query[/dim]")
+                        else:
+                            self.console.print("[yellow]⚠️  Usage: /kg-query <start_entity> <relation1> [relation2] ...[/yellow]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /kg-query <start_entity> <relation1> [relation2] ...[/yellow]")
+                        self.console.print("[dim]   Example: /kg-query Lexington suggested[/dim]")
+                
+                elif command == "/kg-reason":
+                    if args:
+                        result = self.knowledge_graph.logical_reasoning(args)
+                        
+                        self.console.print(f"[bold]🧠 Reasoning Result:[/bold]\n")
+                        self.console.print(f"Query: {result.get('query', args)}")
+                        self.console.print(f"Type: {result.get('reasoning_type', result.get('query_type', 'unknown'))}")
+                        
+                        if 'suggestions' in result:
+                            self.console.print(f"\n[bold]Suggestions ({result['count']}):[/bold]")
+                            for s in result['suggestions']:
+                                self.console.print(f"  • {s['suggestion']} ({s['type']})")
+                        
+                        if 'people' in result:
+                            self.console.print(f"\n[bold]People ({result['count']}):[/bold]")
+                            for p in result['people']:
+                                self.console.print(f"  • {p['name']} ({p['role']})")
+                        
+                        if 'projects' in result:
+                            self.console.print(f"\n[bold]Projects ({result['count']}):[/bold]")
+                            for p in result['projects']:
+                                self.console.print(f"  • {p['project']} - {p['status']}")
+                        
+                        if 'suggestions' in result and result.get('suggestions'):
+                            self.knowledge_graph.save_graph()
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /kg-reason <question>[/yellow]")
+                        self.console.print("[dim]   Example: /kg-reason 'What did Lexington suggest for authentication?'[/dim]")
+                
+                elif command == "/kg-extract":
+                    if args:
+                        extracted = self.knowledge_graph.extract_from_text(args)
+                        
+                        self.console.print(f"[bold]🧠 Extracted from text:[/bold]\n")
+                        
+                        if extracted['entities']:
+                            self.console.print(f"[bold]Entities ({len(extracted['entities']}):[/bold]")
+                            for e in extracted['entities']:
+                                self.console.print(f"  • {e.name} ({e.type})")
+                        
+                        if extracted['relationships']:
+                            self.console.print(f"\n[bold]Relationships ({len(extracted['relationships']}):[/bold]")
+                            for r in extracted['relationships']:
+                                self.console.print(f"  • {r.source} → {r.relation} → {r.target}")
+                        
+                        if not extracted['entities'] and not extracted['relationships']:
+                            self.console.print("[dim]No entities or relationships found[/dim]")
+                        
+                        # Save the graph
+                        self.knowledge_graph.save_graph()
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /kg-extract <text>[/yellow]")
+                        self.console.print("[dim]   Example: /kg-extract 'Lexington suggested using OAuth2 for authentication'[/dim]")
+                
+                elif command == "/kg-visualize":
+                    stats = self.knowledge_graph.get_stats()
+                    
+                    self.console.print("[bold]🧠 Knowledge Graph Structure:[/bold]\n")
+                    
+                    # Show entity types
+                    self.console.print("[bold]Entity Types:[/bold]")
+                    for entity_type, count in stats['entity_types'].items():
+                        entities = list(self.knowledge_graph.get_entities_by_type(entity_type))[:5]
+                        names = [e.name for e in entities]
+                        self.console.print(f"  • {entity_type}: {count} entities")
+                        if names:
+                            self.console.print(f"    Examples: {', '.join(names)}")
+                    
+                    # Show relation types
+                    self.console.print(f"\n[bold]Relationship Types:[/bold]")
+                    for rel_type, count in stats['relation_types'].items():
+                        self.console.print(f"  • {rel_type}: {count} relationships")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

@@ -54,6 +54,7 @@ from eyrie.llama_cpp_client import LlamaCppClient, LocalLLM
 from eyrie.nanogpt_integration import NanoGPTTrainer, ClanModelManager
 from eyrie.knowledge_graph import KnowledgeGraph
 from eyrie.omni_parser import VisualAutomation, VisualBrowserAgent
+from eyrie.agent_coordination import ClanCoordinationManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -205,6 +206,9 @@ class CastleWyvernCLI:
         # OmniParser Visual Automation
         self.visual_automation = VisualAutomation()
         self.visual_browser = VisualBrowserAgent()
+        
+        # Agent Coordination Loops
+        self.coordination = ClanCoordinationManager()
         
         # Initialize clan members
         self.clan = {
@@ -525,6 +529,13 @@ class CastleWyvernCLI:
 - `/visual-browser-start` - Start visual browser session
 - `/visual-browser-task <task>` - Execute visual task
 - `/visual-browser-end` - End visual browser session
+
+## Agent Coordination (Experimental!)
+- `/coord-status` - Show coordination system status
+- `/coord-team <task>` - Get optimal team for task
+- `/coord-run <description> [req1,req2,...]` - Run coordination loop
+- `/coord-agents` - List all agents with stats
+- `/coord-agent <name>` - Show specific agent stats
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -2585,6 +2596,76 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[dim]   Actions performed: {result['actions_performed']}[/dim]")
                     else:
                         self.console.print(f"[red]❌ Failed to end session[/red]")
+                
+                # ============ Agent Coordination Commands ============
+                elif command == "/coord-status":
+                    stats = self.coordination.coordination.get_coordination_stats()
+                    
+                    table = Table(title="🔄 Agent Coordination System")
+                    table.add_column("Metric", style="cyan")
+                    table.add_column("Value")
+                    
+                    table.add_row("Registered Agents", str(stats['registered_agents']))
+                    table.add_row("Active Tasks", str(stats['active_tasks']))
+                    table.add_row("Completed Tasks", str(stats['completed_tasks']))
+                    table.add_row("Failed Tasks", str(stats['failed_tasks']))
+                    table.add_row("Success Rate", f"{stats['success_rate']*100:.1f}%")
+                    table.add_row("Avg Team Size", f"{stats['avg_team_size']:.1f}")
+                    
+                    self.console.print(table)
+                    
+                    self.console.print("\n[dim]Coordination loop: MATCH → EXCHANGE → EXECUTE → SCORE → RE-MATCH[/dim]")
+                
+                elif command == "/coord-team":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        task_desc = parts[0]
+                        requirements = parts[1].split(',') if len(parts) > 1 else ["general"]
+                        
+                        with self.console.status("[cyan]Finding optimal team...[/cyan]"):
+                            team = self.coordination.get_optimal_team(task_desc, requirements)
+                        
+                        if team:
+                            self.console.print(f"[green]✅ Optimal team for '{task_desc}':[/green]")
+                            for agent_id in team:
+                                agent_stats = self.coordination.get_agent_performance(agent_id)
+                                if agent_stats:
+                                    self.console.print(f"  • {agent_stats['name']} ({agent_stats['specialization']})")
+                                    self.console.print(f"    Score: {agent_stats['performance_score']:.2f}")
+                        else:
+                            self.console.print("[yellow]⚠️  No suitable team found[/yellow]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /coord-team <task_description> [req1,req2,...][/yellow]")
+                
+                elif command == "/coord-run":
+                    if args:
+                        parts = args.split(maxsplit=1)
+                        description = parts[0]
+                        requirements = parts[1].split(',') if len(parts) > 1 else ["general"]
+                        
+                        self.console.print(f"[cyan]🔄 Running coordination loop: {description}[/cyan]")
+                        result = self.coordination.coordinate_task(description, requirements)
+                        
+                        self.console.print(f"[green]✅ Completed! Score: {result['performance_score']:.2f}[/green]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /coord-run <description> [req1,req2,...][/yellow]")
+                
+                elif command == "/coord-agents":
+                    agents = self.coordination.coordination.get_all_agents()
+                    for agent in agents:
+                        if agent:
+                            self.console.print(f"  • {agent['name']}: {agent['performance_score']:.2f}")
+                
+                elif command == "/coord-agent":
+                    if args:
+                        stats = self.coordination.get_agent_performance(args.lower())
+                        if stats:
+                            self.console.print(f"[bold]{stats['name']}[/bold] - {stats['specialization']}")
+                            self.console.print(f"  Performance: {stats['performance_score']:.2f}")
+                        else:
+                            self.console.print(f"[red]❌ Agent '{args}' not found[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /coord-agent <agent_name>[/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

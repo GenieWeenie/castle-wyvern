@@ -46,6 +46,8 @@ from eyrie.enhanced_memory import EnhancedGrimoorum
 from eyrie.browser_agent import BrowserAgent
 from eyrie.clan_creator import ClanCreator
 from eyrie.docker_sandbox import DockerSandbox, SafeCodeExecutor
+from eyrie.goal_agent import GoalBasedAgent
+from eyrie.workflow_nodes import NODE_TYPES
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -173,6 +175,12 @@ class CastleWyvernCLI:
         # Docker Sandbox (Competitive Research Feature)
         self.sandbox = DockerSandbox()
         self.safe_executor = SafeCodeExecutor()
+        
+        # Goal-Based Agent (Competitive Research Feature #4)
+        self.goal_agent = None  # Initialized lazily
+        
+        # Extended workflow nodes available
+        self.extended_workflow_nodes = list(NODE_TYPES.keys())
         
         # Initialize clan members
         self.clan = {
@@ -446,6 +454,14 @@ class CastleWyvernCLI:
 - `/sandbox-lang <lang>` - Set language (python, js, bash, go, rust, java)
 - `/sandbox-list` - List running containers
 - `/sandbox-cleanup` - Clean up all containers
+
+## Goal-Based Agent (New!)
+- `/goal <description>` - Start autonomous goal execution
+- `/goal-status <id>` - Check goal progress
+- `/goal-list` - List active and completed goals
+
+## Extended Workflow Nodes (New!)
+- Additional node types: http, condition, loop, delay, transform, variable
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -1960,6 +1976,100 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[green]✅ Removed {removed} container(s)[/green]")
                     else:
                         self.console.print("[dim]No containers to clean up[/dim]")
+                
+                # ============ Goal-Based Agent Commands ============
+                elif command == "/goal":
+                    if args:
+                        # Initialize goal agent if needed
+                        if not self.goal_agent:
+                            clan_funcs = {
+                                name: lambda task, n=name: f"[{n}] Would execute: {task}"
+                                for name in self.clan.keys()
+                            }
+                            self.goal_agent = GoalBasedAgent(clan_funcs)
+                        
+                        self.console.print(f"[cyan]🎯 Creating goal: {args}[/cyan]")
+                        
+                        # Create the goal
+                        goal = self.goal_agent.create_goal(args)
+                        
+                        self.console.print(f"\n[bold]Goal Plan:[/bold]")
+                        for st in goal.subtasks:
+                            self.console.print(f"  {st.id}. [{st.assigned_to}] {st.description}")
+                        
+                        self.console.print(f"\n[cyan]Execute with /goal-execute {goal.id}[/cyan]")
+                        self.console.print("[dim]Or check with /goal-status {goal.id}[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /goal <description>[/yellow]")
+                        self.console.print("[dim]   Example: /goal Build a REST API for a todo app[/dim]")
+                        self.console.print("[dim]   Example: /goal Create a Python script to analyze CSV data[/dim]")
+                
+                elif command == "/goal-execute":
+                    if args:
+                        if not self.goal_agent:
+                            self.console.print("[red]❌ No goals created yet[/red]")
+                            return
+                        
+                        goal = self.goal_agent.active_goals.get(args)
+                        if not goal:
+                            self.console.print(f"[red]❌ Goal {args} not found[/red]")
+                            return
+                        
+                        self.console.print(f"[cyan]🎯 Executing goal: {goal.description}[/cyan]")
+                        self.console.print(f"[dim]This will run {len(goal.subtasks)} subtasks...[/dim]\n")
+                        
+                        def progress(current, total, status):
+                            self.console.print(f"[{current}/{total}] {status}")
+                        
+                        completed = self.goal_agent.execute_goal(args, progress)
+                        
+                        self.console.print(f"\n[green]✅ Goal completed![/green]")
+                        self.console.print(f"[dim]Completed {len(completed.subtasks)} subtasks in {(completed.completed_at - completed.created_at):.1f}s[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /goal-execute <goal_id>[/yellow]")
+                        self.console.print("[dim]   Use /goal-list to see active goals[/dim]")
+                
+                elif command == "/goal-status":
+                    if args:
+                        if not self.goal_agent:
+                            self.console.print("[red]❌ No goals created yet[/red]")
+                            return
+                        
+                        summary = self.goal_agent.get_goal_summary(args)
+                        self.console.print(summary)
+                    else:
+                        if self.goal_agent:
+                            active = self.goal_agent.list_active_goals()
+                            if active:
+                                self.console.print("[bold]Active Goals:[/bold]")
+                                for goal in active:
+                                    completed = sum(1 for st in goal.subtasks if st.status.value == "completed")
+                                    self.console.print(f"  {goal.id}: {goal.description[:50]}... ({completed}/{len(goal.subtasks)})")
+                            else:
+                                self.console.print("[dim]No active goals[/dim]")
+                        else:
+                            self.console.print("[dim]No goals created yet[/dim]")
+                
+                elif command == "/goal-list":
+                    if not self.goal_agent:
+                        self.console.print("[dim]No goals created yet[/dim]")
+                        return
+                    
+                    active = self.goal_agent.list_active_goals()
+                    completed = self.goal_agent.list_completed_goals()
+                    
+                    if active:
+                        self.console.print("[bold]🎯 Active Goals:[/bold]")
+                        for goal in active:
+                            self.console.print(f"  {goal.id}: {goal.description[:60]}")
+                    
+                    if completed:
+                        self.console.print("\n[bold]✅ Completed Goals:[/bold]")
+                        for goal in completed[-5:]:  # Last 5
+                            self.console.print(f"  {goal.id}: {goal.description[:60]}")
+                    
+                    if not active and not completed:
+                        self.console.print("[dim]No goals yet. Create one with /goal[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

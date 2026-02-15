@@ -6,6 +6,7 @@ Beautiful terminal UI with Rich library.
 import os
 import sys
 import time
+import json
 from typing import Optional, Dict, List
 from datetime import datetime
 

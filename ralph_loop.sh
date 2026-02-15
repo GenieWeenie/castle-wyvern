@@ -22,8 +22,8 @@ touch PROMPT.md AGENTS.md IMPLEMENTATION_PLAN.md
 LOG_FILE=".ralph/ralph.log"
 mkdir -p .ralph
 
-# Claude Code command with auto-approval
-CLI_CMD="printf '2\\n' | claude --permission-mode bypassPermissions"
+# Kimi CLI command with auto-approval (-y flag)
+CLI_CMD="kimi -y"
 
 echo "🚀 Starting Ralph Loop for Castle Wyvern verification"
 echo "Max iterations: $MAX_ITERS"
@@ -33,8 +33,8 @@ for i in $(seq 1 "$MAX_ITERS"); do
   echo -e "\n=== Ralph iteration $i/$MAX_ITERS ===" | tee -a "$LOG_FILE"
   echo "$(date): Starting iteration $i" >> "$LOG_FILE"
 
-  # Run Claude with the prompt
-  echo "Running verification..." | tee -a "$LOG_FILE"
+  # Run Kimi with the prompt
+  echo "Running Kimi verification..." | tee -a "$LOG_FILE"
   $CLI_CMD -p "$(cat PROMPT.md)" 2>&1 | tee -a "$LOG_FILE" || true
 
   # Run tests (backpressure)

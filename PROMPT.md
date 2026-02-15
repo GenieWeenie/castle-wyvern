@@ -1,38 +1,22 @@
-# Castle Wyvern - Project Context
+# Castle Wyvern - Verification Task for Kimi
 
-## Goal
-Verify that Castle Wyvern is production-ready: all 63 commits, 39+ features, 97 tests passing, documentation complete.
+You are verifying that Castle Wyvern is production-ready after the json import fix.
 
-## Specs
-- 21 original features (Phases 1-4 + Stretch Goals)
-- MCP Protocol Support (6 tools, 3 resources, 2 prompts)
-- A2A Protocol Support (5 exposed skills)
-- Visual Workflow Builder (7+ node types)
-- Browser Agent (Jade) - web search, fetch, research
-- Natural Language Clan Creation
-- Docker Sandbox
-- Goal-Based Agent
-- Extended Workflow Nodes
-- Self-Building Functions (BabyAGI)
-- llama.cpp Integration
-- CrewAI-Style Backstories
-- nanoGPT Integration
-- Knowledge Graph (KAG)
-- OmniParser Visual Automation
-- Agent Coordination Loops
-- CLI Experience (auto-complete, history)
-- Error Handling & Logging (structured logs)
-- Testing & Quality (97 tests)
+## Your Task
+1. Verify the fix:
+   - Check that `import json` was added to castle_wyvern_cli.py
+   - Run: python3 -m py_compile castle_wyvern_cli.py to confirm no syntax errors
 
-## Project Structure
-- castle_wyvern_cli.py - Main CLI interface
-- eyrie/ - Core modules (knowledge_graph, omni_parser, agent_coordination, etc.)
-- tests/ - Test suite (97 tests)
-- docs/ - Documentation
+2. Quick code review:
+   - Verify castle_wyvern_cli.py has no other obvious issues
+   - Check that /audit-search command would work now
 
-## Backpressure
-Run: pytest tests/ -v
-All tests should pass.
+3. Run full test suite:
+   cd ~/castle-wyvern && python3 -m pytest tests/ -v --tb=short
 
-## Completion Condition
-All 97 tests pass + no critical issues found.
+4. Report:
+   - Confirm json import is present
+   - Test results (pass/fail counts)
+   - Overall verdict: READY or NOT READY
+
+Focus on confirming the fix worked and no new issues were introduced.

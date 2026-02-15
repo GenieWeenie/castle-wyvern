@@ -150,7 +150,7 @@ class KnowledgeGraph:
     
     def __init__(self, storage_dir: str = "~/.castle_wyvern/knowledge_graph"):
         self.storage_dir = Path(storage_dir).expanduser()
-        self.storage_dir.mkdir(parents=True, exist_ok_ok=True)
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
         
         self.entities: Dict[str, Entity] = {}
         self.relationships: Dict[str, Relationship] = {}

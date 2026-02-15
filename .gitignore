@@ -64,3 +64,11 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+
+# Images (keep locally, don't commit)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.svg

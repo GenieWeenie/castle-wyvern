@@ -4,6 +4,9 @@
 python-dotenv>=1.0.0
 requests>=2.31.0
 
+# CLI Experience Enhancements
+prompt_toolkit>=3.0.0
+
 # Feature 11: Auto-Discovery (mDNS/Zeroconf)
 zeroconf>=0.131.0
 

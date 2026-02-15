@@ -65,6 +65,7 @@ from eyrie.agent_coordination import ClanCoordinationManager
 from eyrie.agent_coordination_utils import (
     CoordinationAnalytics, TeamOptimizer, CoordinationReport
 )
+from eyrie.cli_enhancements import EnhancedPrompt, PROMPT_TOOLKIT_AVAILABLE
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -246,6 +247,13 @@ class CastleWyvernCLI:
         
         self.running = True
         self.command_history = []
+        
+        # CLI Experience Enhancements
+        self.enhanced_prompt = EnhancedPrompt(self.console)
+        
+        # Show prompt_toolkit status on startup (optional)
+        if PROMPT_TOOLKIT_AVAILABLE:
+            self.console.print("[dim]✨ Enhanced CLI loaded: Tab completion, history, and smart suggestions enabled[/dim]")
     
     def print_banner(self):
         """Print Castle Wyvern banner."""
@@ -739,8 +747,8 @@ plan Design a microservices architecture for an e-commerce app
         
         while self.running:
             try:
-                # Get user input
-                user_input = self.console.input("[bold cyan]👤 You:[/bold cyan] ").strip()
+                # Get user input with enhanced prompt (tab completion, history)
+                user_input = self.enhanced_prompt.prompt("[bold cyan]👤 You:[/bold cyan] ").strip()
                 
                 if not user_input:
                     continue
@@ -762,6 +770,8 @@ plan Design a microservices architecture for an e-commerce app
                 # Handle commands
                 if command in ["quit", "exit", "bye"]:
                     self.console.print("\n[dim]🏰 Castle Wyvern sleeps until you return...[/dim]")
+                    # Save command history before exiting
+                    self.enhanced_prompt.save_history()
                     self.running = False
                 
                 elif command == "help":
@@ -2497,12 +2507,12 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[bold]🧠 Extracted from text:[/bold]\n")
                         
                         if extracted['entities']:
-                            self.console.print(f"[bold]Entities ({len(extracted['entities']}):[/bold]")
+                            self.console.print(f"[bold]Entities ({len(extracted['entities'])}):[/bold]")
                             for e in extracted['entities']:
                                 self.console.print(f"  • {e.name} ({e.type})")
                         
                         if extracted['relationships']:
-                            self.console.print(f"\n[bold]Relationships ({len(extracted['relationships']}):[/bold]")
+                            self.console.print(f"\n[bold]Relationships ({len(extracted['relationships'])}):[/bold]")
                             for r in extracted['relationships']:
                                 self.console.print(f"  • {r.source} → {r.relation} → {r.target}")
                         
@@ -2945,13 +2955,21 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[yellow]⚠️  Please provide a {command} request.[/yellow]")
                 
                 else:
-                    # Treat as general ask
-                    self.route_and_respond(user_input)
+                    # Check if this looks like a command (starts with /)
+                    if command.startswith('/'):
+                        # Show helpful error message with suggestions
+                        error_msg = self.enhanced_prompt.get_error_suggestion(command)
+                        self.console.print(f"[red]{error_msg}[/red]")
+                    else:
+                        # Treat as general ask
+                        self.route_and_respond(user_input)
                 
                 self.console.print()  # Empty line for spacing
                 
             except KeyboardInterrupt:
                 self.console.print("\n\n[dim]🏰 Castle Wyvern sleeps...[/dim]")
+                # Save command history before exiting
+                self.enhanced_prompt.save_history()
                 break
             except Exception as e:
                 self.console.print(f"\n[red]⚠️  Error: {str(e)}[/red]\n")

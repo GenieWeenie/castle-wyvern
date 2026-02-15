@@ -48,6 +48,7 @@ from eyrie.clan_creator import ClanCreator
 from eyrie.docker_sandbox import DockerSandbox, SafeCodeExecutor
 from eyrie.goal_agent import GoalBasedAgent
 from eyrie.workflow_nodes import NODE_TYPES
+from eyrie.function_builder import FunctionBuilder
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -181,6 +182,9 @@ class CastleWyvernCLI:
         
         # Extended workflow nodes available
         self.extended_workflow_nodes = list(NODE_TYPES.keys())
+        
+        # Function Builder (BabyAGI-inspired)
+        self.function_builder = FunctionBuilder()
         
         # Initialize clan members
         self.clan = {
@@ -462,6 +466,13 @@ class CastleWyvernCLI:
 
 ## Extended Workflow Nodes (New!)
 - Additional node types: http, condition, loop, delay, transform, variable
+
+## Function Builder (BabyAGI-inspired!)
+- `/function-create <description>` - Create function from description
+- `/function-list [pack]` - List all functions
+- `/function-packs` - List function packs
+- `/function-search <query>` - Search functions
+- `/function-show <name>` - Show function code
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -2070,6 +2081,87 @@ plan Design a microservices architecture for an e-commerce app
                     
                     if not active and not completed:
                         self.console.print("[dim]No goals yet. Create one with /goal[/dim]")
+                
+                # ============ Function Builder Commands ============
+                elif command == "/function-create":
+                    if args:
+                        self.console.print(f"[cyan]🔧 Creating function: {args}[/cyan]")
+                        
+                        with self.console.status("[cyan]Generating function code...[/cyan]"):
+                            func = self.function_builder.create_function(
+                                description=args,
+                                pack="user_created",
+                                tags=["user_created"]
+                            )
+                        
+                        self.console.print(f"\n[green]✅ Created function: {func.metadata.name}[/green]")
+                        self.console.print(f"[dim]   Description: {func.metadata.description[:80]}...[/dim]")
+                        self.console.print(f"[dim]   Dependencies: {', '.join(func.metadata.dependencies) or 'None'}[/dim]")
+                        self.console.print(f"\n[cyan]View code with /function-show {func.metadata.name}[/cyan]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /function-create <description>[/yellow]")
+                        self.console.print("[dim]   Example: /function-create Fetch weather data from OpenWeatherMap API[/dim]")
+                
+                elif command == "/function-list":
+                    funcs = self.function_builder.list_functions(pack=args if args else None)
+                    
+                    if funcs:
+                        table = Table(title="🔧 Self-Built Functions")
+                        table.add_column("Name", style="cyan")
+                        table.add_column("Description", max_width=50)
+                        table.add_column("Pack")
+                        table.add_column("Uses")
+                        
+                        for meta in funcs:
+                            pack = "user_created" if "user_created" in meta.tags else "default"
+                            table.add_row(
+                                meta.name,
+                                meta.description[:50] + "..." if len(meta.description) > 50 else meta.description,
+                                pack,
+                                str(meta.usage_count)
+                            )
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No functions found[/dim]")
+                
+                elif command == "/function-packs":
+                    packs = self.function_builder.list_packs()
+                    if packs:
+                        self.console.print("[bold]📦 Function Packs:[/bold]")
+                        for pack in packs:
+                            func_count = len(self.function_builder.packs.get(pack, []))
+                            self.console.print(f"  • {pack}: {func_count} functions")
+                    else:
+                        self.console.print("[dim]No packs created yet[/dim]")
+                
+                elif command == "/function-search":
+                    if args:
+                        results = self.function_builder.search_functions(args)
+                        if results:
+                            self.console.print(f"[bold]🔍 Search results for '{args}':[/bold]")
+                            for meta in results:
+                                self.console.print(f"  • {meta.name}: {meta.description[:60]}...")
+                        else:
+                            self.console.print("[dim]No matching functions found[/dim]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /function-search <query>[/yellow]")
+                
+                elif command == "/function-show":
+                    if args:
+                        func = self.function_builder.get_function(args)
+                        if func:
+                            self.console.print(f"[bold]🔧 Function: {func.metadata.name}[/bold]")
+                            self.console.print(f"[dim]Description: {func.metadata.description}[/dim]")
+                            self.console.print(f"[dim]Dependencies: {', '.join(func.metadata.dependencies) or 'None'}[/dim]")
+                            self.console.print(f"[dim]Created: {datetime.fromtimestamp(func.metadata.created_at).strftime('%Y-%m-%d %H:%M')}[/dim]")
+                            self.console.print(f"[dim]Usage count: {func.metadata.usage_count}[/dim]")
+                            self.console.print("\n[bold]Code:[/bold]")
+                            self.console.print(func.code)
+                        else:
+                            self.console.print(f"[red]❌ Function '{args}' not found[/red]")
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /function-show <name>[/yellow]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

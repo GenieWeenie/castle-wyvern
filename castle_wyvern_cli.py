@@ -43,6 +43,7 @@ from eyrie.mcp_server import CastleWyvernMCPServer
 from eyrie.a2a_protocol import A2AIntegration
 from eyrie.workflow_builder import WorkflowManager, WorkflowExecutor
 from eyrie.enhanced_memory import EnhancedGrimoorum
+from eyrie.browser_agent import BrowserAgent
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -160,6 +161,9 @@ class CastleWyvernCLI:
         self.workflow_manager = WorkflowManager()
         self.workflow_executor = WorkflowExecutor()
         
+        # Browser Agent (Competitive Research Feature)
+        self.browser = BrowserAgent()
+        
         # Initialize clan members
         self.clan = {
             "goliath": ClanMember("Goliath", "🦁", "Leader", "bright_yellow"),
@@ -171,6 +175,7 @@ class CastleWyvernCLI:
             "elisa": ClanMember("Elisa", "🌉", "Bridge", "bright_white"),
             "xanatos": ClanMember("Xanatos", "🎭", "Red Team", "bright_black"),
             "demona": ClanMember("Demona", "🔥", "Failsafe", "bright_red"),
+            "jade": ClanMember("Jade", "🌐", "Web Surfer", "bright_blue"),
         }
         
         self.running = True
@@ -412,6 +417,13 @@ class CastleWyvernCLI:
 - `/memory-context <query>` - Get context for conversation
 - `/memory-stats` - Show memory statistics
 - `/memory-consolidate` - Consolidate old memories
+
+## Browser Agent (New!)
+- `/browse <url>` - Fetch and summarize a webpage
+- `/search <query>` - Search the web
+- `/research <topic>` - Deep research on a topic
+- `/browser-history` - Show browsing history
+- `/browser-clear` - Clear browsing history
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -1688,6 +1700,88 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[green]✅ Consolidated {consolidated} memories[/green]")
                     else:
                         self.console.print("[dim]No memories needed consolidation[/dim]")
+                
+                # ============ Browser Agent Commands ============
+                elif command == "/browse":
+                    if args:
+                        self.clan["jade"].set_busy(f"Browsing: {args[:40]}...")
+                        with self.console.status(f"[cyan]🌐 Jade is browsing {args}...[/cyan]"):
+                            page = self.browser.fetch(args)
+                        
+                        self.console.print(f"\n[bold]🌐 {page.title}[/bold]")
+                        self.console.print(f"[dim]{page.url}[/dim]\n")
+                        
+                        # Show content (truncated)
+                        content = page.content[:2000] if len(page.content) > 2000 else page.content
+                        self.console.print(content)
+                        
+                        if len(page.content) > 2000:
+                            self.console.print(f"\n[dim]... {len(page.content) - 2000} more characters[/dim]")
+                        
+                        self.console.print(f"\n[dim]🔗 Found {len(page.links)} links on page[/dim]")
+                        self.clan["jade"].set_ready()
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /browse <url>[/yellow]")
+                        self.console.print("[dim]   Example: /browse https://python.org[/dim]")
+                
+                elif command == "/search":
+                    if args:
+                        self.clan["jade"].set_busy(f"Searching: {args[:40]}...")
+                        with self.console.status(f"[cyan]🔍 Jade is searching for '{args}'...[/cyan]"):
+                            results = self.browser.search(args, num_results=5)
+                        
+                        table = Table(title=f"🔍 Search Results: '{args}'")
+                        table.add_column("#", justify="right", style="cyan", width=3)
+                        table.add_column("Title", style="bright_blue")
+                        table.add_column("Snippet", style="dim", max_width=50)
+                        
+                        for i, result in enumerate(results, 1):
+                            snippet = result.get('snippet', '')[:80] + '...' if len(result.get('snippet', '')) > 80 else result.get('snippet', '')
+                            table.add_row(str(i), result.get('title', ''), snippet)
+                        
+                        self.console.print(table)
+                        self.console.print(f"\n[dim]Use /browse <url> to fetch full page content[/dim]")
+                        self.clan["jade"].set_ready()
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /search <query>[/yellow]")
+                        self.console.print("[dim]   Example: /search Python tutorials[/dim]")
+                
+                elif command == "/research":
+                    if args:
+                        self.clan["jade"].set_busy(f"Researching: {args[:40]}...")
+                        with self.console.status(f"[cyan]📚 Jade is researching '{args}'...[/cyan]"):
+                            report = self.browser.research(args, depth=2)
+                        
+                        self.console.print(f"\n{report}")
+                        self.clan["jade"].set_ready()
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /research <topic>[/yellow]")
+                        self.console.print("[dim]   Example: /research machine learning basics[/dim]")
+                
+                elif command == "/browser-history":
+                    history = self.browser.get_history()
+                    if history:
+                        table = Table(title="🌐 Browser History")
+                        table.add_column("Time", style="dim", width=8)
+                        table.add_column("Title", style="cyan")
+                        table.add_column("URL", style="blue")
+                        
+                        for page in history[-10:]:  # Last 10
+                            from datetime import datetime
+                            time_str = datetime.fromtimestamp(page.timestamp).strftime("%H:%M")
+                            title = page.title[:40] + '...' if len(page.title) > 40 else page.title
+                            url = page.url[:50] + '...' if len(page.url) > 50 else page.url
+                            table.add_row(time_str, title, url)
+                        
+                        self.console.print(table)
+                        self.console.print(f"\n[dim]Total pages visited: {len(history)}[/dim]")
+                    else:
+                        self.console.print("[dim]No browsing history yet[/dim]")
+                        self.console.print("[dim]Try /search or /browse to start exploring[/dim]")
+                
+                elif command == "/browser-clear":
+                    self.browser.clear_history()
+                    self.console.print("[green]✅ Browser history cleared[/green]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

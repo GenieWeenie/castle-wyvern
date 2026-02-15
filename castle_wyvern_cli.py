@@ -45,6 +45,7 @@ from eyrie.workflow_builder import WorkflowManager, WorkflowExecutor
 from eyrie.enhanced_memory import EnhancedGrimoorum
 from eyrie.browser_agent import BrowserAgent
 from eyrie.clan_creator import ClanCreator
+from eyrie.docker_sandbox import DockerSandbox, SafeCodeExecutor
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -168,6 +169,10 @@ class CastleWyvernCLI:
         # Clan Creator (Competitive Research Feature)
         self.clan_creator = ClanCreator(existing_members=list(self.clan.keys()))
         self.pending_clan_creation = None  # Store preview before confirmation
+        
+        # Docker Sandbox (Competitive Research Feature)
+        self.sandbox = DockerSandbox()
+        self.safe_executor = SafeCodeExecutor()
         
         # Initialize clan members
         self.clan = {
@@ -434,6 +439,13 @@ class CastleWyvernCLI:
 - `/clan-create <description>` - Preview new clan member
 - `/clan-create-confirm` - Confirm and create pending member
 - `/clan-create-cancel` - Cancel pending creation
+
+## Docker Sandbox (New!)
+- `/sandbox-status` - Check Docker sandbox status
+- `/sandbox-exec <code>` - Execute code in sandbox
+- `/sandbox-lang <lang>` - Set language (python, js, bash, go, rust, java)
+- `/sandbox-list` - List running containers
+- `/sandbox-cleanup` - Clean up all containers
 
 ## Stretch Goals (Features 19-21)
 - `/ai-optimize <prompt>` - Optimize a prompt
@@ -1858,6 +1870,96 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[dim]❌ Cancelled creation of {name}[/dim]")
                     else:
                         self.console.print("[dim]No pending creation to cancel[/dim]")
+                
+                # ============ Docker Sandbox Commands ============
+                elif command == "/sandbox-status":
+                    status = self.sandbox.get_status()
+                    
+                    table = Table(title="🐳 Docker Sandbox Status")
+                    table.add_column("Property", style="cyan")
+                    table.add_column("Value")
+                    
+                    table.add_row("Enabled", "✅ Yes" if status['enabled'] else "❌ No")
+                    table.add_row("Docker Available", "✅ Yes" if status['docker_available'] else "❌ No")
+                    table.add_row("Supported Languages", ", ".join(status['supported_languages']))
+                    table.add_row("Default Timeout", f"{status['default_timeout']}s")
+                    table.add_row("Default Memory", status['default_memory'])
+                    table.add_row("Default CPU", status['default_cpu'])
+                    
+                    self.console.print(table)
+                    
+                    if not status['enabled']:
+                        self.console.print("\n[yellow]⚠️  Docker not available[/yellow]")
+                        self.console.print("[dim]   Install Docker: https://docs.docker.com/get-docker/[/dim]")
+                        self.console.print("[dim]   Then restart Castle Wyvern[/dim]")
+                
+                elif command == "/sandbox-exec":
+                    if args:
+                        language = getattr(self, '_sandbox_lang', 'python')
+                        
+                        self.console.print(f"[cyan]🐳 Executing {language} code in Docker sandbox...[/cyan]")
+                        self.console.print("[dim]   (This may take a moment on first run to pull image)[/dim]")
+                        
+                        with self.console.status("[cyan]Running in sandbox...[/cyan]"):
+                            result = self.sandbox.execute(args, language=language)
+                        
+                        if result.success:
+                            self.console.print(f"\n[green]✅ Execution successful ({result.execution_time:.2f}s)[/green]")
+                            if result.stdout:
+                                self.console.print("\n[bold]Output:[/bold]")
+                                self.console.print(result.stdout)
+                        else:
+                            self.console.print(f"\n[red]❌ Execution failed[/red]")
+                            if result.error_message:
+                                self.console.print(f"[red]{result.error_message}[/red]")
+                            if result.stderr:
+                                self.console.print("\n[bold]Error output:[/bold]")
+                                self.console.print(result.stderr)
+                    else:
+                        self.console.print("[yellow]⚠️  Usage: /sandbox-exec <code>[/yellow]")
+                        self.console.print("[dim]   Example: /sandbox-exec print('Hello World')[/dim]")
+                        self.console.print(f"[dim]   Current language: {getattr(self, '_sandbox_lang', 'python')}[/dim]")
+                
+                elif command == "/sandbox-lang":
+                    if args:
+                        lang = args.lower()
+                        supported = self.sandbox.IMAGES.keys()
+                        
+                        if lang in supported:
+                            self._sandbox_lang = lang
+                            self.console.print(f"[green]✅ Sandbox language set to: {lang}[/green]")
+                        else:
+                            self.console.print(f"[red]❌ Unsupported language: {lang}[/red]")
+                            self.console.print(f"[dim]   Supported: {', '.join(supported)}[/dim]")
+                    else:
+                        current = getattr(self, '_sandbox_lang', 'python')
+                        self.console.print(f"[dim]Current language: {current}[/dim]")
+                        self.console.print(f"[dim]Supported: {', '.join(self.sandbox.IMAGES.keys())}[/dim]")
+                
+                elif command == "/sandbox-list":
+                    containers = self.sandbox.list_running_containers()
+                    
+                    if containers:
+                        table = Table(title="🐳 Running Sandbox Containers")
+                        table.add_column("ID", style="cyan", width=12)
+                        table.add_column("Image", style="blue")
+                        table.add_column("Status")
+                        
+                        for c in containers:
+                            table.add_row(c['id'], c['image'], c['status'])
+                        
+                        self.console.print(table)
+                    else:
+                        self.console.print("[dim]No sandbox containers running[/dim]")
+                
+                elif command == "/sandbox-cleanup":
+                    with self.console.status("[cyan]Cleaning up sandbox containers...[/cyan]"):
+                        removed = self.sandbox.cleanup_all()
+                    
+                    if removed > 0:
+                        self.console.print(f"[green]✅ Removed {removed} container(s)[/green]")
+                    else:
+                        self.console.print("[dim]No containers to clean up[/dim]")
                 
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:

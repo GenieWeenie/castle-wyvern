@@ -39,7 +39,7 @@ class LlamaCppClient:
         import urllib.request
         try:
             urllib.request.urlopen(f"{self.base_url}/health", timeout=2)
-        except:
+        except Exception:
             pass  # Will fail on first use if not running
     
     def is_available(self) -> bool:
@@ -48,7 +48,7 @@ class LlamaCppClient:
         try:
             urllib.request.urlopen(f"{self.base_url}/health", timeout=2)
             return True
-        except:
+        except Exception:
             return False
     
     def chat_completion(
@@ -120,7 +120,7 @@ class LlamaCppClient:
             with urllib.request.urlopen(f"{self.base_url}/v1/models", timeout=5) as response:
                 result = json.loads(response.read().decode())
                 return [m['id'] for m in result.get('data', [])]
-        except:
+        except Exception:
             return []
     
     @staticmethod

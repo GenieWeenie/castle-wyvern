@@ -191,7 +191,7 @@ def {name}(url: str, params: Optional[Dict] = None, headers: Optional[Dict] = No
         # Try to return JSON if possible
         try:
             return response.json()
-        except:
+        except Exception:
             return response.text
             
     except Exception as e:
@@ -294,7 +294,7 @@ def {name}(input_data: Any, output_format: str = 'json') -> Any:
             # Try to parse from string
             try:
                 return json.loads(input_data)
-            except:
+            except Exception:
                 return {{'error': 'Invalid JSON input'}}
         else:
             # Convert to JSON string

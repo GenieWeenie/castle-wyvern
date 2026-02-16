@@ -401,7 +401,7 @@ class EnhancedGrimoorum:
         if self.original:
             try:
                 original_id = self.original.add(content, doc_type, metadata)
-            except:
+            except Exception:
                 pass
         
         # Add to vector store
@@ -466,7 +466,7 @@ class EnhancedGrimoorum:
         if self.original:
             try:
                 original_stats = self.original.get_stats()
-            except:
+            except Exception:
                 original_stats = {}
         else:
             original_stats = {}

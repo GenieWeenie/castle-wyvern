@@ -34,7 +34,7 @@ class PhoenixGate:
     
     def __init__(self):
         # Z.ai/GLM API Configuration
-        self.api_key = os.getenv("AI_API_KEY") or "4aedc0c3084f49c0b46679e6f27866c5.SpBz23Mne0vFednl"
+        self.api_key = os.getenv("AI_API_KEY")
         self.zai_base_url = "https://open.bigmodel.cn/api/paas/v4"
         self.model = "glm-4-plus"
         
@@ -316,7 +316,7 @@ class PhoenixGate:
         try:
             requests.get(self.local_url.replace('/generate', '/tags'), timeout=2)
             providers.append({"name": "Local (Ollama)", "status": "ONLINE"})
-        except:
+        except Exception:
             providers.append({"name": "Local (Ollama)", "status": "OFFLINE"})
         
         # Overall status

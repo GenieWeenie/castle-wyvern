@@ -49,7 +49,7 @@ class HTTPNode:
                 try:
                     json_data = json.loads(body)
                     body = None
-                except:
+                except Exception:
                     pass
             
             response = requests.request(
@@ -145,7 +145,7 @@ class ConditionNode:
         try:
             result = eval(condition, {"__builtins__": {}}, context)
             return bool(result)
-        except:
+        except Exception:
             # If eval fails, do string comparison
             return bool(condition)
 

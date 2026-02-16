@@ -90,7 +90,7 @@ class OmniParserClient:
             # Check if omni_parser module can be imported
             # In production, this would check for the actual OmniParser installation
             return False  # Placeholder - would detect actual installation
-        except:
+        except Exception:
             return False
     
     def parse_screenshot(self, image_path: str) -> ParsedScreen:

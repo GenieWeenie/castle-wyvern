@@ -191,6 +191,20 @@ class CastleWyvernCLI:
         self.workflow_manager = WorkflowManager()
         self.workflow_executor = WorkflowExecutor()
         
+        # Initialize clan members FIRST (needed by ClanCreator)
+        self.clan = {
+            "goliath": ClanMember("Goliath", "🦁", "Leader", "bright_yellow"),
+            "lexington": ClanMember("Lexington", "🔧", "Technician", "bright_cyan"),
+            "brooklyn": ClanMember("Brooklyn", "🎯", "Strategist", "bright_red"),
+            "broadway": ClanMember("Broadway", "📜", "Chronicler", "bright_green"),
+            "hudson": ClanMember("Hudson", "📚", "Archivist", "bright_blue"),
+            "bronx": ClanMember("Bronx", "🐕", "Watchdog", "bright_magenta"),
+            "elisa": ClanMember("Elisa", "🌉", "Bridge", "bright_white"),
+            "xanatos": ClanMember("Xanatos", "🎭", "Red Team", "bright_black"),
+            "demona": ClanMember("Demona", "🔥", "Failsafe", "bright_red"),
+            "jade": ClanMember("Jade", "🌐", "Web Surfer", "bright_blue"),
+        }
+        
         # Browser Agent (Competitive Research Feature)
         self.browser = BrowserAgent()
         
@@ -238,20 +252,6 @@ class CastleWyvernCLI:
         self.coord_analytics = CoordinationAnalytics(self.coordination.coordination)
         self.coord_optimizer = TeamOptimizer(self.coordination.coordination)
         self.coord_report = CoordinationReport(self.coordination.coordination)
-        
-        # Initialize clan members
-        self.clan = {
-            "goliath": ClanMember("Goliath", "🦁", "Leader", "bright_yellow"),
-            "lexington": ClanMember("Lexington", "🔧", "Technician", "bright_cyan"),
-            "brooklyn": ClanMember("Brooklyn", "🎯", "Strategist", "bright_red"),
-            "broadway": ClanMember("Broadway", "📜", "Chronicler", "bright_green"),
-            "hudson": ClanMember("Hudson", "📚", "Archivist", "bright_blue"),
-            "bronx": ClanMember("Bronx", "🐕", "Watchdog", "bright_magenta"),
-            "elisa": ClanMember("Elisa", "🌉", "Bridge", "bright_white"),
-            "xanatos": ClanMember("Xanatos", "🎭", "Red Team", "bright_black"),
-            "demona": ClanMember("Demona", "🔥", "Failsafe", "bright_red"),
-            "jade": ClanMember("Jade", "🌐", "Web Surfer", "bright_blue"),
-        }
         
         self.running = True
         self.command_history = []

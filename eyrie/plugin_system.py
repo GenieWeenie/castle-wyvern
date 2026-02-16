@@ -81,11 +81,18 @@ class PluginAPI:
     
     def store_memory(self, content: str, metadata: Dict = None) -> str:
         """Store something in Grimoorum memory."""
-        return self._grimoorum.add(content, metadata=metadata or {})
+        metadata = metadata or {}
+        return self._grimoorum.record(
+            user_input=content,
+            agent_name=metadata.get("agent", "plugin"),
+            agent_response="",  # Plugin memories don't have responses
+            importance=metadata.get("importance", 3),
+            tags=metadata.get("tags", [])
+        )
     
     def search_memory(self, query: str, limit: int = 10) -> List[Dict]:
         """Search Grimoorum memory."""
-        return self._grimoorum.search(query, limit=limit)
+        return self._grimoorum.search_by_keyword(query, limit=limit)
     
     def register_hook(self, hook_name: str, callback: Callable):
         """Register a callback for a plugin hook."""

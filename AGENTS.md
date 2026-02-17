@@ -37,6 +37,6 @@ python -m castle_wyvern
 
 ## Operational Notes
 - 63 commits on main branch
-- 97 tests expected
+- 98 tests expected
 - 39+ features implemented
 - GitHub: GenieWeenie/castle-wyvern

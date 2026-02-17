@@ -9,20 +9,8 @@ from functools import wraps
 from typing import Optional, Callable, Any
 from enum import Enum
 
-# Configure logging
-import os
-log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs')
-os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, 'castle_wyvern.log')
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler()
-    ]
-)
+# Use root logging config; CLI/app entrypoints call setup_logging() so we avoid
+# import-time side effects (creating logs/, basicConfig) when used as a library.
 logger = logging.getLogger(__name__)
 
 

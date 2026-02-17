@@ -42,3 +42,68 @@ class TestCastleWyvernAPI:
         names = [m["name"] for m in data["members"]]
         assert "Goliath" in names
         assert "Lexington" in names
+
+    def test_kg_status_returns_200_and_stats(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        r = client.get("/kg/status")
+        assert r.status_code == 200
+        data = r.get_json()
+        assert "knowledge_graph" in data
+        kg = data["knowledge_graph"]
+        assert "total_entities" in kg or "entity_types" in kg
+
+    def test_kg_reason_400_when_query_missing(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        r = client.post("/kg/reason", json={}, content_type="application/json")
+        assert r.status_code == 400
+        data = r.get_json()
+        assert "error" in data
+        assert data.get("code") == "missing_field"
+
+    def test_kg_reason_200_with_query(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        r = client.post(
+            "/kg/reason",
+            json={"query": "What facts do we have?"},
+            content_type="application/json",
+        )
+        assert r.status_code == 200
+        data = r.get_json()
+        assert isinstance(data, dict)
+
+    def test_coord_status_returns_200_and_stats(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        r = client.get("/coord/status")
+        assert r.status_code == 200
+        data = r.get_json()
+        assert "coordination" in data
+        coord = data["coordination"]
+        assert "registered_agents" in coord
+
+    def test_coord_team_400_when_task_missing(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        r = client.post("/coord/team", json={"requirements": ["coding"]}, content_type="application/json")
+        assert r.status_code == 400
+        data = r.get_json()
+        assert "error" in data
+        assert data.get("code") == "missing_field"
+
+    def test_coord_team_200_with_task(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        r = client.post(
+            "/coord/team",
+            json={"task": "Implement a small API", "requirements": ["coding", "documentation"]},
+            content_type="application/json",
+        )
+        assert r.status_code == 200
+        data = r.get_json()
+        assert "team" in data
+        assert data["task"] == "Implement a small API"
+        assert "requirements" in data
+        assert isinstance(data["team"], list)

@@ -203,5 +203,7 @@ MIT — see [LICENSE](LICENSE).
 ## Docs and roadmap
 
 - **Architecture:** [docs/architecture.md](docs/architecture.md) — layers, data flow, where components live.
+- **API examples:** [docs/api-examples.md](docs/api-examples.md) — curl examples for all endpoints.
+- **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md) — configuration and common errors.
 - **Roadmap:** [docs/roadmap.md](docs/roadmap.md) — short/medium-term direction and how to contribute.
 - **Recent changes:** [CHANGELOG.md](CHANGELOG.md) and [releases](https://github.com/GenieWeenie/castle-wyvern/releases).

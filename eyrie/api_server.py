@@ -92,11 +92,15 @@ class CastleWyvernAPI:
 
             provided_key = request.headers.get("X-API-Key") or request.args.get("api_key")
             if provided_key != self.api_key:
-                return jsonify({"error": "Invalid or missing API key"}), 401
+                return jsonify({"error": "Invalid or missing API key", "code": "invalid_api_key"}), 401
 
             return f(*args, **kwargs)
 
         return decorated
+
+    def _error(self, message: str, code: str, status_code: int = 400):
+        """Return a consistent JSON error response."""
+        return jsonify({"error": message, "code": code}), status_code
 
     def _register_routes(self):
         """Register all API routes."""
@@ -251,7 +255,7 @@ class CastleWyvernAPI:
             question = data.get("question") or data.get("prompt") or data.get("message")
 
             if not question:
-                return jsonify({"error": "Question is required"}), 400
+                return self._error("Question is required", "missing_field", 400)
 
             try:
                 # Classify intent
@@ -285,7 +289,7 @@ class CastleWyvernAPI:
                 )
 
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/clan/code", methods=["POST"])
         @self._require_api_key
@@ -296,7 +300,7 @@ class CastleWyvernAPI:
             language = data.get("language", "python")
 
             if not description:
-                return jsonify({"error": "Description is required"}), 400
+                return self._error("Description is required", "missing_field", 400)
 
             try:
                 system_prompt = """You are Lexington, the technician of the Manhattan Clan.
@@ -323,7 +327,7 @@ Provide example usage when appropriate."""
                 )
 
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/clan/review", methods=["POST"])
         @self._require_api_key
@@ -333,7 +337,7 @@ Provide example usage when appropriate."""
             code = data.get("code") or data.get("content")
 
             if not code:
-                return jsonify({"error": "Code is required"}), 400
+                return self._error("Code is required", "missing_field", 400)
 
             try:
                 system_prompt = """You are Xanatos, the red team specialist.
@@ -358,7 +362,7 @@ Be thorough but constructive. Identify issues and suggest fixes."""
                 )
 
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/clan/plan", methods=["POST"])
         @self._require_api_key
@@ -368,7 +372,7 @@ Be thorough but constructive. Identify issues and suggest fixes."""
             description = data.get("description") or data.get("prompt")
 
             if not description:
-                return jsonify({"error": "Description is required"}), 400
+                return self._error("Description is required", "missing_field", 400)
 
             try:
                 system_prompt = """You are Brooklyn, the strategist.
@@ -394,7 +398,7 @@ Consider trade-offs and provide reasoning."""
                 )
 
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/clan/summarize", methods=["POST"])
         @self._require_api_key
@@ -405,7 +409,7 @@ Consider trade-offs and provide reasoning."""
             max_length = data.get("max_length", "medium")  # short, medium, long
 
             if not text:
-                return jsonify({"error": "Text is required"}), 400
+                return self._error("Text is required", "missing_field", 400)
 
             try:
                 length_prompt = {
@@ -436,7 +440,7 @@ Maintain the original meaning and key details."""
                 )
 
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         # ============ Node Management ============
 
@@ -476,7 +480,7 @@ Maintain the original meaning and key details."""
             capabilities = data.get("capabilities", ["cpu"])
 
             if not name or not host:
-                return jsonify({"error": "Name and host are required"}), 400
+                return self._error("Name and host are required", "missing_field", 400)
 
             try:
                 node = self.node_manager.add_node(name, host, port, capabilities)
@@ -496,7 +500,7 @@ Maintain the original meaning and key details."""
                     201,
                 )
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/nodes/discover", methods=["POST"])
         @self._require_api_key
@@ -512,7 +516,7 @@ Maintain the original meaning and key details."""
                     }
                 )
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         # ============ Memory (Grimoorum) ============
 
@@ -525,13 +529,13 @@ Maintain the original meaning and key details."""
             limit = data.get("limit", 10)
 
             if not query:
-                return jsonify({"error": "Query is required"}), 400
+                return self._error("Query is required", "missing_field", 400)
 
             try:
                 results = self.grimoorum.search(query, limit=limit)
                 return jsonify({"query": query, "results_count": len(results), "results": results})
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/memory/ingest", methods=["POST"])
         @self._require_api_key
@@ -543,7 +547,7 @@ Maintain the original meaning and key details."""
             metadata = data.get("metadata", {})
 
             if not content:
-                return jsonify({"error": "Content is required"}), 400
+                return self._error("Content is required", "missing_field", 400)
 
             try:
                 doc_id = self.grimoorum.add(content, doc_type=doc_type, metadata=metadata)
@@ -559,7 +563,7 @@ Maintain the original meaning and key details."""
                     201,
                 )
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/memory/conversations", methods=["GET"])
         @self._require_api_key
@@ -569,7 +573,7 @@ Maintain the original meaning and key details."""
                 conversations = self.grimoorum.get_recent_conversations(limit=50)
                 return jsonify({"count": len(conversations), "conversations": conversations})
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         # ============ Knowledge Graph (KAG) ============
 
@@ -581,7 +585,7 @@ Maintain the original meaning and key details."""
                 stats = self.knowledge_graph.get_stats()
                 return jsonify({"knowledge_graph": stats})
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/kg/reason", methods=["POST"])
         @self._require_api_key
@@ -591,13 +595,13 @@ Maintain the original meaning and key details."""
             query = data.get("query")
 
             if not query:
-                return jsonify({"error": "query is required"}), 400
+                return self._error("query is required", "missing_field", 400)
 
             try:
                 result = self.knowledge_graph.logical_reasoning(query)
                 return jsonify(result)
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         # ============ Agent Coordination ============
 
@@ -609,7 +613,7 @@ Maintain the original meaning and key details."""
                 stats = self.coordination.coordination.get_coordination_stats()
                 return jsonify({"coordination": stats})
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/coord/team", methods=["POST"])
         @self._require_api_key
@@ -622,7 +626,7 @@ Maintain the original meaning and key details."""
                 requirements = [r.strip() for r in requirements.split(",")]
 
             if not task:
-                return jsonify({"error": "task (or description) is required"}), 400
+                return self._error("task (or description) is required", "missing_field", 400)
 
             try:
                 team_ids = self.coordination.get_optimal_team(task, requirements)
@@ -639,7 +643,7 @@ Maintain the original meaning and key details."""
                     )
                 return jsonify({"task": task, "requirements": requirements, "team": team})
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         # ============ BMAD Workflows ============
 
@@ -651,7 +655,7 @@ Maintain the original meaning and key details."""
             description = data.get("description") or data.get("prompt")
 
             if not description:
-                return jsonify({"error": "Description is required"}), 400
+                return self._error("Description is required", "missing_field", 400)
 
             try:
                 # Use Lexington for spec generation
@@ -675,7 +679,7 @@ Include: Overview, Requirements, and Implementation approach."""
                 )
 
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
         @self.app.route("/bmad/review", methods=["POST"])
         @self._require_api_key
@@ -685,7 +689,7 @@ Include: Overview, Requirements, and Implementation approach."""
             code = data.get("code") or data.get("content")
 
             if not code:
-                return jsonify({"error": "Code is required"}), 400
+                return self._error("Code is required", "missing_field", 400)
 
             try:
                 system_prompt = """You are Xanatos. Conduct a thorough code review.
@@ -709,7 +713,7 @@ Provide specific line-by-line feedback."""
                 )
 
             except Exception as e:
-                return jsonify({"error": str(e)}), 500
+                return self._error(str(e), "server_error", 500)
 
     def _get_member_for_intent(self, intent: IntentType) -> str:
         """Map intent to clan member."""

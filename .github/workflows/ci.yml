@@ -71,7 +71,7 @@ jobs:
 
     - name: Run Bandit security checks (fail on high severity)
       run: |
-        bandit -r eyrie/ --ini .bandit -f json -o bandit-report.json
+        bandit -r eyrie/ --ini .bandit -f json -o bandit-report.json || true
         cat bandit-report.json
         # Fail the job only on high-severity findings (-l 3)
         bandit -r eyrie/ --ini .bandit -l 3

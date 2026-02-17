@@ -11,11 +11,14 @@ Provides HTTP endpoints for:
 """
 
 import json
+import logging
 import os
 import sys
 from typing import Dict, Any, Optional
 from datetime import datetime
 from functools import wraps
+
+logger = logging.getLogger("castle_wyvern.api")
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -79,6 +82,15 @@ class CastleWyvernAPI:
         self.app = Flask("CastleWyvern")
         CORS(self.app)  # Enable CORS for all routes
 
+        # Light observability: request count and access log
+        self._request_count = 0
+
+        @self.app.after_request
+        def _log_request(response):
+            self._request_count += 1
+            logger.info("%s %s %s", request.method, request.path, response.status_code)
+            return response
+
         # Register routes
         self._register_routes()
 
@@ -125,6 +137,11 @@ class CastleWyvernAPI:
                     },
                 }
             )
+
+        @self.app.route("/metrics", methods=["GET"])
+        def metrics():
+            """Light observability: request count (no auth for easy scraping)."""
+            return jsonify({"requests_total": self._request_count})
 
         @self.app.route("/status", methods=["GET"])
         @self._require_api_key

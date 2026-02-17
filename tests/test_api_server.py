@@ -30,6 +30,16 @@ class TestCastleWyvernAPI:
         assert "phoenix_gate" in data["services"]
         assert data["services"]["grimoorum"] == "active"
 
+    def test_metrics_returns_200_and_request_count(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        r = client.get("/metrics")
+        assert r.status_code == 200
+        data = r.get_json()
+        assert "requests_total" in data
+        assert isinstance(data["requests_total"], int)
+        assert data["requests_total"] >= 0
+
     def test_clan_list_returns_200_and_members(self):
         api = CastleWyvernAPI()
         client = api.app.test_client()

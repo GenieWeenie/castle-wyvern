@@ -23,6 +23,18 @@ If you set `API_KEY` in `.env` or pass `--api-key`, send it as a header or query
 curl -s http://localhost:18791/health | jq
 ```
 
+---
+
+## Metrics (no auth)
+
+Light observability: total request count since server start.
+
+```bash
+curl -s http://localhost:18791/metrics | jq
+```
+
+Example: `{"requests_total": 42}`. The API also logs each request as `METHOD path status_code` to the `castle_wyvern.api` logger.
+
 Example response:
 
 ```json
@@ -167,6 +179,7 @@ curl -s -X POST http://localhost:18791/bmad/review \
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
 | GET | `/health` | no | Liveness |
+| GET | `/metrics` | no | Request count (observability) |
 | GET | `/status` | yes | Full status |
 | GET | `/clan` | yes | List clan members |
 | POST | `/clan/ask` | yes | Ask (routed by intent) |

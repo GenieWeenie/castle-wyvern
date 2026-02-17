@@ -617,6 +617,7 @@ class CastleWyvernCLI:
 - `/debug-off` - Disable debug mode  
 - `/logs [type]` - View recent logs (error, audit, api)
 - `help` - Show this help
+- `version` - Show Castle Wyvern version
 - `quit` / `exit` - Leave Castle Wyvern
 
 ## Examples
@@ -791,6 +792,11 @@ plan Design a microservices architecture for an e-commerce app
         self.console.clear()
         self.print_banner()
         self.print_dashboard()
+        # Hint if no API key is configured (LLM features need one)
+        if not (os.getenv("AI_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ZAI_API_KEY")):
+            self.console.print(
+                "[yellow]Tip: Copy .env.example to .env and add AI_API_KEY (or OPENAI_API_KEY) for LLM features.[/yellow]"
+            )
         self.console.print(
             "\n[dim]Type 'help' for commands or just start chatting with the clan![/dim]\n"
         )
@@ -826,6 +832,9 @@ plan Design a microservices architecture for an e-commerce app
 
                 elif command == "help":
                     self.print_help()
+
+                elif command == "version":
+                    self.console.print("[bold]Castle Wyvern[/bold] 0.2.0")
 
                 elif command == "status":
                     self.print_dashboard()

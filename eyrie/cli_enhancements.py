@@ -252,7 +252,9 @@ class CommandCompleter(Completer):
         self.members = self.CLAN_MEMBERS
         self.member_commands = self.MEMBER_COMMANDS
 
-    def get_completions(self, document: Any, complete_event: Any) -> Generator[Completion, None, None]:
+    def get_completions(
+        self, document: Any, complete_event: Any
+    ) -> Generator[Completion, None, None]:
         """Generate completions based on current input."""
         text = document.text_before_cursor
         words = text.split()

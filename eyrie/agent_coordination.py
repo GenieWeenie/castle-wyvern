@@ -555,7 +555,9 @@ class ClanCoordinationManager:
                 ["security", "coding", "technical"]
             )
         """
-        return cast(Dict[str, Any], self.coordination.run_coordination_loop(description, requirements))
+        return cast(
+            Dict[str, Any], self.coordination.run_coordination_loop(description, requirements)
+        )
 
     def get_optimal_team(self, task_description: str, requirements: List[str]) -> List[str]:
         """Get the optimal team for a task without executing."""

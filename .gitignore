@@ -52,6 +52,8 @@ logs/
 # Runtime data
 grimoorum/clan_memory.json
 grimoorum/*.json
+grimoorum/documents/
+grimoorum/nodes/
 !/grimoorum/.gitkeep
 
 # Test outputs

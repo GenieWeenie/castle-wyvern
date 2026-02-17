@@ -1,0 +1,31 @@
+---
+name: ❓ Question/Support
+description: Ask a question or get help using Castle Wyvern
+title: "[QUESTION] "
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What do you need help with?
+      placeholder: How do I add a custom clan member?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What are you trying to accomplish?
+      placeholder: I want to create a specialized agent for data analysis...
+      
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your setup (optional)
+      placeholder: |
+        - OS: macOS 14.0
+        - Python: 3.11
+        - Version: 0.2.0

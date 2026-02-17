@@ -1,0 +1,69 @@
+---
+name: 🐛 Bug Report
+description: Report a bug in Castle Wyvern
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below.
+        
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What happened? What did you expect to happen?
+      placeholder: When I run the code command, it crashes with...
+    validations:
+      required: true
+      
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Run `wyvern code "test"`
+        2. Wait for response
+        3. See error
+    validations:
+      required: true
+      
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+      placeholder: The code should be generated without errors
+      
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your system information
+      placeholder: |
+        - OS: macOS 14.0 / Ubuntu 22.04 / Windows 11
+        - Python version: 3.11
+        - Castle Wyvern version: 0.2.0
+        - Installation method: pip / git clone
+      render: markdown
+      
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs/Error Messages
+      description: Paste any relevant logs or error messages
+      render: shell
+      
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I've searched existing issues and this hasn't been reported
+          required: true
+        - label: I've tested with the latest version
+          required: true
+        - label: I've included all information needed to reproduce
+          required: true

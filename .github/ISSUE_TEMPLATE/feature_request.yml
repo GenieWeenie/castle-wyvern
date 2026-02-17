@@ -1,0 +1,50 @@
+---
+name: ✨ Feature Request
+description: Suggest a new feature for Castle Wyvern
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make Castle Wyvern better? We'd love to hear it!
+        
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem/Use Case
+      description: What problem does this solve? Or what use case does it enable?
+      placeholder: I want to be able to use Castle Wyvern with Ollama's new vision models...
+    validations:
+      required: true
+      
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this to work?
+      placeholder: Add a new agent type that can process images...
+    validations:
+      required: true
+      
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other solutions have you thought about?
+      placeholder: I could use a different tool, but...
+      
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other information, screenshots, or examples
+      
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: This feature doesn't already exist
+        - label: This isn't a bug (use bug report template)
+        - label: I've checked if this has been requested before

@@ -87,7 +87,9 @@ class TestCastleWyvernAPI:
     def test_coord_team_400_when_task_missing(self):
         api = CastleWyvernAPI()
         client = api.app.test_client()
-        r = client.post("/coord/team", json={"requirements": ["coding"]}, content_type="application/json")
+        r = client.post(
+            "/coord/team", json={"requirements": ["coding"]}, content_type="application/json"
+        )
         assert r.status_code == 400
         data = r.get_json()
         assert "error" in data

@@ -92,7 +92,10 @@ class CastleWyvernAPI:
 
             provided_key = request.headers.get("X-API-Key") or request.args.get("api_key")
             if provided_key != self.api_key:
-                return jsonify({"error": "Invalid or missing API key", "code": "invalid_api_key"}), 401
+                return (
+                    jsonify({"error": "Invalid or missing API key", "code": "invalid_api_key"}),
+                    401,
+                )
 
             return f(*args, **kwargs)
 

@@ -8,6 +8,40 @@
 ![Version](https://img.shields.io/badge/version-0.2.0-blue)
 ![Python](https://img.shields.io/badge/python-3.9+-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![OpenClaw](https://img.shields.io/badge/works%20with-OpenClaw-purple)](https://openclaw.ai)
+
+---
+
+## 🤝 Works with OpenClaw
+
+Castle Wyvern is designed to complement [OpenClaw](https://openclaw.ai) — the multi-channel AI assistant platform.
+
+**The perfect pair:**
+- **OpenClaw** = Your conversational assistant (Telegram, WhatsApp, Discord, etc.)
+- **Castle Wyvern** = Your technical infrastructure (CLI, API, multi-agent system)
+
+### Use Cases
+
+**1. OpenClaw Delegates to Castle Wyvern**
+```
+You (Telegram) → OpenClaw → Castle Wyvern → Lexington generates code → Back to you
+```
+
+**2. Castle Wyvern as an OpenClaw Skill**
+```python
+# Install Castle Wyvern as an OpenClaw skill
+# Use the clan directly from any OpenClaw channel
+
+User: "Write a Python function to parse JSON"
+OpenClaw: Delegates to Castle Wyvern's Lexington
+Lexington: Returns the code
+OpenClaw: Sends code back to user
+```
+
+**3. Hybrid Workflows**
+- OpenClaw monitors messages 24/7
+- Castle Wyvern handles complex technical tasks
+- Both share memory (Grimoorum) for continuity
 
 ---
 
@@ -852,6 +886,82 @@ Castle Wyvern can now:
 - **MCP** connects Castle Wyvern to clients (Claude, Cursor)
 - **A2A** connects Castle Wyvern to other agents (CrewAI, LangGraph)
 - Together: Full ecosystem interoperability!
+
+---
+
+## 🔌 OpenClaw Integration
+
+Castle Wyvern works seamlessly with [OpenClaw](https://openclaw.ai) — the multi-channel AI assistant platform.
+
+### Why Use Them Together?
+
+| OpenClaw | Castle Wyvern | Combined Power |
+|----------|--------------|----------------|
+| Multi-channel messaging (Telegram, WhatsApp, Discord) | Multi-agent technical execution | Chat anywhere, execute everywhere |
+| Always-on availability | Deep technical workflows | Simple questions → quick answers, Complex tasks → deep execution |
+| Conversation continuity | Code generation & review | Natural discussion → production code |
+| Skills system | Plugin system + MCP/A2A | Extensible on both sides |
+
+### Integration Methods
+
+**1. Castle Wyvern as OpenClaw Skill**
+
+Install Castle Wyvern as an OpenClaw skill and use the clan from any channel:
+
+```
+User (Telegram): "Write a Python function to calculate Fibonacci"
+OpenClaw: Delegates to Castle Wyvern
+Lexington: Generates the code
+OpenClaw: Sends code back to user on Telegram
+```
+
+**2. Hybrid Mode**
+
+- **OpenClaw** handles: Scheduling, reminders, quick lookups, conversation
+- **Castle Wyvern** handles: Code generation, architecture planning, security reviews, complex workflows
+
+**3. Shared Infrastructure**
+
+Both can share:
+- **Memory** (Grimoorum) — Conversation history persists across both
+- **Configuration** (`.env` files) — Same API keys, same providers
+- **Docker** — Shared sandbox for safe code execution
+
+### Setup
+
+```bash
+# 1. Install OpenClaw
+npm install -g openclaw
+
+# 2. Install Castle Wyvern skill for OpenClaw
+openclaw skills install castle-wyvern
+
+# 3. Configure both to use the same .env
+# Both read AI_API_KEY, OLLAMA_HOST, etc.
+
+# 4. Start using!
+# Message your OpenClaw bot: "Ask Lexington to review this code"
+```
+
+### Example Workflows
+
+**Code Review Pipeline:**
+```
+You (WhatsApp) → OpenClaw → Castle Wyvern (Xanatos reviews) 
+→ Result back to WhatsApp with security analysis
+```
+
+**Architecture Planning:**
+```
+You (Discord): "Plan a microservices architecture for e-commerce"
+OpenClaw → Castle Wyvern (Brooklyn architects + Goliath approves)
+→ Full architecture document in Discord
+```
+
+**Continuous Monitoring:**
+```
+OpenClaw cron → Castle Wyvern (Bronx monitors) → Alert via Telegram when issues found
+```
 
 ---
 

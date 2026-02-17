@@ -10,6 +10,7 @@ import json
 import argparse
 from typing import Optional, Dict, List
 from datetime import datetime
+from pathlib import Path
 
 # Rich imports
 from rich.console import Console
@@ -752,8 +753,6 @@ plan Design a microservices architecture for an e-commerce app
     
     def show_logs(self, log_type: str = None):
         """Show recent log entries."""
-        from pathlib import Path
-        
         log_dir = Path("~/.castle_wyvern/logs").expanduser()
         
         if not log_dir.exists():

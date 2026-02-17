@@ -479,7 +479,6 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
 # Add to knowledge_graph.py
 __all__ = [
-    'KnowledgeGraph', 'Entity', 'Relationship', 'KnowledgeSchema',
     'KnowledgeGraphVisualizer', 'SmartEntityExtractor', 
     'QueryEngine', 'KnowledgeGraphExporter'
 ]

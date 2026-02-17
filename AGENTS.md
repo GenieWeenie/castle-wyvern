@@ -35,6 +35,10 @@ python -m castle_wyvern
 - Tests in tests/ directory
 - Documentation in .md files at root
 
+## Before pushing (CI)
+- **Format:** Run `black --line-length 100 .` (or on changed files only) so the format check stays green.
+- Run tests: `pytest tests/ -v`
+
 ## Operational Notes
 - 63 commits on main branch
 - 117 tests expected

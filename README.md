@@ -86,6 +86,24 @@ python castle_wyvern_cli.py
 
 ---
 
+## API
+
+The REST API (default port **18791**) exposes clan, memory, KAG, coordination, and BMAD. Start with the CLI (`api-start`) or `python -m eyrie.api_server`.
+
+```bash
+# No auth required
+curl -s http://localhost:18791/health | jq
+
+# With API key (if configured)
+curl -s -H "X-API-Key: YOUR_KEY" http://localhost:18791/status | jq
+curl -s -X POST http://localhost:18791/clan/ask -H "Content-Type: application/json" -H "X-API-Key: YOUR_KEY" \
+  -d '{"question": "How do I structure a Python project?"}' | jq
+```
+
+**Full examples:** [docs/api-examples.md](docs/api-examples.md) — health, status, clan/ask, memory, kg/reason, coord/team, BMAD.
+
+---
+
 ## Project Structure
 
 ```
@@ -94,7 +112,7 @@ castle-wyvern/
 ├── eyrie/             # Phoenix Gate, intent router, API server, plugins, security, etc.
 ├── grimoorum/         # Memory
 ├── tests/             # Test suite (117 tests)
-├── docs/              # Feature documentation
+├── docs/              # Architecture, API examples, features, roadmap
 ├── castle_wyvern_cli.py
 ├── clan_wyvern.py
 ├── pyproject.toml
@@ -182,6 +200,8 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-## Roadmap
+## Docs and roadmap
 
-See [docs/cli_research.md](docs/cli_research.md) and [roadmap.json](roadmap.json). For recent changes see [CHANGELOG.md](CHANGELOG.md) and [releases](https://github.com/GenieWeenie/castle-wyvern/releases).
+- **Architecture:** [docs/architecture.md](docs/architecture.md) — layers, data flow, where components live.
+- **Roadmap:** [docs/roadmap.md](docs/roadmap.md) — short/medium-term direction and how to contribute.
+- **Recent changes:** [CHANGELOG.md](CHANGELOG.md) and [releases](https://github.com/GenieWeenie/castle-wyvern/releases).

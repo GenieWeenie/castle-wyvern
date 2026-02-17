@@ -11,6 +11,10 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![OpenClaw](https://img.shields.io/badge/works%20with-OpenClaw-purple)](https://openclaw.ai)
 
+<p align="center">
+  <img src="assets/castle-wyvern-logo.png" alt="Castle Wyvern - Personal AI Infrastructure" width="480">
+</p>
+
 ---
 
 ## Works with OpenClaw

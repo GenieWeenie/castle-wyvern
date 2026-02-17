@@ -1,0 +1,16 @@
+{
+  "5aa3014c": {
+    "id": "5aa3014c",
+    "name": "MacBookAir",
+    "host": "192.168.0.45",
+    "port": 18790,
+    "status": "online",
+    "capabilities": [
+      "cpu",
+      "ollama"
+    ],
+    "load": 0.0,
+    "last_seen": "2026-02-16T16:38:06.450165",
+    "metadata": {}
+  }
+}

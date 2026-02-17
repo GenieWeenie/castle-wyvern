@@ -198,8 +198,15 @@ class TestClanCoordinationManager:
     def test_clan_members_registered(self):
         manager = ClanCoordinationManager()
         expected_members = [
-            "goliath", "lexington", "brooklyn", "broadway",
-            "hudson", "xanatos", "demona", "elisa", "jade",
+            "goliath",
+            "lexington",
+            "brooklyn",
+            "broadway",
+            "hudson",
+            "xanatos",
+            "demona",
+            "elisa",
+            "jade",
         ]
         for member_id in expected_members:
             assert member_id in manager.coordination.agents

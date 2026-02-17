@@ -11,10 +11,11 @@ from eyrie.visual_automation_utils import VisualMacro, SessionRecorder, Automati
 
 # --- Fixtures ---
 
+
 @pytest.fixture
 def mock_visual_automation():
     """Create a VisualAutomation with mocked internals."""
-    with patch('eyrie.omni_parser.OmniParserClient'):
+    with patch("eyrie.omni_parser.OmniParserClient"):
         va = VisualAutomation()
         va.parser.available = True
         va.current_screen = None
@@ -26,26 +27,45 @@ def mock_visual_automation():
 def sample_elements():
     """Sample UIElements for testing."""
     return [
-        UIElement(id="btn1", type="button", bbox=(10, 20, 100, 40),
-                  text="Submit", confidence=0.95, interactive=True),
-        UIElement(id="inp1", type="input", bbox=(10, 60, 200, 30),
-                  text="username", confidence=0.90, interactive=True),
-        UIElement(id="txt1", type="text", bbox=(10, 100, 150, 20),
-                  text="Welcome", confidence=0.85, interactive=False),
-        UIElement(id="btn2", type="button", bbox=(10, 140, 100, 40),
-                  text="Cancel", confidence=0.88, interactive=True),
+        UIElement(
+            id="btn1",
+            type="button",
+            bbox=(10, 20, 100, 40),
+            text="Submit",
+            confidence=0.95,
+            interactive=True,
+        ),
+        UIElement(
+            id="inp1",
+            type="input",
+            bbox=(10, 60, 200, 30),
+            text="username",
+            confidence=0.90,
+            interactive=True,
+        ),
+        UIElement(
+            id="txt1",
+            type="text",
+            bbox=(10, 100, 150, 20),
+            text="Welcome",
+            confidence=0.85,
+            interactive=False,
+        ),
+        UIElement(
+            id="btn2",
+            type="button",
+            bbox=(10, 140, 100, 40),
+            text="Cancel",
+            confidence=0.88,
+            interactive=True,
+        ),
     ]
 
 
 @pytest.fixture
 def sample_screen(sample_elements):
     """A ParsedScreen with sample elements."""
-    return ParsedScreen(
-        elements=sample_elements,
-        width=1920,
-        height=1080,
-        timestamp=time.time()
-    )
+    return ParsedScreen(elements=sample_elements, width=1920, height=1080, timestamp=time.time())
 
 
 @pytest.fixture
@@ -55,6 +75,7 @@ def session_recorder(tmp_path):
 
 
 # --- VisualAutomation.get_status() ---
+
 
 class TestVisualAutomationStatus:
 
@@ -78,12 +99,17 @@ class TestVisualAutomationStatus:
 
 # --- UIElement ---
 
+
 class TestUIElement:
 
     def test_creation_and_properties(self):
         elem = UIElement(
-            id="btn1", type="button", bbox=(10, 20, 100, 40),
-            text="OK", confidence=0.95, interactive=True
+            id="btn1",
+            type="button",
+            bbox=(10, 20, 100, 40),
+            text="OK",
+            confidence=0.95,
+            interactive=True,
         )
         assert elem.type == "button"
         assert elem.bbox == (10, 20, 100, 40)
@@ -103,6 +129,7 @@ class TestUIElement:
 
 
 # --- ParsedScreen.get_interactive_elements() ---
+
 
 class TestScreenAnalysis:
 
@@ -126,6 +153,7 @@ class TestScreenAnalysis:
 
 # --- VisualMacro ---
 
+
 class TestVisualMacro:
 
     def _make_macro(self, click_results, type_results, tmp_path):
@@ -141,8 +169,8 @@ class TestVisualMacro:
     def test_login_sequence_success(self, tmp_path):
         success = {"success": True}
         macro = self._make_macro(
-            click_results=[success, success, success],   # username field, password field, submit
-            type_results=[success, success],              # type username, type password
+            click_results=[success, success, success],  # username field, password field, submit
+            type_results=[success, success],  # type username, type password
             tmp_path=tmp_path,
         )
 
@@ -192,6 +220,7 @@ class TestVisualMacro:
 
 
 # --- SessionRecorder ---
+
 
 class TestSessionRecorder:
 

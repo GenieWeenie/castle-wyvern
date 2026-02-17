@@ -1,0 +1,5 @@
+[bandit]
+exclude_dirs = /tests/,/.venv/
+skips = B101,B105
+
+# B101: assert_used in tests; B105: hardcoded password (demo placeholder in eyrie/security.py __main__ only)

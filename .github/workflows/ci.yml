@@ -37,11 +37,10 @@ jobs:
     - name: Format check with black
       run: |
         black --check --line-length=100 .
-      continue-on-error: true
-    
+
     - name: Type check with mypy
       run: |
-        mypy eyrie/ --ignore-missing-imports || true
+        mypy eyrie/ --ignore-missing-imports --no-strict-optional
       continue-on-error: true
     
     - name: Test with pytest
@@ -71,9 +70,8 @@ jobs:
 
     - name: Run Bandit security checks
       run: |
-        bandit -r eyrie/ -f json -o bandit-report.json || true
-        cat bandit-report.json || echo "Bandit check completed"
-      continue-on-error: true
+        bandit -r eyrie/ -c .bandit -f json -o bandit-report.json
+        cat bandit-report.json
 
     - name: Check for hardcoded secrets
       run: |

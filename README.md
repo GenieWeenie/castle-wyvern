@@ -83,6 +83,13 @@ cp .env.example .env
 python castle_wyvern_cli.py
 ```
 
+### Optional features
+
+| Feature | Install | Usage |
+|--------|--------|--------|
+| **Local LLM (Ollama)** | `pip install ollama` or `pip install -e ".[local]"` | Set `OLLAMA_HOST` in `.env` (default `http://localhost:11434`). Use `mode=local` for Phoenix Gate. |
+| **RAG (vector search)** | `pip install faiss-cpu chromadb` or `pip install -e ".[rag]"` | Enables vector memory and semantic search in enhanced memory. |
+
 ---
 
 ## 🎮 Using Castle Wyvern
@@ -789,39 +796,13 @@ Then configure your MCP client to connect to Castle Wyvern!
 
 ## 🚀 Project Status
 
-**🎉 37+ FEATURES COMPLETE! 🎉**
+**🎉 39+ FEATURES COMPLETE! 🎉**
 
-| Category | Features | Status |
-|----------|----------|--------|
-| Phase 1 | 4/4 | ✅ 100% |
-| Phase 2 | 4/4 | ✅ 100% |
-| Phase 3 | 5/5 | ✅ 100% |
-| Phase 4 | 8/8 | ✅ 100% |
-| **Research Improvements** | **4/5** | ✅ **Done** |
-| **Competitive Features** | **5/5** | ✅ **Done** |
-| **BabyAGI Features** | **1/1** | ✅ **Done** |
-| **llama.cpp** | **1/1** | ✅ **Done** |
-| **CrewAI Backstories** | **1/1** | ✅ **Done** |
-| **nanoGPT** | **1/1** | ✅ **Done** |
-| **KAG Knowledge Graph** | **1/1** | ✅ **Done** |
-| **OmniParser** | **1/1** | ✅ **Done** |
-| **Agent Coordination** | **1/1** | ✅ **Done** |
-| **TOTAL** | **37+** | **✅ 100%** |
-| Phase 3 | 5/5 | ✅ 100% |
-| Phase 4 | 8/8 | ✅ 100% |
-| **Research Improvements** | **4/5** | ✅ **Done** |
-| **Competitive Features** | **5/5** | ✅ **Done** |
-| **BabyAGI Features** | **1/1** | ✅ **Done** |
-| **llama.cpp** | **1/1** | ✅ **Done** |
-| **CrewAI Backstories** | **1/1** | ✅ **Done** |
-| **nanoGPT** | **1/1** | ✅ **Done** |
-| **KAG Knowledge Graph** | **1/1** | ✅ **Done** |
-| **TOTAL** | **35+** | **✅ 100%** |
-| Phase 3 | 5/5 | ✅ 100% |
-| Phase 4 | 8/8 | ✅ 100% |
-| **Research Improvements** | **4/5** | ✅ **Done** |
-| **Competitive Features** | **5/5** | ✅ **Done** |
-| **TOTAL** | **30/30** | **✅ 100%** |
+| Category | Status |
+|----------|--------|
+| Phase 1–4 (Core, Distribution, Interfaces, Security) | ✅ 100% |
+| Research (BabyAGI, llama.cpp, CrewAI, nanoGPT, KAG, OmniParser, Agent Coordination) | ✅ Done |
+| **TOTAL** | **✅ 100%** |
 
 ### Feature Categories
 - ✅ **Core** — Multi-agent routing, memory, workflows
@@ -831,8 +812,6 @@ Then configure your MCP client to connect to Castle Wyvern!
 - ✅ **Protocols** — MCP, A2A
 - ✅ **Advanced** — Visual workflows, semantic memory
 - ✅ **Research** — Browser agent, clan creation, Docker sandbox, goals, extended nodes
-
-**41 commits on GitHub!**
 
 ## 🛠️ Tech Stack
 

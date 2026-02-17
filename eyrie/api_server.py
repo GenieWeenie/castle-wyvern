@@ -14,7 +14,10 @@ import json
 import logging
 import os
 import sys
-from typing import Dict, Any, Optional
+import threading
+import time
+from collections import defaultdict
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from functools import wraps
 
@@ -62,13 +65,22 @@ class CastleWyvernAPI:
     - POST /bmad/review     - Run code review
     """
 
-    def __init__(self, host: str = "0.0.0.0", port: int = 18791, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        host: str = "0.0.0.0",
+        port: int = 18791,
+        api_key: Optional[str] = None,
+        rate_limit_per_minute: int = 60,
+    ):
         if not FLASK_AVAILABLE:
             raise ImportError("Flask not installed. Run: pip install flask flask-cors")
 
         self.host = host
         self.port = port
         self.api_key = api_key
+        self.rate_limit_per_minute = max(1, rate_limit_per_minute)
+        self._rate_limit_times: Dict[str, List[float]] = defaultdict(list)
+        self._rate_limit_lock = threading.Lock()
 
         # Initialize Castle Wyvern components
         self.phoenix_gate = PhoenixGate()
@@ -87,6 +99,24 @@ class CastleWyvernAPI:
         # Light observability: request count, start time, access log
         self._request_count = 0
         self._started_at = datetime.now()
+
+        @self.app.before_request
+        def _rate_limit():
+            key = request.headers.get("X-API-Key") or request.remote_addr or "unknown"
+            now = time.monotonic()
+            window = 60.0  # 1 minute
+            with self._rate_limit_lock:
+                times = self._rate_limit_times[key]
+                cutoff = now - window
+                self._rate_limit_times[key] = [t for t in times if t > cutoff]
+                if len(self._rate_limit_times[key]) >= self.rate_limit_per_minute:
+                    return self._error(
+                        "Rate limit exceeded (max %d requests per minute)"
+                        % self.rate_limit_per_minute,
+                        "rate_limit_exceeded",
+                        429,
+                    )
+                self._rate_limit_times[key].append(now)
 
         @self.app.after_request
         def _log_request(response):

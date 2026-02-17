@@ -44,6 +44,18 @@ class TestCastleWyvernAPI:
         assert "uptime_seconds" in data
         assert data["uptime_seconds"] >= 0
 
+    def test_rate_limit_returns_429_when_exceeded(self):
+        api = CastleWyvernAPI(rate_limit_per_minute=2)
+        client = api.app.test_client()
+        r1 = client.get("/health")
+        r2 = client.get("/health")
+        r3 = client.get("/health")
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+        assert r3.status_code == 429
+        data = r3.get_json()
+        assert data.get("code") == "rate_limit_exceeded"
+
     def test_request_body_over_5mb_returns_413(self):
         api = CastleWyvernAPI()
         client = api.app.test_client()

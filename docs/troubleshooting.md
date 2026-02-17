@@ -61,6 +61,9 @@ Run `python castle_wyvern_cli.py` from the repo root. For non-interactive comman
 **Request body too large (413)?**  
 The API limits request bodies to 5MB. Split large payloads or use a different upload strategy.
 
+**Rate limit exceeded (429)?**  
+The API allows 60 requests per minute per IP (or per API key if sent). Default is configurable when starting the server (`rate_limit_per_minute=`). Slow down or batch requests.
+
 ---
 
 ## Getting help

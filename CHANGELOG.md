@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **API:** Request body size limit (5MB); 413 with `payload_too_large` when exceeded.
+- **API:** Rate limiting (per IP or API key): default 60 requests/minute, configurable via `rate_limit_per_minute`; 429 with `rate_limit_exceeded` when exceeded.
 - **API /metrics:** `started_at` (ISO timestamp) and `uptime_seconds`.
 - **CONTRIBUTING:** Quick smoke check (start API, curl /health).
 - **docs/troubleshooting.md:** FAQ (run API, run CLI, 413 payload too large).
 - **CI:** Bandit security job fails on high-severity findings only (`-l 3`).
-- **Test:** Request body over 5MB returns 413 and `payload_too_large`.
+- **CI:** Mypy type check enforced (config relaxed: allow_untyped_defs, check_untyped_defs=false); continue-on-error removed.
+- **Test:** Request body over 5MB returns 413 and `payload_too_large`; rate limit returns 429 when exceeded.
 
 ### Changed
 - **docs/api-examples.md:** /metrics example includes `started_at` and `uptime_seconds`.

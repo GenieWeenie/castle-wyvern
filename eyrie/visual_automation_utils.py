@@ -5,7 +5,7 @@ Polish features for OmniParser integration
 
 import time
 import json
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, cast
 from dataclasses import dataclass, field
 from pathlib import Path
 import tempfile
@@ -55,7 +55,7 @@ class SessionRecorder:
         if self.current_session:
             self.current_session.screenshots.append(screenshot_path)
 
-    def end_session(self) -> AutomationSession:
+    def end_session(self) -> Optional[AutomationSession]:
         """End the current session and save it."""
         if self.current_session:
             self.current_session.end_time = time.time()
@@ -84,12 +84,12 @@ class SessionRecorder:
 
         return None
 
-    def load_session(self, session_id: str) -> Optional[Dict]:
+    def load_session(self, session_id: str) -> Optional[Dict[str, Any]]:
         """Load a recorded session."""
         session_file = self.storage_dir / f"{session_id}.json"
         if session_file.exists():
             with open(session_file, "r") as f:
-                return json.load(f)
+                return cast(Dict[str, Any], json.load(f))
         return None
 
     def list_sessions(self) -> List[Dict]:
@@ -128,7 +128,7 @@ class SessionRecorder:
         if not session_data:
             return {"success": False, "error": "Session not found"}
 
-        results = {
+        results: Dict[str, Any] = {
             "success": True,
             "actions_replayed": 0,
             "actions_succeeded": 0,
@@ -190,7 +190,7 @@ class VisualMacro:
         """
         self.recorder.start_session()
 
-        results = {"steps": [], "success": True}
+        results: Dict[str, Any] = {"steps": [], "success": True}
 
         # Step 1: Click username field
         result = self.va.click(username_field)
@@ -245,7 +245,7 @@ class VisualMacro:
         """
         self.recorder.start_session()
 
-        results = {"steps": [], "success": True}
+        results: Dict[str, Any] = {"steps": [], "success": True}
 
         step = 1
         for field_desc, value in field_values.items():

@@ -254,6 +254,7 @@ class TransformNode:
         start = time.time()
 
         try:
+            output: Any
             if self.transform_type == "template":
                 output = self._apply_template(self.template, input_data)
             elif self.transform_type == "mapping":

@@ -25,7 +25,7 @@ class TestCastleWyvernAPI:
         data = r.get_json()
         assert data["status"] == "healthy"
         assert "timestamp" in data
-        assert data.get("version") == "0.2.0"
+        assert data.get("version") == "0.2.1"
         assert "services" in data
         assert "phoenix_gate" in data["services"]
         assert data["services"]["grimoorum"] == "active"

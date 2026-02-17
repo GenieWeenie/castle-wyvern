@@ -273,7 +273,7 @@ class CastleWyvernCLI:
         banner = """
 ╔══════════════════════════════════════════════════════════════════╗
 ║                                                                  ║
-║                    🏰 CASTLE WYVERN v0.2.0                       ║
+║                    🏰 CASTLE WYVERN v0.2.1                       ║
 ║                                                                  ║
 ║           "We are defenders of the night!"                       ║
 ║                     "We are Gargoyles!"                          ║
@@ -834,7 +834,7 @@ plan Design a microservices architecture for an e-commerce app
                     self.print_help()
 
                 elif command == "version":
-                    self.console.print("[bold]Castle Wyvern[/bold] 0.2.0")
+                    self.console.print("[bold]Castle Wyvern[/bold] 0.2.1")
 
                 elif command == "status":
                     self.print_dashboard()
@@ -3570,7 +3570,7 @@ plan Design a microservices architecture for an e-commerce app
     def get_system_status(self) -> dict:
         """Get full system status."""
         return {
-            "version": "0.2.0",
+            "version": "0.2.1",
             "phoenix_gate": (
                 self.phoenix_gate.health_check()
                 if hasattr(self.phoenix_gate, "health_check")
@@ -3628,7 +3628,7 @@ Examples:
     )
 
     # Global flags
-    parser.add_argument("--version", "-v", action="version", version="%(prog)s 0.2.0")
+    parser.add_argument("--version", "-v", action="version", version="%(prog)s 0.2.1")
     parser.add_argument(
         "--json", "-j", action="store_true", help="Output in JSON format (for scripting)"
     )

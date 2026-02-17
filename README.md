@@ -6,7 +6,7 @@
 
 > "One thousand years ago, superstition and the sword ruled. It was a time of darkness. It was a world of fear. It was the age of gargoyles."
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![Python](https://img.shields.io/badge/python-3.9+-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![OpenClaw](https://img.shields.io/badge/works%20with-OpenClaw-purple)](https://openclaw.ai)

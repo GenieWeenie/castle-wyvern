@@ -41,7 +41,7 @@ Example response:
 {
   "status": "healthy",
   "timestamp": "2025-02-17T12:00:00",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "services": {
     "phoenix_gate": "closed",
     "grimoorum": "active",

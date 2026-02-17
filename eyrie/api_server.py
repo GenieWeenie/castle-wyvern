@@ -129,7 +129,7 @@ class CastleWyvernAPI:
                 {
                     "status": "healthy",
                     "timestamp": datetime.now().isoformat(),
-                    "version": "0.2.0",
+                    "version": "0.2.1",
                     "services": {
                         "phoenix_gate": self.phoenix_gate.circuit_breakers["primary"].state,
                         "grimoorum": "active",
@@ -150,7 +150,7 @@ class CastleWyvernAPI:
             return jsonify(
                 {
                     "castle_wyvern": {
-                        "version": "0.2.0",
+                        "version": "0.2.1",
                         "timestamp": datetime.now().isoformat(),
                         "phoenix_gate": {
                             "primary": {

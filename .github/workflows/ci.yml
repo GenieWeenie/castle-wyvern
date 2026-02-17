@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov black flake8 mypy
+        pip install pytest pytest-cov "black==25.11.0" flake8 mypy
     
     - name: Lint with flake8
       run: |
@@ -37,11 +37,11 @@ jobs:
     - name: Format check with black
       run: |
         black --check --line-length=100 .
-      continue-on-error: true
-    
+
     - name: Type check with mypy
       run: |
-        mypy eyrie/ --ignore-missing-imports || true
+        mypy eyrie/ --ignore-missing-imports --no-strict-optional
+      # TODO: fix ~118 mypy errors then remove continue-on-error to enforce types
       continue-on-error: true
     
     - name: Test with pytest
@@ -71,8 +71,9 @@ jobs:
 
     - name: Run Bandit security checks
       run: |
-        bandit -r eyrie/ -f json -o bandit-report.json || true
-        cat bandit-report.json || echo "Bandit check completed"
+        bandit -r eyrie/ --ini .bandit -f json -o bandit-report.json
+        cat bandit-report.json
+      # TODO: fix remaining findings then remove continue-on-error to enforce
       continue-on-error: true
 
     - name: Check for hardcoded secrets

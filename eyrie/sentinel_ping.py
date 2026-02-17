@@ -12,8 +12,9 @@ load_dotenv()
 CLAN_NODES = {
     "High_Keep": os.getenv("HIGH_CLOUD_IP"),
     "Stone_Sentinel": os.getenv("STONE_SENTINEL_IP"),
-    "Mobile_Rookery": os.getenv("MOBILE_ROOKERY_IP")
+    "Mobile_Rookery": os.getenv("MOBILE_ROOKERY_IP"),
 }
+
 
 def ping_node(name, address):
     """Checks if a node is Awake (Online) or in Stone (Offline)."""
@@ -21,9 +22,9 @@ def ping_node(name, address):
         return "UNCONFIGURED ⚪"
 
     # Handle cross-platform ping flags
-    param = '-n' if platform.system().lower() == 'windows' else '-c'
-    command = ['ping', param, '1', address]
-    
+    param = "-n" if platform.system().lower() == "windows" else "-c"
+    command = ["ping", param, "1", address]
+
     try:
         # We run the ping and hide the messy output
         output = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -31,22 +32,24 @@ def ping_node(name, address):
     except Exception:
         return "ERROR ⚠️"
 
+
 def rooftop_check():
     print(f"\n--- [ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ] ---")
     print("CASTLE WYVERN: ROOFTOP STATUS CHECK\n")
-    
+
     status_report = {}
     for name, addr in CLAN_NODES.items():
         status = ping_node(name, addr)
         status_report[name] = status
         print(f"[{name.replace('_', ' ')}]: {status}")
-    
+
     # Log the status for Goliath to see
-    log_path = os.path.join('eyrie', 'heartbeat.json')
-    with open(log_path, 'w') as f:
+    log_path = os.path.join("eyrie", "heartbeat.json")
+    with open(log_path, "w") as f:
         json.dump(status_report, f, indent=4)
-    
+
     print(f"\nStatus logged to {log_path}. The night is ours.")
+
 
 if __name__ == "__main__":
     rooftop_check()

@@ -27,6 +27,7 @@ def populated_kg(kg):
 
 # --- add_entity ---
 
+
 class TestAddEntity:
     def test_returns_entity(self, kg):
         entity = kg.add_entity("Goliath", "ClanMember", {"role": "leader"})
@@ -76,6 +77,7 @@ class TestAddEntity:
 
 
 # --- add_relationship ---
+
 
 class TestAddRelationship:
     def test_returns_relationship(self, populated_kg):
@@ -143,6 +145,7 @@ class TestAddRelationship:
 
 # --- get_stats ---
 
+
 class TestGetStats:
     def test_empty_graph(self, kg):
         stats = kg.get_stats()
@@ -173,6 +176,7 @@ class TestGetStats:
 
 # --- get_entities_by_type ---
 
+
 class TestGetEntitiesByType:
     def test_returns_matching_entities(self, populated_kg):
         members = populated_kg.get_entities_by_type("ClanMember")
@@ -196,6 +200,7 @@ class TestGetEntitiesByType:
 
 
 # --- save_graph ---
+
 
 class TestSaveGraph:
     def test_creates_files(self, populated_kg, tmp_path):

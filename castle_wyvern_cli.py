@@ -57,17 +57,20 @@ from eyrie.llama_cpp_client import LlamaCppClient, LocalLLM
 from eyrie.nanogpt_integration import NanoGPTTrainer, ClanModelManager
 from eyrie.knowledge_graph import KnowledgeGraph
 from eyrie.knowledge_graph_utils import (
-    KnowledgeGraphVisualizer, SmartEntityExtractor, 
-    QueryEngine, KnowledgeGraphExporter
+    KnowledgeGraphVisualizer,
+    SmartEntityExtractor,
+    QueryEngine,
+    KnowledgeGraphExporter,
 )
 from eyrie.omni_parser import VisualAutomation, VisualBrowserAgent
 from eyrie.visual_automation_utils import (
-    SessionRecorder, VisualMacro, ElementHighlighter, VisualDebugger
+    SessionRecorder,
+    VisualMacro,
+    ElementHighlighter,
+    VisualDebugger,
 )
 from eyrie.agent_coordination import ClanCoordinationManager
-from eyrie.agent_coordination_utils import (
-    CoordinationAnalytics, TeamOptimizer, CoordinationReport
-)
+from eyrie.agent_coordination_utils import CoordinationAnalytics, TeamOptimizer, CoordinationReport
 from eyrie.cli_enhancements import EnhancedPrompt, PROMPT_TOOLKIT_AVAILABLE
 from eyrie.logging_config import setup_logging, get_logger, set_debug_mode, log_audit
 from eyrie.error_handler import CastleWyvernError, ErrorSeverity
@@ -84,12 +87,13 @@ THEME = {
     "error": "bright_red",
     "info": "bright_white",
     "muted": "dim",
-    "border": "cyan"
+    "border": "cyan",
 }
 
 
 class ClanMember:
     """Represents a clan member with UI state."""
+
     def __init__(self, name: str, emoji: str, role: str, color: str):
         self.name = name
         self.emoji = emoji
@@ -98,13 +102,13 @@ class ClanMember:
         self.status = "Ready"
         self.current_task = "Standing by"
         self.last_active = datetime.now()
-    
+
     def set_busy(self, task: str):
         """Set member as busy with a task."""
         self.status = "Busy"
         self.current_task = task
         self.last_active = datetime.now()
-    
+
     def set_ready(self):
         """Set member as ready."""
         self.status = "Ready"
@@ -115,84 +119,81 @@ class ClanMember:
 class CastleWyvernCLI:
     """
     Rich CLI interface for Castle Wyvern.
-    
+
     Features:
     - Beautiful themed dashboard
     - Live clan status
     - Phoenix Gate monitor
     - Interactive command loop
     """
-    
+
     def __init__(self):
         self.console = Console()
-        
+
         # Setup structured logging
         self.logger = setup_logging(debug_mode=False)
         self.logger.get_logger().info("Castle Wyvern CLI starting up...")
-        
+
         self.phoenix_gate = PhoenixGate()
         self.intent_router = IntentRouter(use_ai_classification=True)
         self.grimoorum = GrimoorumV2()
-        
+
         # Enhanced Memory (Improvement #4)
         self.enhanced_memory = EnhancedGrimoorum(self.grimoorum)
-        
+
         self.bmad = BMADWorkflow(self.console, self.phoenix_gate, self.grimoorum)
         self.documents = DocumentIngestion()
         self.nodes = NodeManager()
-        
+
         # Feature 11: Auto-Discovery
         self.auto_discovery = None
-        
+
         # Feature 12: REST API
         self.api_server = None
-        
+
         # Feature 13: Web Dashboard
         self.web_dashboard = None
-        
+
         # Feature 14: Plugin System
         self.plugin_manager = PluginManager(
-            phoenix_gate=self.phoenix_gate,
-            grimoorum=self.grimoorum
+            phoenix_gate=self.phoenix_gate, grimoorum=self.grimoorum
         )
         # Auto-load plugins on startup
         self.plugin_manager.load_all_plugins()
-        
+
         # Feature 15: Monitoring Service
         self.monitoring = MonitoringService(
-            phoenix_gate=self.phoenix_gate,
-            grimoorum=self.grimoorum,
-            plugins=self.plugin_manager
+            phoenix_gate=self.phoenix_gate, grimoorum=self.grimoorum, plugins=self.plugin_manager
         )
-        
+
         # Feature 16: CLI Improvements
         self.cli_improvements = CLIImprovements()
-        
+
         # Feature 17: Integration Manager
         self.integrations = IntegrationManager()
-        
+
         # Feature 18: Security Manager
         self.security = SecurityManager()
-        
+
         # Feature 19: Advanced AI
         self.advanced_ai = AdvancedAIManager()
-        
+
         # Feature 20: Performance Manager
         self.performance = PerformanceManager()
-        
+
         # Feature 21: Documentation Generator
         self.documentation = DocumentationGenerator()
-        
+
         # MCP Server
         self.mcp_server: Optional[CastleWyvernMCPServer] = None
-        
+
         # A2A Protocol
         self.a2a: Optional[A2AIntegration] = None
-        
+
         # Visual Workflow Builder
         self.workflow_manager = WorkflowManager()
         self.workflow_executor = WorkflowExecutor()
-        
+
         # Initialize clan members FIRST (needed by ClanCreator)
         self.clan = {
             "goliath": ClanMember("Goliath", "🦁", "Leader", "bright_yellow"),
@@ -206,65 +207,67 @@ class CastleWyvernCLI:
             "demona": ClanMember("Demona", "🔥", "Failsafe", "bright_red"),
             "jade": ClanMember("Jade", "🌐", "Web Surfer", "bright_blue"),
         }
-        
+
         # Browser Agent (Competitive Research Feature)
         self.browser = BrowserAgent()
-        
+
         # Clan Creator (Competitive Research Feature)
         self.clan_creator = ClanCreator(existing_members=list(self.clan.keys()))
         self.pending_clan_creation = None  # Store preview before confirmation
-        
+
         # Docker Sandbox (Competitive Research Feature)
         self.sandbox = DockerSandbox()
         self.safe_executor = SafeCodeExecutor()
-        
+
         # Goal-Based Agent (Competitive Research Feature #4)
         self.goal_agent = None  # Initialized lazily
-        
+
         # Extended workflow nodes available
         self.extended_workflow_nodes = list(NODE_TYPES.keys())
-        
+
         # Function Builder (BabyAGI-inspired)
         self.function_builder = FunctionBuilder()
-        
+
         # llama.cpp Client (for local LLM)
         self.llama_client = LlamaCppClient()
         self.local_llm = LocalLLM()
-        
+
         # nanoGPT Integration (for custom model training)
         self.nanogpt = NanoGPTTrainer()
         self.clan_model_manager = ClanModelManager(self.nanogpt)
-        
+
         # Knowledge Graph (KAG Integration)
         self.knowledge_graph = KnowledgeGraph()
         self.kg_visualizer = KnowledgeGraphVisualizer(self.knowledge_graph)
         self.kg_extractor = SmartEntityExtractor(self.knowledge_graph)
         self.kg_query = QueryEngine(self.knowledge_graph)
         self.kg_exporter = KnowledgeGraphExporter(self.knowledge_graph)
-        
+
         # OmniParser Visual Automation
         self.visual_automation = VisualAutomation()
         self.visual_browser = VisualBrowserAgent()
         self.visual_macro = VisualMacro(self.visual_automation)
         self.visual_debugger = VisualDebugger(self.visual_automation)
         self.session_recorder = SessionRecorder()
-        
+
         # Agent Coordination Loops
         self.coordination = ClanCoordinationManager()
         self.coord_analytics = CoordinationAnalytics(self.coordination.coordination)
         self.coord_optimizer = TeamOptimizer(self.coordination.coordination)
         self.coord_report = CoordinationReport(self.coordination.coordination)
-        
+
         self.running = True
         self.command_history = []
-        
+
         # CLI Experience Enhancements
         self.enhanced_prompt = EnhancedPrompt(self.console)
-        
+
         # Show prompt_toolkit status on startup (optional)
         if PROMPT_TOOLKIT_AVAILABLE:
-            self.console.print("[dim]✨ Enhanced CLI loaded: Tab completion, history, and smart suggestions enabled[/dim]")
-    
+            self.console.print(
+                "[dim]✨ Enhanced CLI loaded: Tab completion, history, and smart suggestions enabled[/dim]"
+            )
+
     def print_banner(self):
         """Print Castle Wyvern banner."""
         banner = """
@@ -278,12 +281,12 @@ class CastleWyvernCLI:
 ╚══════════════════════════════════════════════════════════════════╝
         """
         self.console.print(banner, style=THEME["primary"])
-    
+
     def create_phoenix_gate_panel(self) -> Panel:
         """Create Phoenix Gate status panel."""
         try:
             health = self.phoenix_gate.health_check()
-            
+
             if health["status"] == "ONLINE":
                 status_icon = "🟢"
                 status_style = THEME["success"]
@@ -293,33 +296,30 @@ class CastleWyvernCLI:
             else:
                 status_icon = "🔴"
                 status_style = THEME["error"]
-            
+
             content = f"""
 {status_icon} Status: [{status_style}]{health['status']}[/{status_style}]
 📡 Model: {health.get('model', 'Unknown')}
 🔄 Providers: {len([p for p in health.get('providers', []) if p['status'] in ['ONLINE', 'AVAILABLE']])} online
             """.strip()
-            
+
         except Exception as e:
             content = f"🔴 Status: [red]ERROR[/red]\n⚠️  {str(e)}"
-        
+
         return Panel(
-            content,
-            title="⚔️  PHOENIX GATE",
-            border_style=THEME["border"],
-            box=box.ROUNDED
+            content, title="⚔️  PHOENIX GATE", border_style=THEME["border"], box=box.ROUNDED
         )
-    
+
     def create_circuit_breaker_panel(self) -> Panel:
         """Create circuit breaker status panel."""
         try:
             stats = self.phoenix_gate.get_stats()
-            
+
             lines = []
             for name, data in stats.items():
-                state = data['state']
-                failures = data['failure_count']
-                
+                state = data["state"]
+                failures = data["failure_count"]
+
                 if state == "CLOSED":
                     icon = "🟢"
                     style = THEME["success"]
@@ -329,21 +329,20 @@ class CastleWyvernCLI:
                 else:
                     icon = "🔴"
                     style = THEME["error"]
-                
-                lines.append(f"{icon} [{style}]{name.replace('_', ' ').title()}[/{style}]: {state} ({failures} failures)")
-            
+
+                lines.append(
+                    f"{icon} [{style}]{name.replace('_', ' ').title()}[/{style}]: {state} ({failures} failures)"
+                )
+
             content = "\n".join(lines) if lines else "No circuit breakers active"
-            
+
         except Exception:
             content = "Circuit breaker status unavailable"
-        
+
         return Panel(
-            content,
-            title="🛡️  CIRCUIT BREAKERS",
-            border_style=THEME["border"],
-            box=box.ROUNDED
+            content, title="🛡️  CIRCUIT BREAKERS", border_style=THEME["border"], box=box.ROUNDED
         )
-    
+
     def create_clan_table(self) -> Table:
         """Create clan members status table."""
         table = Table(
@@ -351,54 +350,45 @@ class CastleWyvernCLI:
             box=box.ROUNDED,
             border_style=THEME["border"],
             header_style=THEME["primary"],
-            expand=True
+            expand=True,
         )
-        
+
         table.add_column("Agent", style=THEME["info"], width=15)
         table.add_column("Status", width=12)
         table.add_column("Role", style=THEME["muted"], width=15)
         table.add_column("Current Task", style=THEME["info"])
-        
+
         for member in self.clan.values():
             if member.status == "Ready":
                 status = f"[green]● {member.status}[/green]"
             else:
                 status = f"[yellow]● {member.status}[/yellow]"
-            
-            table.add_row(
-                f"{member.emoji} {member.name}",
-                status,
-                member.role,
-                member.current_task
-            )
-        
+
+            table.add_row(f"{member.emoji} {member.name}", status, member.role, member.current_task)
+
         return table
-    
+
     def create_dashboard(self) -> Layout:
         """Create full dashboard layout."""
         layout = Layout()
-        
+
         # Split into top and bottom
-        layout.split_column(
-            Layout(name="top", size=8),
-            Layout(name="main")
-        )
-        
+        layout.split_column(Layout(name="top", size=8), Layout(name="main"))
+
         # Top: Phoenix Gate and Circuit Breakers side by side
         layout["top"].split_row(
-            Layout(self.create_phoenix_gate_panel()),
-            Layout(self.create_circuit_breaker_panel())
+            Layout(self.create_phoenix_gate_panel()), Layout(self.create_circuit_breaker_panel())
         )
-        
+
         # Main: Clan table
         layout["main"].update(self.create_clan_table())
-        
+
         return layout
-    
+
     def print_dashboard(self):
         """Print the full dashboard."""
         self.console.print(self.create_dashboard())
-    
+
     def print_help(self):
         """Print help information."""
         help_text = """
@@ -639,50 +629,54 @@ plan Design a microservices architecture for an e-commerce app
 ```
         """
         self.console.print(Markdown(help_text))
-    
+
     def route_and_respond(self, user_input: str):
         """Route user input to appropriate clan member and display response."""
         # Classify intent
         with self.console.status("[cyan]Consulting the clan...[/cyan]", spinner="dots"):
             match = self.intent_router.classify(user_input)
-        
+
         # Get primary agent
         agent_key = match.primary_agent
         agent = self.clan.get(agent_key, self.clan["goliath"])
-        
+
         # Update agent status
         agent.set_busy(f"Processing: {user_input[:40]}...")
-        
+
         # Display routing info
-        self.console.print(f"\n[dim]🎯 Intent: {match.intent.value} ({match.confidence:.0%} confidence)[/dim]")
-        self.console.print(f"[dim]🛡️  Routed to: {agent.emoji} {agent.name} - {match.reasoning}[/dim]\n")
-        
+        self.console.print(
+            f"\n[dim]🎯 Intent: {match.intent.value} ({match.confidence:.0%} confidence)[/dim]"
+        )
+        self.console.print(
+            f"[dim]🛡️  Routed to: {agent.emoji} {agent.name} - {match.reasoning}[/dim]\n"
+        )
+
         # Get agent's system prompt (would load from prompts/ directory)
         system_prompt = self._get_agent_prompt(agent_key)
-        
+
         # Call AI with progress indicator
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             console=self.console,
-            transient=True
+            transient=True,
         ) as progress:
             task = progress.add_task(f"[cyan]{agent.name} is responding...", total=None)
-            
+
             try:
                 response = self.phoenix_gate.call_ai(user_input, system_prompt)
             except Exception as e:
                 response = f"⚠️  Error: {str(e)}"
-        
+
         # Display response
         response_panel = Panel(
             Markdown(response),
             title=f"{agent.emoji} {agent.name}",
             border_style=agent.color,
-            box=box.ROUNDED
+            box=box.ROUNDED,
         )
         self.console.print(response_panel)
-        
+
         # Save to memory (NEW)
         self.grimoorum.record(
             user_input=user_input,
@@ -690,20 +684,22 @@ plan Design a microservices architecture for an e-commerce app
             agent_response=response,
             intent=match.intent.value,
             importance=3 if match.intent != IntentType.CHAT else 2,
-            session_id="main_session"
+            session_id="main_session",
         )
-        
+
         # Update agent status back to ready
         agent.set_ready()
-        
+
         # Add to history
-        self.command_history.append({
-            "input": user_input,
-            "agent": agent.name,
-            "response": response,
-            "timestamp": datetime.now()
-        })
-    
+        self.command_history.append(
+            {
+                "input": user_input,
+                "agent": agent.name,
+                "response": response,
+                "timestamp": datetime.now(),
+            }
+        )
+
     def _get_agent_prompt(self, agent_key: str) -> str:
         """Get system prompt for an agent."""
         prompts = {
@@ -718,162 +714,178 @@ plan Design a microservices architecture for an e-commerce app
             "demona": "You are Demona, the failsafe. You predict failures and worst-case scenarios. Be cautious and protective.",
         }
         return prompts.get(agent_key, prompts["goliath"])
-    
+
     def show_history(self):
         """Display conversation history from memory."""
         memories = self.grimoorum.get_recent_memories(limit=10)
-        
+
         if not memories:
             self.console.print("[dim]No history yet. Start a conversation![/dim]")
             return
-        
+
         self.console.print("\n[bold]📜 Conversation History[/bold]\n")
         for mem in memories:
             time_str = mem["timestamp"][11:19]  # Extract HH:MM:SS
-            agent_emoji = self.clan.get(mem["agent_name"], {}).emoji if mem["agent_name"] in self.clan else "🎭"
+            agent_emoji = (
+                self.clan.get(mem["agent_name"], {}).emoji
+                if mem["agent_name"] in self.clan
+                else "🎭"
+            )
             self.console.print(f"[dim]{time_str}[/dim] You: {mem['user_input'][:60]}...")
-            self.console.print(f"[dim]     → {agent_emoji} {mem['agent_name'].title()}: {mem['agent_response'][:60]}...[/dim]\n")
-    
+            self.console.print(
+                f"[dim]     → {agent_emoji} {mem['agent_name'].title()}: {mem['agent_response'][:60]}...[/dim]\n"
+            )
+
     def show_memory_stats(self):
         """Show memory system statistics."""
         stats = self.grimoorum.get_stats()
-        
+
         self.console.print("\n[bold]🧠 Memory System Statistics[/bold]\n")
         self.console.print(f"Total memories: {stats['total_memories']}")
         self.console.print(f"Total threads: {stats['total_threads']}")
         self.console.print(f"Agents with memories: {stats['agents_with_memories']}")
         self.console.print(f"High importance memories: {stats['high_importance']}")
         self.console.print(f"Storage size: {stats['storage_size_kb']} KB")
-        
-        if stats['agent_breakdown']:
+
+        if stats["agent_breakdown"]:
             self.console.print("\n[dim]Agent memory counts:[/dim]")
-            for agent, count in stats['agent_breakdown'].items():
+            for agent, count in stats["agent_breakdown"].items():
                 self.console.print(f"  {agent}: {count}")
         self.console.print()
-    
+
     def show_logs(self, log_type: str = None):
         """Show recent log entries."""
         log_dir = Path("~/.castle_wyvern/logs").expanduser()
-        
+
         if not log_dir.exists():
             self.console.print("[dim]No logs found. Run some commands first![/dim]")
             return
-        
+
         # Determine which log file to show
         log_files = {
-            'error': log_dir / 'errors.log',
-            'audit': log_dir / 'audit.log',
-            'api': log_dir / 'api.log',
-            None: log_dir / 'castle_wyvern.log'
+            "error": log_dir / "errors.log",
+            "audit": log_dir / "audit.log",
+            "api": log_dir / "api.log",
+            None: log_dir / "castle_wyvern.log",
         }
-        
+
         log_file = log_files.get(log_type, log_files[None])
-        
+
         if not log_file.exists():
             self.console.print(f"[yellow]⚠️  {log_type or 'main'} log file not found[/yellow]")
             return
-        
+
         # Read last 20 lines
         try:
-            lines = log_file.read_text().strip().split('\n')
+            lines = log_file.read_text().strip().split("\n")
             recent_lines = lines[-20:] if len(lines) > 20 else lines
-            
+
             self.console.print(f"[bold]📋 Recent {log_type or 'main'} log entries:[/bold]\n")
             for line in recent_lines:
                 self.console.print(f"[dim]{line}[/dim]")
         except Exception as e:
             self.console.print(f"[red]❌ Error reading logs: {str(e)}[/red]")
-    
+
     def run(self):
         """Main CLI loop."""
         self.console.clear()
         self.print_banner()
         self.print_dashboard()
-        self.console.print("\n[dim]Type 'help' for commands or just start chatting with the clan![/dim]\n")
-        
+        self.console.print(
+            "\n[dim]Type 'help' for commands or just start chatting with the clan![/dim]\n"
+        )
+
         while self.running:
             try:
                 # Get user input with enhanced prompt (tab completion, history)
                 user_input = self.enhanced_prompt.prompt("[bold cyan]👤 You:[/bold cyan] ").strip()
-                
+
                 if not user_input:
                     continue
-                
+
                 # Expand aliases (Feature 16)
                 original_input = user_input
                 user_input = self.cli_improvements.expand_command(user_input)
                 if user_input != original_input:
                     self.console.print(f"[dim]↳ Expanded: {user_input}[/dim]")
-                
+
                 # Record in history (Feature 16)
                 self.cli_improvements.record_command(user_input)
-                
+
                 # Parse command
                 parts = user_input.split(maxsplit=1)
                 command = parts[0].lower()
                 args = parts[1] if len(parts) > 1 else ""
-                
+
                 # Handle commands
                 if command in ["quit", "exit", "bye"]:
                     self.console.print("\n[dim]🏰 Castle Wyvern sleeps until you return...[/dim]")
                     # Save command history before exiting
                     self.enhanced_prompt.save_history()
                     self.running = False
-                
+
                 elif command == "help":
                     self.print_help()
-                
+
                 elif command == "status":
                     self.print_dashboard()
-                
+
                 elif command == "health":
                     self.console.print(self.create_phoenix_gate_panel())
-                
+
                 elif command == "members":
                     self.console.print(self.create_clan_table())
-                
+
                 elif command == "history":
                     self.show_history()
-                
+
                 elif command == "memory":
                     self.show_memory_stats()
-                
+
                 elif command == "/debug-on":
                     set_debug_mode(True)
-                    self.console.print("[green]✅ Debug mode enabled - verbose logging active[/green]")
+                    self.console.print(
+                        "[green]✅ Debug mode enabled - verbose logging active[/green]"
+                    )
                     self.console.print("[dim]   Check logs at ~/.castle_wyvern/logs/[/dim]")
-                
+
                 elif command == "/debug-off":
                     set_debug_mode(False)
                     self.console.print("[yellow]⚠️  Debug mode disabled[/yellow]")
-                
+
                 elif command == "/logs":
                     self.show_logs(args)
-                
+
                 elif command == "/spec":
                     if args:
                         self.bmad.quick_spec(args)
                     else:
-                        self.console.print("[yellow]⚠️  Please provide a description for the spec.[/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Please provide a description for the spec.[/yellow]"
+                        )
+
                 elif command == "/build":
                     if args:
                         self.bmad.dev_story(args)
                     else:
                         self.console.print("[yellow]⚠️  Please provide what to build.[/yellow]")
-                
+
                 elif command == "/review":
                     if args:
                         self.bmad.code_review(args)
                     else:
-                        self.console.print("[yellow]⚠️  Please provide code or description to review.[/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Please provide code or description to review.[/yellow]"
+                        )
+
                 elif command == "/brief":
                     if args:
                         self.bmad.product_brief(args)
                     else:
-                        self.console.print("[yellow]⚠️  Please provide product description.[/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Please provide product description.[/yellow]"
+                        )
+
                 elif command == "/ingest":
                     if args:
                         try:
@@ -883,7 +895,7 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]⚠️  Error: {str(e)}[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Please provide file path.[/yellow]")
-                
+
                 elif command == "/docs":
                     docs = self.documents.list_documents()
                     if docs:
@@ -892,30 +904,34 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Filename")
                         table.add_column("Type")
                         table.add_column("Chunks")
-                        
+
                         for doc in docs:
-                            table.add_row(doc['id'], doc['filename'], doc['type'], str(doc['chunks']))
-                        
+                            table.add_row(
+                                doc["id"], doc["filename"], doc["type"], str(doc["chunks"])
+                            )
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No documents ingested yet.[/dim]")
-                
+
                 elif command == "/search":
                     if args:
                         results = self.documents.search(args, top_k=5)
                         if results:
                             self.console.print(f"\n[bold]🔍 Search results for: {args}[/bold]\n")
                             for r in results:
-                                self.console.print(Panel(
-                                    r['content'][:300] + "...",
-                                    title=f"📄 {r['document_name']} (score: {r['score']})",
-                                    border_style="blue"
-                                ))
+                                self.console.print(
+                                    Panel(
+                                        r["content"][:300] + "...",
+                                        title=f"📄 {r['document_name']} (score: {r['score']})",
+                                        border_style="blue",
+                                    )
+                                )
                         else:
                             self.console.print("[dim]No results found.[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Please provide search query.[/yellow]")
-                
+
                 elif command == "/nodes":
                     nodes = self.nodes.list_nodes()
                     if nodes:
@@ -926,22 +942,22 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Status")
                         table.add_column("Load")
                         table.add_column("Capabilities")
-                        
+
                         for node in nodes:
-                            status_color = "green" if node['status'] == 'online' else "red"
+                            status_color = "green" if node["status"] == "online" else "red"
                             table.add_row(
-                                node['id'][:8],
-                                node['name'],
-                                node['host'],
+                                node["id"][:8],
+                                node["name"],
+                                node["host"],
                                 f"[{status_color}]{node['status']}[/{status_color}]",
                                 f"{node['load']:.0%}",
-                                ", ".join(node['capabilities'])
+                                ", ".join(node["capabilities"]),
                             )
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No nodes registered.[/dim]")
-                
+
                 elif command == "/node-add":
                     parts = args.split()
                     if len(parts) >= 2:
@@ -950,7 +966,7 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[green]✅ Node registered: {node_id}[/green]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /node-add <name> <host>[/yellow]")
-                
+
                 elif command == "/tasks":
                     tasks = self.nodes.list_tasks()
                     if tasks:
@@ -960,27 +976,27 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Status")
                         table.add_column("Priority")
                         table.add_column("Assigned Node")
-                        
+
                         for task in tasks[-10:]:  # Last 10
                             status_color = {
-                                'completed': 'green',
-                                'failed': 'red',
-                                'running': 'yellow',
-                                'pending': 'dim'
-                            }.get(task['status'], 'white')
-                            
+                                "completed": "green",
+                                "failed": "red",
+                                "running": "yellow",
+                                "pending": "dim",
+                            }.get(task["status"], "white")
+
                             table.add_row(
-                                task['id'][:12],
-                                task['type'],
+                                task["id"][:12],
+                                task["type"],
                                 f"[{status_color}]{task['status']}[/{status_color}]",
-                                str(task['priority']),
-                                task.get('assigned_node', 'Unassigned')[:8] or "None"
+                                str(task["priority"]),
+                                task.get("assigned_node", "Unassigned")[:8] or "None",
                             )
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No tasks created yet.[/dim]")
-                
+
                 # ============ Feature 11: Auto-Discovery Commands ============
                 elif command == "/discover-start":
                     if not self.auto_discovery:
@@ -988,7 +1004,7 @@ plan Design a microservices architecture for an e-commerce app
                             node_name="Castle-Wyvern-Main",
                             node_id="main-node",
                             port=18790,
-                            capabilities=["cpu", "api"]
+                            capabilities=["cpu", "api"],
                         )
                     if self.auto_discovery.start():
                         self.console.print("[green]✅ Auto-discovery started[/green]")
@@ -996,7 +1012,7 @@ plan Design a microservices architecture for an e-commerce app
                     else:
                         self.console.print("[red]⚠️  Failed to start auto-discovery[/red]")
                         self.console.print("[dim]   Run: pip install zeroconf[/dim]")
-                
+
                 elif command == "/discover-stop":
                     if self.auto_discovery:
                         self.auto_discovery.stop()
@@ -1004,7 +1020,7 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print("[green]✅ Auto-discovery stopped[/green]")
                     else:
                         self.console.print("[dim]Auto-discovery not running[/dim]")
-                
+
                 elif command == "/discover-status":
                     if self.auto_discovery:
                         status = self.auto_discovery.status()
@@ -1013,48 +1029,50 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"  Advertising: {status['advertising']}")
                         self.console.print(f"  Discovered nodes: {status['discovered_nodes']}")
                         self.console.print(f"  Capabilities: {', '.join(status['capabilities'])}")
-                        
+
                         nodes = self.auto_discovery.get_discovered_nodes()
                         if nodes:
                             self.console.print(f"\n[bold]Discovered Nodes:[/bold]")
                             for node in nodes:
                                 self.console.print(f"  • {node.name} ({node.host}:{node.port})")
-                                self.console.print(f"    Capabilities: {', '.join(node.capabilities)}")
+                                self.console.print(
+                                    f"    Capabilities: {', '.join(node.capabilities)}"
+                                )
                     else:
                         self.console.print("[dim]Auto-discovery not running[/dim]")
                         self.console.print("[dim]Run /discover-start to begin[/dim]")
-                
+
                 # ============ Feature 12: REST API Commands ============
                 elif command == "/api-start":
                     if not self.api_server:
                         try:
-                            self.api_server = CastleWyvernAPI(
-                                host="0.0.0.0",
-                                port=18791
-                            )
+                            self.api_server = CastleWyvernAPI(host="0.0.0.0", port=18791)
                             # Start in background thread
                             import threading
+
                             api_thread = threading.Thread(
-                                target=self.api_server.run,
-                                kwargs={"debug": False},
-                                daemon=True
+                                target=self.api_server.run, kwargs={"debug": False}, daemon=True
                             )
                             api_thread.start()
                             self.console.print("[green]✅ REST API server started[/green]")
                             self.console.print("[dim]   Listening on http://0.0.0.0:18791[/dim]")
-                            self.console.print("[dim]   Try: curl http://localhost:18791/health[/dim]")
+                            self.console.print(
+                                "[dim]   Try: curl http://localhost:18791/health[/dim]"
+                            )
                         except Exception as e:
                             self.console.print(f"[red]⚠️  Failed to start API: {e}[/red]")
                             self.console.print("[dim]   Run: pip install flask flask-cors[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  API server already running[/yellow]")
-                
+
                 elif command == "/api-stop":
                     # Flask doesn't have a clean shutdown from outside
-                    self.console.print("[yellow]⚠️  API server cannot be stopped gracefully[/yellow]")
+                    self.console.print(
+                        "[yellow]⚠️  API server cannot be stopped gracefully[/yellow]"
+                    )
                     self.console.print("[dim]   Restart Castle Wyvern to stop API[/dim]")
                     self.api_server = None
-                
+
                 elif command == "/api-status":
                     if self.api_server:
                         self.console.print("[green]✅ REST API is running[/green]")
@@ -1069,38 +1087,38 @@ plan Design a microservices architecture for an e-commerce app
                     else:
                         self.console.print("[dim]REST API not running[/dim]")
                         self.console.print("[dim]Run /api-start to begin[/dim]")
-                
+
                 # ============ Feature 13: Web Dashboard Commands ============
                 elif command == "/web-start":
                     if not self.web_dashboard:
                         try:
-                            self.web_dashboard = WebDashboard(
-                                host="0.0.0.0",
-                                port=18792
-                            )
+                            self.web_dashboard = WebDashboard(host="0.0.0.0", port=18792)
                             # Start in background thread
                             import threading
+
                             web_thread = threading.Thread(
-                                target=self.web_dashboard.run,
-                                kwargs={"debug": False},
-                                daemon=True
+                                target=self.web_dashboard.run, kwargs={"debug": False}, daemon=True
                             )
                             web_thread.start()
                             self.console.print("[green]✅ Web Dashboard started[/green]")
                             self.console.print("[dim]   URL: http://localhost:18792[/dim]")
-                            self.console.print("[dim]   Open your browser to view the dashboard[/dim]")
+                            self.console.print(
+                                "[dim]   Open your browser to view the dashboard[/dim]"
+                            )
                         except Exception as e:
                             self.console.print(f"[red]⚠️  Failed to start Web Dashboard: {e}[/red]")
                             self.console.print("[dim]   Run: pip install flask flask-cors[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Web Dashboard already running[/yellow]")
-                
+
                 elif command == "/web-stop":
                     # Flask doesn't have clean shutdown from outside
-                    self.console.print("[yellow]⚠️  Web Dashboard cannot be stopped gracefully[/yellow]")
+                    self.console.print(
+                        "[yellow]⚠️  Web Dashboard cannot be stopped gracefully[/yellow]"
+                    )
                     self.console.print("[dim]   Restart Castle Wyvern to stop Web Dashboard[/dim]")
                     self.web_dashboard = None
-                
+
                 elif command == "/web-status":
                     if self.web_dashboard:
                         self.console.print("[green]✅ Web Dashboard is running[/green]")
@@ -1114,7 +1132,7 @@ plan Design a microservices architecture for an e-commerce app
                     else:
                         self.console.print("[dim]Web Dashboard not running[/dim]")
                         self.console.print("[dim]Run /web-start to begin[/dim]")
-                
+
                 # ============ Feature 14: Plugin System Commands ============
                 elif command == "/plugins":
                     plugins = self.plugin_manager.list_plugins()
@@ -1124,17 +1142,25 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Version")
                         table.add_column("Status")
                         table.add_column("Description", style="dim")
-                        
+
                         for p in plugins:
-                            status = "[green]enabled[/green]" if p["enabled"] else "[red]disabled[/red]"
-                            table.add_row(p["name"], p["version"], status, p.get("description", "")[:40])
-                        
+                            status = (
+                                "[green]enabled[/green]" if p["enabled"] else "[red]disabled[/red]"
+                            )
+                            table.add_row(
+                                p["name"], p["version"], status, p.get("description", "")[:40]
+                            )
+
                         self.console.print(table)
                         stats = self.plugin_manager.get_stats()
-                        self.console.print(f"\n[dim]Total: {stats['total_loaded']} loaded, {stats['total_discovered']} discovered[/dim]")
+                        self.console.print(
+                            f"\n[dim]Total: {stats['total_loaded']} loaded, {stats['total_discovered']} discovered[/dim]"
+                        )
                     else:
-                        self.console.print("[dim]No plugins loaded. Place plugins in the plugins/ directory[/dim]")
-                
+                        self.console.print(
+                            "[dim]No plugins loaded. Place plugins in the plugins/ directory[/dim]"
+                        )
+
                 elif command == "/plugin-load":
                     if args:
                         success = self.plugin_manager.load_plugin(args)
@@ -1144,7 +1170,7 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]⚠️  Failed to load plugin '{args}'[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /plugin-load <name>[/yellow]")
-                
+
                 elif command == "/plugin-unload":
                     if args:
                         success = self.plugin_manager.unload_plugin(args)
@@ -1154,7 +1180,7 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]⚠️  Failed to unload plugin '{args}'[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /plugin-unload <name>[/yellow]")
-                
+
                 elif command == "/plugin-reload":
                     if args:
                         success = self.plugin_manager.reload_plugin(args)
@@ -1164,21 +1190,21 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]⚠️  Failed to reload plugin '{args}'[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /plugin-reload <name>[/yellow]")
-                
+
                 elif command == "/plugin-enable":
                     if args:
                         self.plugin_manager.enable_plugin(args)
                         self.console.print(f"[green]✅ Plugin '{args}' enabled[/green]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /plugin-enable <name>[/yellow]")
-                
+
                 elif command == "/plugin-disable":
                     if args:
                         self.plugin_manager.disable_plugin(args)
                         self.console.print(f"[yellow]⚠️  Plugin '{args}' disabled[/yellow]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /plugin-disable <name>[/yellow]")
-                
+
                 elif command == "/plugin-info":
                     if args:
                         info = self.plugin_manager.get_plugin_info(args)
@@ -1186,14 +1212,16 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"\n[bold]🔌 {info['name']}[/bold]")
                             self.console.print(f"Version: {info['version']}")
                             self.console.print(f"Author: {info.get('author', 'Unknown')}")
-                            self.console.print(f"Status: {'enabled' if info['enabled'] else 'disabled'}")
-                            if info.get('description'):
+                            self.console.print(
+                                f"Status: {'enabled' if info['enabled'] else 'disabled'}"
+                            )
+                            if info.get("description"):
                                 self.console.print(f"Description: {info['description']}")
                         else:
                             self.console.print(f"[red]⚠️  Plugin '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /plugin-info <name>[/yellow]")
-                
+
                 elif command == "/hooks":
                     hooks = self.plugin_manager.hooks
                     if hooks:
@@ -1201,14 +1229,14 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Name", style="cyan")
                         table.add_column("Callbacks")
                         table.add_column("Description", style="dim")
-                        
+
                         for name, hook in sorted(hooks.items()):
                             table.add_row(name, str(len(hook.callbacks)), hook.description[:50])
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No hooks registered[/dim]")
-                
+
                 # ============ Feature 15: Monitoring Commands ============
                 elif command == "/monitor-start":
                     if not self.monitoring._running:
@@ -1217,14 +1245,14 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print("[dim]   Collecting metrics every 30 seconds[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Monitoring service already running[/yellow]")
-                
+
                 elif command == "/monitor-stop":
                     if self.monitoring._running:
                         self.monitoring.stop()
                         self.console.print("[green]✅ Monitoring service stopped[/green]")
                     else:
                         self.console.print("[dim]Monitoring service not running[/dim]")
-                
+
                 elif command == "/monitor-status":
                     status = self.monitoring.get_status()
                     self.console.print(f"\n[bold]📊 Monitoring Status[/bold]")
@@ -1233,28 +1261,40 @@ plan Design a microservices architecture for an e-commerce app
                     self.console.print(f"Active Alerts: {status['active_alerts']}")
                     self.console.print(f"Total Alerts: {status['total_alerts']}")
                     self.console.print(f"Metrics Stored: {status['metrics_stored']}")
-                    
-                    if status['health_checks']:
+
+                    if status["health_checks"]:
                         self.console.print(f"\n[bold]Health Checks:[/bold]")
-                        for name, check in status['health_checks'].items():
-                            icon = "🟢" if check['status'] == 'healthy' else "🟡" if check['status'] == 'degraded' else "🔴"
+                        for name, check in status["health_checks"].items():
+                            icon = (
+                                "🟢"
+                                if check["status"] == "healthy"
+                                else "🟡" if check["status"] == "degraded" else "🔴"
+                            )
                             self.console.print(f"  {icon} {name}: {check['message']}")
-                
+
                 elif command == "/health-check":
                     with self.console.status("[cyan]Running health checks...[/cyan]"):
                         results = self.monitoring.health.run_all_checks()
-                    
+
                     table = Table(title="🏥 Health Check Results")
                     table.add_column("Component", style="cyan")
                     table.add_column("Status")
                     table.add_column("Message", style="dim")
-                    
+
                     for name, status in results.items():
-                        status_color = "green" if status.status == "healthy" else "yellow" if status.status == "degraded" else "red"
-                        table.add_row(name, f"[{status_color}]{status.status}[/{status_color}]", status.message)
-                    
+                        status_color = (
+                            "green"
+                            if status.status == "healthy"
+                            else "yellow" if status.status == "degraded" else "red"
+                        )
+                        table.add_row(
+                            name,
+                            f"[{status_color}]{status.status}[/{status_color}]",
+                            status.message,
+                        )
+
                     self.console.print(table)
-                
+
                 elif command == "/alerts":
                     alerts = self.monitoring.get_active_alerts()
                     if alerts:
@@ -1263,36 +1303,40 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Severity")
                         table.add_column("Message")
                         table.add_column("Time", style="dim")
-                        
+
                         for alert in alerts[:10]:  # Show last 10
                             sev_color = {
                                 "critical": "red",
                                 "error": "red",
                                 "warning": "yellow",
-                                "info": "blue"
+                                "info": "blue",
                             }.get(alert.severity.value, "white")
-                            
+
                             table.add_row(
                                 alert.id[:20],
                                 f"[{sev_color}]{alert.severity.value}[/{sev_color}]",
                                 alert.message,
-                                alert.timestamp[11:19]
+                                alert.timestamp[11:19],
                             )
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[green]✅ No active alerts[/green]")
-                
+
                 elif command == "/metrics":
                     metrics = self.monitoring.metrics
                     self.console.print(f"\n[bold]📈 System Metrics[/bold]\n")
-                    
+
                     # Show latest values
-                    for name in ["system.cpu.percent", "system.memory.percent", "system.disk.percent"]:
+                    for name in [
+                        "system.cpu.percent",
+                        "system.memory.percent",
+                        "system.disk.percent",
+                    ]:
                         latest = metrics.get_latest(name)
                         if latest:
                             self.console.print(f"{name}: {latest.value:.1f}%")
-                    
+
                     # Show stats
                     self.console.print(f"\n[bold]Last 5 Minutes:[/bold]")
                     for name in ["system.cpu.percent", "system.memory.percent"]:
@@ -1301,12 +1345,12 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"\n{name}:")
                             self.console.print(f"  Mean: {stats.get('mean', 0):.1f}%")
                             self.console.print(f"  Max: {stats.get('max', 0):.1f}%")
-                
+
                 elif command == "/prometheus":
                     metrics_text = self.monitoring.metrics.export_prometheus()
                     self.console.print("\n[bold]# Prometheus Metrics Export[/bold]\n")
                     self.console.print(metrics_text)
-                
+
                 # ============ Feature 16: CLI Improvements Commands ============
                 elif command == "/alias":
                     parts = args.split(maxsplit=1)
@@ -1319,7 +1363,7 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[red]⚠️  Failed to create alias[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /alias <name> <command>[/yellow]")
-                
+
                 elif command == "/alias-list":
                     aliases = self.cli_improvements.aliases.list_all()
                     if aliases:
@@ -1327,14 +1371,14 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Name", style="cyan")
                         table.add_column("Command", style="dim")
                         table.add_column("Description", style="dim")
-                        
+
                         for alias in aliases:
                             table.add_row(alias.name, alias.command[:50], alias.description[:30])
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No aliases defined[/dim]")
-                
+
                 elif command == "/alias-remove":
                     if args:
                         if self.cli_improvements.aliases.remove(args):
@@ -1343,18 +1387,20 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]⚠️  Alias '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /alias-remove <name>[/yellow]")
-                
+
                 elif command == "/session-save":
                     if args:
                         # Get recent commands from history
                         recent = self.cli_improvements.history.get_recent(20)
                         commands = [cmd["command"] for cmd in recent]
-                        
+
                         self.cli_improvements.sessions.save(args, commands)
-                        self.console.print(f"[green]✅ Session '{args}' saved ({len(commands)} commands)[/green]")
+                        self.console.print(
+                            f"[green]✅ Session '{args}' saved ({len(commands)} commands)[/green]"
+                        )
                     else:
                         self.console.print("[yellow]⚠️  Usage: /session-save <name>[/yellow]")
-                
+
                 elif command == "/session-load":
                     if args:
                         session = self.cli_improvements.sessions.load(args)
@@ -1366,7 +1412,7 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]⚠️  Session '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /session-load <name>[/yellow]")
-                
+
                 elif command == "/session-list":
                     sessions = self.cli_improvements.sessions.list_all()
                     if sessions:
@@ -1374,37 +1420,37 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Name", style="cyan")
                         table.add_column("Commands")
                         table.add_column("Created", style="dim")
-                        
+
                         for session in sessions:
                             table.add_row(
-                                session.name,
-                                str(len(session.commands)),
-                                session.created_at[:10]
+                                session.name, str(len(session.commands)), session.created_at[:10]
                             )
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No saved sessions[/dim]")
-                
+
                 elif command == "/history-search":
                     if args:
                         results = self.cli_improvements.history.search(args)
                         if results:
                             self.console.print(f"\n[bold]🔍 History search for '{args}':[/bold]\n")
                             for cmd in results[-10:]:
-                                self.console.print(f"  {cmd['timestamp'][11:19]} {cmd['command'][:60]}")
+                                self.console.print(
+                                    f"  {cmd['timestamp'][11:19]} {cmd['command'][:60]}"
+                                )
                         else:
                             self.console.print("[dim]No matching commands found[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /history-search <query>[/yellow]")
-                
+
                 elif command == "/history-clear":
                     self.cli_improvements.history.clear()
                     self.console.print("[green]✅ Command history cleared[/green]")
-                
+
                 elif command == "/config":
                     self.cli_improvements.config.run_wizard(self.console)
-                
+
                 elif command == "/export":
                     if args:
                         if self.cli_improvements.export_import.export_all(args):
@@ -1413,7 +1459,7 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[red]⚠️  Export failed[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /export <file.json>[/yellow]")
-                
+
                 elif command == "/import":
                     if args:
                         if self.cli_improvements.export_import.import_all(args):
@@ -1422,30 +1468,34 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[red]⚠️  Import failed[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /import <file.json>[/yellow]")
-                
+
                 # ============ Feature 17: Integration Commands ============
                 elif command == "/integrations":
                     status = self.integrations.get_status()
-                    
+
                     table = Table(title="🔗 Integration Status")
                     table.add_column("Service", style="cyan")
                     table.add_column("Configured")
                     table.add_column("Status")
-                    
+
                     for name, info in status.items():
                         if "configured" in info:
                             icon = "✅" if info["configured"] else "❌"
-                            table.add_row(name, icon, "Ready" if info["configured"] else "Not configured")
+                            table.add_row(
+                                name, icon, "Ready" if info["configured"] else "Not configured"
+                            )
                         elif "running" in info:
                             icon = "🟢" if info["running"] else "🔴"
-                            table.add_row(name, "-", icon + " Running" if info["running"] else "Stopped")
-                    
+                            table.add_row(
+                                name, "-", icon + " Running" if info["running"] else "Stopped"
+                            )
+
                     self.console.print(table)
-                    
+
                     self.console.print("\n[dim]Configure integrations with:[/dim]")
                     self.console.print("  /slack-config <webhook_url>")
                     self.console.print("  /discord-config <webhook_url>")
-                
+
                 elif command == "/slack-config":
                     if args:
                         self.integrations.configure_slack(args)
@@ -1453,28 +1503,35 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print("[dim]   Test with: /slack-test[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /slack-config <webhook_url>[/yellow]")
-                        self.console.print("[dim]   Get webhook URL from: https://api.slack.com/messaging/webhooks[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Get webhook URL from: https://api.slack.com/messaging/webhooks[/dim]"
+                        )
+
                 elif command == "/discord-config":
                     if args:
                         self.integrations.configure_discord(args)
                         self.console.print("[green]✅ Discord configured[/green]")
                         self.console.print("[dim]   Test with: /discord-test[/dim]")
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /discord-config <webhook_url>[/yellow]")
-                        self.console.print("[dim]   Get webhook URL from: Server Settings > Integrations > Webhooks[/dim]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /discord-config <webhook_url>[/yellow]"
+                        )
+                        self.console.print(
+                            "[dim]   Get webhook URL from: Server Settings > Integrations > Webhooks[/dim]"
+                        )
+
                 elif command == "/slack-test":
                     success = self.integrations.slack.send_message(
-                        "🏰 Castle Wyvern test message!",
-                        username="Castle Wyvern"
+                        "🏰 Castle Wyvern test message!", username="Castle Wyvern"
                     )
                     if success:
                         self.console.print("[green]✅ Test message sent to Slack[/green]")
                     else:
                         self.console.print("[red]⚠️  Failed to send Slack message[/red]")
-                        self.console.print("[dim]   Check your webhook URL with /integrations[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Check your webhook URL with /integrations[/dim]"
+                        )
+
                 elif command == "/discord-test":
                     success = self.integrations.discord.send_message(
                         "🏰 Castle Wyvern test message!"
@@ -1483,23 +1540,23 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print("[green]✅ Test message sent to Discord[/green]")
                     else:
                         self.console.print("[red]⚠️  Failed to send Discord message[/red]")
-                        self.console.print("[dim]   Check your webhook URL with /integrations[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Check your webhook URL with /integrations[/dim]"
+                        )
+
                 elif command == "/alert":
                     if args:
                         results = self.integrations.send_alert(
-                            "Manual Alert",
-                            args,
-                            severity="info"
+                            "Manual Alert", args, severity="info"
                         )
-                        
+
                         self.console.print("[bold]📤 Alert sent to:[/bold]")
                         for channel, success in results.items():
                             icon = "✅" if success else "❌"
                             self.console.print(f"  {icon} {channel}")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /alert <message>[/yellow]")
-                
+
                 elif command == "/webhook-start":
                     if self.integrations.start_webhook_server():
                         self.console.print("[green]✅ Webhook server started[/green]")
@@ -1510,27 +1567,37 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print("[dim]     POST /webhook/events[/dim]")
                     else:
                         self.console.print("[red]⚠️  Failed to start webhook server[/red]")
-                
+
                 elif command == "/webhook-stop":
-                    self.console.print("[yellow]⚠️  Webhook server cannot be stopped gracefully[/yellow]")
+                    self.console.print(
+                        "[yellow]⚠️  Webhook server cannot be stopped gracefully[/yellow]"
+                    )
                     self.console.print("[dim]   Restart Castle Wyvern to stop[/dim]")
-                
+
                 # ============ Feature 18: Security Commands ============
                 elif command == "/security-status":
                     status = self.security.get_status()
-                    
+
                     table = Table(title="🔒 Security Status")
                     table.add_column("Component", style="cyan")
                     table.add_column("Status")
-                    
-                    table.add_row("Audit Logging", "✅ Enabled" if status["audit_enabled"] else "❌ Disabled")
-                    table.add_row("Encryption", "✅ Enabled" if status["encryption_enabled"] else "❌ Disabled")
-                    table.add_row("Intrusion Detection", "✅ Enabled" if status["intrusion_detection"] else "❌ Disabled")
+
+                    table.add_row(
+                        "Audit Logging", "✅ Enabled" if status["audit_enabled"] else "❌ Disabled"
+                    )
+                    table.add_row(
+                        "Encryption",
+                        "✅ Enabled" if status["encryption_enabled"] else "❌ Disabled",
+                    )
+                    table.add_row(
+                        "Intrusion Detection",
+                        "✅ Enabled" if status["intrusion_detection"] else "❌ Disabled",
+                    )
                     table.add_row("Audit Entries", str(status["audit_entries"]))
                     table.add_row("API Keys", str(status["api_keys"]))
-                    
+
                     self.console.print(table)
-                
+
                 elif command == "/audit-log":
                     entries = self.security.audit.get_recent(20)
                     if entries:
@@ -1540,24 +1607,32 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Category", style="dim")
                         table.add_column("Action")
                         table.add_column("User", style="cyan")
-                        
+
                         for entry in entries:
                             time_str = entry.timestamp[11:19]
-                            table.add_row(time_str, entry.level, entry.category, entry.action, entry.user)
-                        
+                            table.add_row(
+                                time_str, entry.level, entry.category, entry.action, entry.user
+                            )
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No audit entries[/dim]")
-                
+
                 elif command == "/audit-search":
                     if args:
                         results = self.security.audit.search(**json.loads(args))
-                        self.console.print(f"\n[bold]🔍 Found {len(results)} matching entries[/bold]\n")
+                        self.console.print(
+                            f"\n[bold]🔍 Found {len(results)} matching entries[/bold]\n"
+                        )
                         for entry in results[-10:]:
-                            self.console.print(f"  {entry.timestamp[11:19]} [{entry.level}] {entry.category}: {entry.action}")
+                            self.console.print(
+                                f"  {entry.timestamp[11:19]} [{entry.level}] {entry.category}: {entry.action}"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /audit-search <json_filters>[/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /audit-search <json_filters>[/yellow]"
+                        )
+
                 elif command == "/audit-export":
                     if args:
                         if self.security.audit.export(args):
@@ -1566,16 +1641,18 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[red]⚠️  Export failed[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /audit-export <file.json>[/yellow]")
-                
+
                 elif command == "/apikey-create":
                     if args:
                         key = self.security.api_keys.generate_key(args)
                         self.console.print(f"[green]✅ API key created for: {args}[/green]")
                         self.console.print(f"[dim]   Key: {key}[/dim]")
-                        self.console.print("\n[yellow]⚠️  Save this key - it won't be shown again![/yellow]")
+                        self.console.print(
+                            "\n[yellow]⚠️  Save this key - it won't be shown again![/yellow]"
+                        )
                     else:
                         self.console.print("[yellow]⚠️  Usage: /apikey-create <name>[/yellow]")
-                
+
                 elif command == "/apikey-list":
                     keys = self.security.api_keys.list_keys()
                     if keys:
@@ -1583,14 +1660,22 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Name", style="cyan")
                         table.add_column("Created")
                         table.add_column("Last Used", style="dim")
-                        
+
                         for key in keys:
-                            table.add_row(key["name"], key["created_at"][:10], key.get("last_used", "Never")[:10] if key.get("last_used") else "Never")
-                        
+                            table.add_row(
+                                key["name"],
+                                key["created_at"][:10],
+                                (
+                                    key.get("last_used", "Never")[:10]
+                                    if key.get("last_used")
+                                    else "Never"
+                                ),
+                            )
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No API keys[/dim]")
-                
+
                 elif command == "/apikey-revoke":
                     if args:
                         if self.security.api_keys.revoke_key(args):
@@ -1599,30 +1684,38 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]⚠️  API key not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /apikey-revoke <key>[/yellow]")
-                
+
                 elif command == "/security-scan":
                     with self.console.status("[cyan]Running security scan...[/cyan]"):
                         results = self.security.run_security_scan()
-                    
+
                     self.console.print(f"\n[bold]🔒 Security Scan Results[/bold]")
                     self.console.print(f"Issues found: {len(results['issues'])}")
-                    
-                    if results['issues']:
-                        for issue in results['issues']:
-                            icon = "🔴" if issue['severity'] == 'error' else "🟡" if issue['severity'] == 'warning' else "ℹ️"
+
+                    if results["issues"]:
+                        for issue in results["issues"]:
+                            icon = (
+                                "🔴"
+                                if issue["severity"] == "error"
+                                else "🟡" if issue["severity"] == "warning" else "ℹ️"
+                            )
                             self.console.print(f"  {icon} [{issue['severity']}] {issue['message']}")
-                
+
                 elif command == "/intrusion-check":
                     with self.console.status("[cyan]Checking for intrusions...[/cyan]"):
                         detections = self.security.check_intrusions()
-                    
+
                     if detections:
-                        self.console.print(f"\n[bold]🚨 {len(detections)} Potential Intrusions Detected[/bold]")
+                        self.console.print(
+                            f"\n[bold]🚨 {len(detections)} Potential Intrusions Detected[/bold]"
+                        )
                         for detection in detections:
-                            self.console.print(f"  🟡 {detection['pattern']}: {detection['count']} occurrences")
+                            self.console.print(
+                                f"  🟡 {detection['pattern']}: {detection['count']} occurrences"
+                            )
                     else:
                         self.console.print("[green]✅ No intrusions detected[/green]")
-                
+
                 # ============ Stretch Goals (Features 19-21) ============
                 elif command == "/ai-optimize":
                     if args:
@@ -1631,78 +1724,89 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"\n[bold]Optimized:[/bold] {optimized}")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /ai-optimize <prompt>[/yellow]")
-                
+
                 elif command == "/ai-stats":
                     stats = self.advanced_ai.get_stats()
                     table = Table(title="🧠 Advanced AI Stats")
                     table.add_column("Metric", style="cyan")
                     table.add_column("Value")
-                    
-                    table.add_row("Context Window Utilization", f"{stats['context_window'].get('utilization', 0):.1%}")
-                    table.add_row("Cached Prompts", str(stats['cached_prompts']))
-                    table.add_row("Code Executions", str(stats['executions']))
-                    table.add_row("Ensemble Models", str(stats['ensemble_models']))
-                    
+
+                    table.add_row(
+                        "Context Window Utilization",
+                        f"{stats['context_window'].get('utilization', 0):.1%}",
+                    )
+                    table.add_row("Cached Prompts", str(stats["cached_prompts"]))
+                    table.add_row("Code Executions", str(stats["executions"]))
+                    table.add_row("Ensemble Models", str(stats["ensemble_models"]))
+
                     self.console.print(table)
-                
+
                 elif command == "/perf-stats":
                     stats = self.performance.get_stats()
                     table = Table(title="⚡ Performance Stats")
                     table.add_column("Metric", style="cyan")
                     table.add_column("Value")
-                    
-                    table.add_row("Uptime", f"{stats['uptime_seconds'] // 3600}h {(stats['uptime_seconds'] % 3600) // 60}m")
-                    table.add_row("Total Requests", str(stats['total_requests']))
-                    table.add_row("Cache Hit Rate", stats['cache'].get('hit_rate', 'N/A'))
-                    table.add_row("Cache Size", f"{stats['cache'].get('size', 0)}/{stats['cache'].get('max_size', 0)}")
-                    
+
+                    table.add_row(
+                        "Uptime",
+                        f"{stats['uptime_seconds'] // 3600}h {(stats['uptime_seconds'] % 3600) // 60}m",
+                    )
+                    table.add_row("Total Requests", str(stats["total_requests"]))
+                    table.add_row("Cache Hit Rate", stats["cache"].get("hit_rate", "N/A"))
+                    table.add_row(
+                        "Cache Size",
+                        f"{stats['cache'].get('size', 0)}/{stats['cache'].get('max_size', 0)}",
+                    )
+
                     self.console.print(table)
-                
+
                 elif command == "/perf-optimize":
                     with self.console.status("[cyan]Optimizing memory...[/cyan]"):
                         result = self.performance.optimize_memory()
-                    
+
                     self.console.print("[green]✅ Memory optimization complete[/green]")
                     self.console.print(f"[dim]   Cache cleared: {result['cache_cleared']}[/dim]")
                     self.console.print(f"[dim]   Pools cleared: {result['pools_cleared']}[/dim]")
-                
+
                 elif command == "/docs-generate":
                     with self.console.status("[cyan]Generating documentation...[/cyan]"):
                         output_file = self.documentation.export_markdown()
-                    
+
                     self.console.print(f"[green]✅ Documentation generated[/green]")
                     self.console.print(f"[dim]   Location: {output_file}[/dim]")
-                
+
                 elif command == "/docs-export":
                     if args:
                         with self.console.status("[cyan]Exporting documentation...[/cyan]"):
                             output_file = self.documentation.export_markdown(args)
-                        
+
                         self.console.print(f"[green]✅ Documentation exported to {args}[/green]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /docs-export <file.md>[/yellow]")
-                
+
                 # ============ MCP Protocol Commands ============
                 elif command == "/mcp-start":
                     if not self.mcp_server:
                         self.mcp_server = CastleWyvernMCPServer(castle_wyvern_cli=self)
-                        
+
                         # Start in background thread
                         import threading
-                        mcp_thread = threading.Thread(
-                            target=self.mcp_server.start,
-                            daemon=True
-                        )
+
+                        mcp_thread = threading.Thread(target=self.mcp_server.start, daemon=True)
                         mcp_thread.start()
-                        
+
                         self.console.print("[green]✅ MCP Server started[/green]")
-                        self.console.print("[dim]   The Manhattan Clan is now available via MCP![/dim]")
+                        self.console.print(
+                            "[dim]   The Manhattan Clan is now available via MCP![/dim]"
+                        )
                         self.console.print("[dim]   Tools available:[/dim]")
                         for tool in self.mcp_server.list_tools():
-                            self.console.print(f"[dim]     • {tool['name']}: {tool['description'][:50]}...[/dim]")
+                            self.console.print(
+                                f"[dim]     • {tool['name']}: {tool['description'][:50]}...[/dim]"
+                            )
                     else:
                         self.console.print("[yellow]⚠️  MCP Server already running[/yellow]")
-                
+
                 elif command == "/mcp-stop":
                     if self.mcp_server:
                         self.mcp_server.stop()
@@ -1710,16 +1814,16 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print("[green]✅ MCP Server stopped[/green]")
                     else:
                         self.console.print("[dim]MCP Server not running[/dim]")
-                
+
                 elif command == "/mcp-tools":
                     if self.mcp_server:
                         table = Table(title="🔌 MCP Tools")
                         table.add_column("Tool Name", style="cyan")
                         table.add_column("Description")
-                        
+
                         for tool in self.mcp_server.list_tools():
-                            table.add_row(tool['name'], tool['description'][:60])
-                        
+                            table.add_row(tool["name"], tool["description"][:60])
+
                         self.console.print(table)
                     else:
                         # Show what tools would be available
@@ -1727,21 +1831,22 @@ plan Design a microservices architecture for an e-commerce app
                         table = Table(title="🔌 Available MCP Tools (Start server with /mcp-start)")
                         table.add_column("Tool Name", style="cyan")
                         table.add_column("Description")
-                        
+
                         for tool in temp_server.list_tools():
-                            table.add_row(tool['name'], tool['description'][:60])
-                        
+                            table.add_row(tool["name"], tool["description"][:60])
+
                         self.console.print(table)
-                
+
                 elif command == "/mcp-install":
                     self.console.print("[bold]📦 MCP Installation Guide[/bold]\n")
                     self.console.print("To use Castle Wyvern with MCP clients:\n")
-                    
+
                     self.console.print("[bold]1. Claude Desktop:[/bold]")
                     self.console.print("   - Open Claude Desktop")
                     self.console.print("   - Go to Settings > Developer > Edit Config")
                     self.console.print("   - Add Castle Wyvern to claude_desktop_config.json:")
-                    self.console.print("""
+                    self.console.print(
+                        """
    {
      "mcpServers": {
        "castle-wyvern": {
@@ -1751,62 +1856,78 @@ plan Design a microservices architecture for an e-commerce app
        }
      }
    }
-""")
-                    
+"""
+                    )
+
                     self.console.print("[bold]2. Cursor:[/bold]")
                     self.console.print("   - Open Cursor Settings")
                     self.console.print("   - Find MCP settings")
                     self.console.print("   - Add the same configuration as above")
                     self.console.print("")
-                    
+
                     self.console.print("[bold]3. Other MCP Clients:[/bold]")
                     self.console.print("   - Configure with stdio transport")
                     self.console.print("   - Command: python -m eyrie.mcp_server")
                     self.console.print("")
-                    
-                    self.console.print("[green]✅ After installation, restart your MCP client![/green]")
-                
+
+                    self.console.print(
+                        "[green]✅ After installation, restart your MCP client![/green]"
+                    )
+
                 # ============ A2A Protocol Commands ============
                 elif command == "/a2a-start":
                     if not self.a2a:
                         self.a2a = A2AIntegration(castle_wyvern_cli=self)
-                    
+
                     if self.a2a.start_server():
                         self.console.print("[green]✅ A2A Server started[/green]")
-                        self.console.print("[dim]   The Manhattan Clan can now talk to other A2A agents![/dim]")
-                        self.console.print("[dim]   Agent Card: http://localhost:18795/.well-known/agent.json[/dim]")
+                        self.console.print(
+                            "[dim]   The Manhattan Clan can now talk to other A2A agents![/dim]"
+                        )
+                        self.console.print(
+                            "[dim]   Agent Card: http://localhost:18795/.well-known/agent.json[/dim]"
+                        )
                         self.console.print("[dim]   Skills available:[/dim]")
                         for skill in ["goliath", "lexington", "brooklyn", "xanatos", "broadway"]:
                             self.console.print(f"[dim]     • {skill}[/dim]")
                     else:
                         self.console.print("[red]⚠️  Failed to start A2A server[/red]")
-                
+
                 elif command == "/a2a-stop":
-                    self.console.print("[yellow]⚠️  A2A Server cannot be stopped gracefully[/yellow]")
+                    self.console.print(
+                        "[yellow]⚠️  A2A Server cannot be stopped gracefully[/yellow]"
+                    )
                     self.console.print("[dim]   Restart Castle Wyvern to stop[/dim]")
                     self.a2a = None
-                
+
                 elif command == "/a2a-discover":
                     if args:
                         import asyncio
+
                         urls = args.split()
-                        
+
                         with self.console.status("[cyan]Discovering A2A agents...[/cyan]"):
                             if not self.a2a:
                                 self.a2a = A2AIntegration()
                             agents = asyncio.run(self.a2a.discover_agents(urls))
-                        
+
                         if agents:
-                            self.console.print(f"\n[green]✅ Discovered {len(agents)} A2A agent(s):[/green]")
+                            self.console.print(
+                                f"\n[green]✅ Discovered {len(agents)} A2A agent(s):[/green]"
+                            )
                             for agent in agents:
                                 self.console.print(f"  • {agent.name} ({agent.url})")
                                 self.console.print(f"    {agent.description[:60]}...")
                         else:
                             self.console.print("[dim]No A2A agents found at provided URLs[/dim]")
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /a2a-discover <url1> [url2] ...[/yellow]")
-                        self.console.print("[dim]   Example: /a2a-discover http://localhost:8080 http://localhost:9090[/dim]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /a2a-discover <url1> [url2] ...[/yellow]"
+                        )
+                        self.console.print(
+                            "[dim]   Example: /a2a-discover http://localhost:8080 http://localhost:9090[/dim]"
+                        )
+
                 elif command == "/a2a-agents":
                     if self.a2a:
                         agents = self.a2a.get_known_agents()
@@ -1814,50 +1935,52 @@ plan Design a microservices architecture for an e-commerce app
                             table = Table(title="🔗 Known A2A Agents")
                             table.add_column("Agent", style="cyan")
                             table.add_column("Skills")
-                            
+
                             for agent in agents:
-                                skills = ", ".join([s['id'] for s in agent.get('skills', [])[:3]])
-                                table.add_row(agent.get('name', 'Unknown'), skills)
-                            
+                                skills = ", ".join([s["id"] for s in agent.get("skills", [])[:3]])
+                                table.add_row(agent.get("name", "Unknown"), skills)
+
                             self.console.print(table)
                         else:
                             self.console.print("[dim]No known A2A agents[/dim]")
                             self.console.print("[dim]Use /a2a-discover to find agents[/dim]")
                     else:
                         self.console.print("[dim]A2A not initialized[/dim]")
-                
+
                 elif command == "/a2a-delegate":
                     parts = args.split(maxsplit=1)
                     if len(parts) >= 2:
                         agent_name, message = parts[0], parts[1]
-                        
+
                         if self.a2a:
                             with self.console.status(f"[cyan]Delegating to {agent_name}...[/cyan]"):
                                 import asyncio
+
                                 response = asyncio.run(self.a2a.delegate_task(agent_name, message))
-                            
+
                             if response:
                                 self.console.print(f"\n[bold]Response from {agent_name}:[/bold]")
                                 self.console.print(response)
                             else:
                                 self.console.print(f"[red]⚠️  No response from {agent_name}[/red]")
                         else:
-                            self.console.print("[red]⚠️  A2A not initialized. Start with /a2a-start[/red]")
+                            self.console.print(
+                                "[red]⚠️  A2A not initialized. Start with /a2a-start[/red]"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /a2a-delegate <agent_name> <message>[/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /a2a-delegate <agent_name> <message>[/yellow]"
+                        )
+
                 # ============ Enhanced Memory Commands ============
                 elif command == "/memory-add":
                     if args:
-                        mem_id = self.enhanced_memory.add(
-                            content=args,
-                            importance=4
-                        )
+                        mem_id = self.enhanced_memory.add(content=args, importance=4)
                         self.console.print(f"[green]✅ Memory added with embedding[/green]")
                         self.console.print(f"[dim]   ID: {mem_id[:16]}...[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /memory-add <content>[/yellow]")
-                
+
                 elif command == "/memory-search":
                     if args:
                         results = self.enhanced_memory.search(args, use_semantic=True)
@@ -1865,17 +1988,17 @@ plan Design a microservices architecture for an e-commerce app
                             table = Table(title=f"🧠 Semantic Search: '{args}'")
                             table.add_column("Memory", style="cyan", max_width=60)
                             table.add_column("Similarity")
-                            
+
                             for r in results:
                                 sim_pct = f"{r['similarity']*100:.1f}%"
-                                table.add_row(r['content'][:80], sim_pct)
-                            
+                                table.add_row(r["content"][:80], sim_pct)
+
                             self.console.print(table)
                         else:
                             self.console.print("[dim]No similar memories found[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /memory-search <query>[/yellow]")
-                
+
                 elif command == "/memory-context":
                     if args:
                         context = self.enhanced_memory.get_context(args)
@@ -1886,89 +2009,107 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[dim]No relevant context found[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /memory-context <query>[/yellow]")
-                
+
                 elif command == "/memory-stats":
                     stats = self.enhanced_memory.get_stats()
                     table = Table(title="🧠 Enhanced Memory Statistics")
                     table.add_column("Metric", style="cyan")
                     table.add_column("Value")
-                    
-                    vector_stats = stats.get('vector_memory', {})
-                    table.add_row("Total Memories", str(vector_stats.get('total_memories', 0)))
-                    table.add_row("Vector Dimension", str(vector_stats.get('dimension', 0)))
-                    table.add_row("High Importance", str(vector_stats.get('high_importance', 0)))
-                    table.add_row("Total Accesses", str(vector_stats.get('total_accesses', 0)))
-                    table.add_row("Consolidated", str(vector_stats.get('consolidated', 0)))
-                    
+
+                    vector_stats = stats.get("vector_memory", {})
+                    table.add_row("Total Memories", str(vector_stats.get("total_memories", 0)))
+                    table.add_row("Vector Dimension", str(vector_stats.get("dimension", 0)))
+                    table.add_row("High Importance", str(vector_stats.get("high_importance", 0)))
+                    table.add_row("Total Accesses", str(vector_stats.get("total_accesses", 0)))
+                    table.add_row("Consolidated", str(vector_stats.get("consolidated", 0)))
+
                     self.console.print(table)
-                    self.console.print("[dim]Enhanced with vector embeddings for semantic search[/dim]")
-                
+                    self.console.print(
+                        "[dim]Enhanced with vector embeddings for semantic search[/dim]"
+                    )
+
                 elif command == "/memory-consolidate":
                     with self.console.status("[cyan]Consolidating old memories...[/cyan]"):
                         consolidated = self.enhanced_memory.vector_store.consolidate_memories()
-                    
+
                     if consolidated > 0:
-                        self.console.print(f"[green]✅ Consolidated {consolidated} memories[/green]")
+                        self.console.print(
+                            f"[green]✅ Consolidated {consolidated} memories[/green]"
+                        )
                     else:
                         self.console.print("[dim]No memories needed consolidation[/dim]")
-                
+
                 # ============ Browser Agent Commands ============
                 elif command == "/browse":
                     if args:
                         self.clan["jade"].set_busy(f"Browsing: {args[:40]}...")
                         with self.console.status(f"[cyan]🌐 Jade is browsing {args}...[/cyan]"):
                             page = self.browser.fetch(args)
-                        
+
                         self.console.print(f"\n[bold]🌐 {page.title}[/bold]")
                         self.console.print(f"[dim]{page.url}[/dim]\n")
-                        
+
                         # Show content (truncated)
                         content = page.content[:2000] if len(page.content) > 2000 else page.content
                         self.console.print(content)
-                        
+
                         if len(page.content) > 2000:
-                            self.console.print(f"\n[dim]... {len(page.content) - 2000} more characters[/dim]")
-                        
+                            self.console.print(
+                                f"\n[dim]... {len(page.content) - 2000} more characters[/dim]"
+                            )
+
                         self.console.print(f"\n[dim]🔗 Found {len(page.links)} links on page[/dim]")
                         self.clan["jade"].set_ready()
                     else:
                         self.console.print("[yellow]⚠️  Usage: /browse <url>[/yellow]")
                         self.console.print("[dim]   Example: /browse https://python.org[/dim]")
-                
+
                 elif command == "/search":
                     if args:
                         self.clan["jade"].set_busy(f"Searching: {args[:40]}...")
-                        with self.console.status(f"[cyan]🔍 Jade is searching for '{args}'...[/cyan]"):
+                        with self.console.status(
+                            f"[cyan]🔍 Jade is searching for '{args}'...[/cyan]"
+                        ):
                             results = self.browser.search(args, num_results=5)
-                        
+
                         table = Table(title=f"🔍 Search Results: '{args}'")
                         table.add_column("#", justify="right", style="cyan", width=3)
                         table.add_column("Title", style="bright_blue")
                         table.add_column("Snippet", style="dim", max_width=50)
-                        
+
                         for i, result in enumerate(results, 1):
-                            snippet = result.get('snippet', '')[:80] + '...' if len(result.get('snippet', '')) > 80 else result.get('snippet', '')
-                            table.add_row(str(i), result.get('title', ''), snippet)
-                        
+                            snippet = (
+                                result.get("snippet", "")[:80] + "..."
+                                if len(result.get("snippet", "")) > 80
+                                else result.get("snippet", "")
+                            )
+                            table.add_row(str(i), result.get("title", ""), snippet)
+
                         self.console.print(table)
-                        self.console.print(f"\n[dim]Use /browse <url> to fetch full page content[/dim]")
+                        self.console.print(
+                            f"\n[dim]Use /browse <url> to fetch full page content[/dim]"
+                        )
                         self.clan["jade"].set_ready()
                     else:
                         self.console.print("[yellow]⚠️  Usage: /search <query>[/yellow]")
                         self.console.print("[dim]   Example: /search Python tutorials[/dim]")
-                
+
                 elif command == "/research":
                     if args:
                         self.clan["jade"].set_busy(f"Researching: {args[:40]}...")
-                        with self.console.status(f"[cyan]📚 Jade is researching '{args}'...[/cyan]"):
+                        with self.console.status(
+                            f"[cyan]📚 Jade is researching '{args}'...[/cyan]"
+                        ):
                             report = self.browser.research(args, depth=2)
-                        
+
                         self.console.print(f"\n{report}")
                         self.clan["jade"].set_ready()
                     else:
                         self.console.print("[yellow]⚠️  Usage: /research <topic>[/yellow]")
-                        self.console.print("[dim]   Example: /research machine learning basics[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Example: /research machine learning basics[/dim]"
+                        )
+
                 elif command == "/browser-history":
                     history = self.browser.get_history()
                     if history:
@@ -1976,82 +2117,95 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Time", style="dim", width=8)
                         table.add_column("Title", style="cyan")
                         table.add_column("URL", style="blue")
-                        
+
                         for page in history[-10:]:  # Last 10
                             from datetime import datetime
+
                             time_str = datetime.fromtimestamp(page.timestamp).strftime("%H:%M")
-                            title = page.title[:40] + '...' if len(page.title) > 40 else page.title
-                            url = page.url[:50] + '...' if len(page.url) > 50 else page.url
+                            title = page.title[:40] + "..." if len(page.title) > 40 else page.title
+                            url = page.url[:50] + "..." if len(page.url) > 50 else page.url
                             table.add_row(time_str, title, url)
-                        
+
                         self.console.print(table)
                         self.console.print(f"\n[dim]Total pages visited: {len(history)}[/dim]")
                     else:
                         self.console.print("[dim]No browsing history yet[/dim]")
                         self.console.print("[dim]Try /search or /browse to start exploring[/dim]")
-                
+
                 elif command == "/browser-clear":
                     self.browser.clear_history()
                     self.console.print("[green]✅ Browser history cleared[/green]")
-                
+
                 # ============ Clan Creator Commands ============
                 elif command == "/clan-create":
                     if args:
                         self.console.print("[cyan]🎭 Generating clan member...[/cyan]")
-                        
+
                         # Update existing members list
                         self.clan_creator.existing_members = list(self.clan.keys())
-                        
+
                         # Generate preview
                         preview = self.clan_creator.preview_creation(args)
                         self.console.print(preview)
-                        
+
                         # Store for confirmation
                         self.pending_clan_creation = self.clan_creator.create_from_description(args)
-                        
+
                         if self.pending_clan_creation:
-                            self.console.print(f"\n[cyan]Use /clan-create-confirm to add {self.pending_clan_creation.name} to the clan![/cyan]")
+                            self.console.print(
+                                f"\n[cyan]Use /clan-create-confirm to add {self.pending_clan_creation.name} to the clan![/cyan]"
+                            )
                         else:
                             self.console.print("[red]❌ Failed to generate clan member[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /clan-create <description>[/yellow]")
-                        self.console.print("[dim]   Example: /clan-create A DevOps expert who knows Kubernetes[/dim]")
-                        self.console.print("[dim]   Example: /clan-create Security specialist for penetration testing[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Example: /clan-create A DevOps expert who knows Kubernetes[/dim]"
+                        )
+                        self.console.print(
+                            "[dim]   Example: /clan-create Security specialist for penetration testing[/dim]"
+                        )
+
                 elif command == "/clan-create-confirm":
                     if self.pending_clan_creation:
                         template = self.pending_clan_creation
-                        
+
                         # Create the clan member
                         new_member = ClanMember(
                             name=template.name,
                             emoji=template.emoji,
                             role=template.role,
-                            color=template.color
+                            color=template.color,
                         )
-                        
+
                         # Add to clan (use lowercase name as key)
                         member_key = template.name.lower()
                         self.clan[member_key] = new_member
-                        
-                        self.console.print(f"\n[green]✅ {template.emoji} {template.name} has joined the clan![/green]")
+
+                        self.console.print(
+                            f"\n[green]✅ {template.emoji} {template.name} has joined the clan![/green]"
+                        )
                         self.console.print(f"[dim]   Role: {template.role}[/dim]")
                         self.console.print(f"[dim]   Specialty: {template.specialty.title()}[/dim]")
                         self.console.print("\n[bold]Example tasks:[/bold]")
                         for task in template.example_tasks:
                             self.console.print(f"  • {task}")
-                        
+
                         # Clear pending
                         self.pending_clan_creation = None
-                        
+
                         # Update clan creator's list
                         self.clan_creator.existing_members = list(self.clan.keys())
-                        
-                        self.console.print(f"\n[cyan]The clan now has {len(self.clan)} members! 🏰[/cyan]")
+
+                        self.console.print(
+                            f"\n[cyan]The clan now has {len(self.clan)} members! 🏰[/cyan]"
+                        )
                     else:
                         self.console.print("[yellow]⚠️  No pending clan member creation[/yellow]")
-                        self.console.print("[dim]   Use /clan-create first to preview a new member[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Use /clan-create first to preview a new member[/dim]"
+                        )
+
                 elif command == "/clan-create-cancel":
                     if self.pending_clan_creation:
                         name = self.pending_clan_creation.name
@@ -2059,41 +2213,51 @@ plan Design a microservices architecture for an e-commerce app
                         self.console.print(f"[dim]❌ Cancelled creation of {name}[/dim]")
                     else:
                         self.console.print("[dim]No pending creation to cancel[/dim]")
-                
+
                 # ============ Docker Sandbox Commands ============
                 elif command == "/sandbox-status":
                     status = self.sandbox.get_status()
-                    
+
                     table = Table(title="🐳 Docker Sandbox Status")
                     table.add_column("Property", style="cyan")
                     table.add_column("Value")
-                    
-                    table.add_row("Enabled", "✅ Yes" if status['enabled'] else "❌ No")
-                    table.add_row("Docker Available", "✅ Yes" if status['docker_available'] else "❌ No")
-                    table.add_row("Supported Languages", ", ".join(status['supported_languages']))
+
+                    table.add_row("Enabled", "✅ Yes" if status["enabled"] else "❌ No")
+                    table.add_row(
+                        "Docker Available", "✅ Yes" if status["docker_available"] else "❌ No"
+                    )
+                    table.add_row("Supported Languages", ", ".join(status["supported_languages"]))
                     table.add_row("Default Timeout", f"{status['default_timeout']}s")
-                    table.add_row("Default Memory", status['default_memory'])
-                    table.add_row("Default CPU", status['default_cpu'])
-                    
+                    table.add_row("Default Memory", status["default_memory"])
+                    table.add_row("Default CPU", status["default_cpu"])
+
                     self.console.print(table)
-                    
-                    if not status['enabled']:
+
+                    if not status["enabled"]:
                         self.console.print("\n[yellow]⚠️  Docker not available[/yellow]")
-                        self.console.print("[dim]   Install Docker: https://docs.docker.com/get-docker/[/dim]")
+                        self.console.print(
+                            "[dim]   Install Docker: https://docs.docker.com/get-docker/[/dim]"
+                        )
                         self.console.print("[dim]   Then restart Castle Wyvern[/dim]")
-                
+
                 elif command == "/sandbox-exec":
                     if args:
-                        language = getattr(self, '_sandbox_lang', 'python')
-                        
-                        self.console.print(f"[cyan]🐳 Executing {language} code in Docker sandbox...[/cyan]")
-                        self.console.print("[dim]   (This may take a moment on first run to pull image)[/dim]")
-                        
+                        language = getattr(self, "_sandbox_lang", "python")
+
+                        self.console.print(
+                            f"[cyan]🐳 Executing {language} code in Docker sandbox...[/cyan]"
+                        )
+                        self.console.print(
+                            "[dim]   (This may take a moment on first run to pull image)[/dim]"
+                        )
+
                         with self.console.status("[cyan]Running in sandbox...[/cyan]"):
                             result = self.sandbox.execute(args, language=language)
-                        
+
                         if result.success:
-                            self.console.print(f"\n[green]✅ Execution successful ({result.execution_time:.2f}s)[/green]")
+                            self.console.print(
+                                f"\n[green]✅ Execution successful ({result.execution_time:.2f}s)[/green]"
+                            )
                             if result.stdout:
                                 self.console.print("\n[bold]Output:[/bold]")
                                 self.console.print(result.stdout)
@@ -2106,14 +2270,18 @@ plan Design a microservices architecture for an e-commerce app
                                 self.console.print(result.stderr)
                     else:
                         self.console.print("[yellow]⚠️  Usage: /sandbox-exec <code>[/yellow]")
-                        self.console.print("[dim]   Example: /sandbox-exec print('Hello World')[/dim]")
-                        self.console.print(f"[dim]   Current language: {getattr(self, '_sandbox_lang', 'python')}[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Example: /sandbox-exec print('Hello World')[/dim]"
+                        )
+                        self.console.print(
+                            f"[dim]   Current language: {getattr(self, '_sandbox_lang', 'python')}[/dim]"
+                        )
+
                 elif command == "/sandbox-lang":
                     if args:
                         lang = args.lower()
                         supported = self.sandbox.IMAGES.keys()
-                        
+
                         if lang in supported:
                             self._sandbox_lang = lang
                             self.console.print(f"[green]✅ Sandbox language set to: {lang}[/green]")
@@ -2121,35 +2289,37 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[red]❌ Unsupported language: {lang}[/red]")
                             self.console.print(f"[dim]   Supported: {', '.join(supported)}[/dim]")
                     else:
-                        current = getattr(self, '_sandbox_lang', 'python')
+                        current = getattr(self, "_sandbox_lang", "python")
                         self.console.print(f"[dim]Current language: {current}[/dim]")
-                        self.console.print(f"[dim]Supported: {', '.join(self.sandbox.IMAGES.keys())}[/dim]")
-                
+                        self.console.print(
+                            f"[dim]Supported: {', '.join(self.sandbox.IMAGES.keys())}[/dim]"
+                        )
+
                 elif command == "/sandbox-list":
                     containers = self.sandbox.list_running_containers()
-                    
+
                     if containers:
                         table = Table(title="🐳 Running Sandbox Containers")
                         table.add_column("ID", style="cyan", width=12)
                         table.add_column("Image", style="blue")
                         table.add_column("Status")
-                        
+
                         for c in containers:
-                            table.add_row(c['id'], c['image'], c['status'])
-                        
+                            table.add_row(c["id"], c["image"], c["status"])
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No sandbox containers running[/dim]")
-                
+
                 elif command == "/sandbox-cleanup":
                     with self.console.status("[cyan]Cleaning up sandbox containers...[/cyan]"):
                         removed = self.sandbox.cleanup_all()
-                    
+
                     if removed > 0:
                         self.console.print(f"[green]✅ Removed {removed} container(s)[/green]")
                     else:
                         self.console.print("[dim]No containers to clean up[/dim]")
-                
+
                 # ============ Goal-Based Agent Commands ============
                 elif command == "/goal":
                     if args:
@@ -2160,54 +2330,62 @@ plan Design a microservices architecture for an e-commerce app
                                 for name in self.clan.keys()
                             }
                             self.goal_agent = GoalBasedAgent(clan_funcs)
-                        
+
                         self.console.print(f"[cyan]🎯 Creating goal: {args}[/cyan]")
-                        
+
                         # Create the goal
                         goal = self.goal_agent.create_goal(args)
-                        
+
                         self.console.print(f"\n[bold]Goal Plan:[/bold]")
                         for st in goal.subtasks:
                             self.console.print(f"  {st.id}. [{st.assigned_to}] {st.description}")
-                        
+
                         self.console.print(f"\n[cyan]Execute with /goal-execute {goal.id}[/cyan]")
                         self.console.print("[dim]Or check with /goal-status {goal.id}[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /goal <description>[/yellow]")
-                        self.console.print("[dim]   Example: /goal Build a REST API for a todo app[/dim]")
-                        self.console.print("[dim]   Example: /goal Create a Python script to analyze CSV data[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Example: /goal Build a REST API for a todo app[/dim]"
+                        )
+                        self.console.print(
+                            "[dim]   Example: /goal Create a Python script to analyze CSV data[/dim]"
+                        )
+
                 elif command == "/goal-execute":
                     if args:
                         if not self.goal_agent:
                             self.console.print("[red]❌ No goals created yet[/red]")
                             return
-                        
+
                         goal = self.goal_agent.active_goals.get(args)
                         if not goal:
                             self.console.print(f"[red]❌ Goal {args} not found[/red]")
                             return
-                        
+
                         self.console.print(f"[cyan]🎯 Executing goal: {goal.description}[/cyan]")
-                        self.console.print(f"[dim]This will run {len(goal.subtasks)} subtasks...[/dim]\n")
-                        
+                        self.console.print(
+                            f"[dim]This will run {len(goal.subtasks)} subtasks...[/dim]\n"
+                        )
+
                         def progress(current, total, status):
                             self.console.print(f"[{current}/{total}] {status}")
-                        
+
                         completed = self.goal_agent.execute_goal(args, progress)
-                        
+
                         self.console.print(f"\n[green]✅ Goal completed![/green]")
-                        self.console.print(f"[dim]Completed {len(completed.subtasks)} subtasks in {(completed.completed_at - completed.created_at):.1f}s[/dim]")
+                        self.console.print(
+                            f"[dim]Completed {len(completed.subtasks)} subtasks in {(completed.completed_at - completed.created_at):.1f}s[/dim]"
+                        )
                     else:
                         self.console.print("[yellow]⚠️  Usage: /goal-execute <goal_id>[/yellow]")
                         self.console.print("[dim]   Use /goal-list to see active goals[/dim]")
-                
+
                 elif command == "/goal-status":
                     if args:
                         if not self.goal_agent:
                             self.console.print("[red]❌ No goals created yet[/red]")
                             return
-                        
+
                         summary = self.goal_agent.get_goal_summary(args)
                         self.console.print(summary)
                     else:
@@ -2216,77 +2394,95 @@ plan Design a microservices architecture for an e-commerce app
                             if active:
                                 self.console.print("[bold]Active Goals:[/bold]")
                                 for goal in active:
-                                    completed = sum(1 for st in goal.subtasks if st.status.value == "completed")
-                                    self.console.print(f"  {goal.id}: {goal.description[:50]}... ({completed}/{len(goal.subtasks)})")
+                                    completed = sum(
+                                        1 for st in goal.subtasks if st.status.value == "completed"
+                                    )
+                                    self.console.print(
+                                        f"  {goal.id}: {goal.description[:50]}... ({completed}/{len(goal.subtasks)})"
+                                    )
                             else:
                                 self.console.print("[dim]No active goals[/dim]")
                         else:
                             self.console.print("[dim]No goals created yet[/dim]")
-                
+
                 elif command == "/goal-list":
                     if not self.goal_agent:
                         self.console.print("[dim]No goals created yet[/dim]")
                         return
-                    
+
                     active = self.goal_agent.list_active_goals()
                     completed = self.goal_agent.list_completed_goals()
-                    
+
                     if active:
                         self.console.print("[bold]🎯 Active Goals:[/bold]")
                         for goal in active:
                             self.console.print(f"  {goal.id}: {goal.description[:60]}")
-                    
+
                     if completed:
                         self.console.print("\n[bold]✅ Completed Goals:[/bold]")
                         for goal in completed[-5:]:  # Last 5
                             self.console.print(f"  {goal.id}: {goal.description[:60]}")
-                    
+
                     if not active and not completed:
                         self.console.print("[dim]No goals yet. Create one with /goal[/dim]")
-                
+
                 # ============ Function Builder Commands ============
                 elif command == "/function-create":
                     if args:
                         self.console.print(f"[cyan]🔧 Creating function: {args}[/cyan]")
-                        
+
                         with self.console.status("[cyan]Generating function code...[/cyan]"):
                             func = self.function_builder.create_function(
-                                description=args,
-                                pack="user_created",
-                                tags=["user_created"]
+                                description=args, pack="user_created", tags=["user_created"]
                             )
-                        
-                        self.console.print(f"\n[green]✅ Created function: {func.metadata.name}[/green]")
-                        self.console.print(f"[dim]   Description: {func.metadata.description[:80]}...[/dim]")
-                        self.console.print(f"[dim]   Dependencies: {', '.join(func.metadata.dependencies) or 'None'}[/dim]")
-                        self.console.print(f"\n[cyan]View code with /function-show {func.metadata.name}[/cyan]")
+
+                        self.console.print(
+                            f"\n[green]✅ Created function: {func.metadata.name}[/green]"
+                        )
+                        self.console.print(
+                            f"[dim]   Description: {func.metadata.description[:80]}...[/dim]"
+                        )
+                        self.console.print(
+                            f"[dim]   Dependencies: {', '.join(func.metadata.dependencies) or 'None'}[/dim]"
+                        )
+                        self.console.print(
+                            f"\n[cyan]View code with /function-show {func.metadata.name}[/cyan]"
+                        )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /function-create <description>[/yellow]")
-                        self.console.print("[dim]   Example: /function-create Fetch weather data from OpenWeatherMap API[/dim]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /function-create <description>[/yellow]"
+                        )
+                        self.console.print(
+                            "[dim]   Example: /function-create Fetch weather data from OpenWeatherMap API[/dim]"
+                        )
+
                 elif command == "/function-list":
                     funcs = self.function_builder.list_functions(pack=args if args else None)
-                    
+
                     if funcs:
                         table = Table(title="🔧 Self-Built Functions")
                         table.add_column("Name", style="cyan")
                         table.add_column("Description", max_width=50)
                         table.add_column("Pack")
                         table.add_column("Uses")
-                        
+
                         for meta in funcs:
                             pack = "user_created" if "user_created" in meta.tags else "default"
                             table.add_row(
                                 meta.name,
-                                meta.description[:50] + "..." if len(meta.description) > 50 else meta.description,
+                                (
+                                    meta.description[:50] + "..."
+                                    if len(meta.description) > 50
+                                    else meta.description
+                                ),
                                 pack,
-                                str(meta.usage_count)
+                                str(meta.usage_count),
                             )
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No functions found[/dim]")
-                
+
                 elif command == "/function-packs":
                     packs = self.function_builder.list_packs()
                     if packs:
@@ -2296,7 +2492,7 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"  • {pack}: {func_count} functions")
                     else:
                         self.console.print("[dim]No packs created yet[/dim]")
-                
+
                 elif command == "/function-search":
                     if args:
                         results = self.function_builder.search_functions(args)
@@ -2308,40 +2504,51 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print("[dim]No matching functions found[/dim]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /function-search <query>[/yellow]")
-                
+
                 elif command == "/function-show":
                     if args:
                         func = self.function_builder.get_function(args)
                         if func:
                             self.console.print(f"[bold]🔧 Function: {func.metadata.name}[/bold]")
-                            self.console.print(f"[dim]Description: {func.metadata.description}[/dim]")
-                            self.console.print(f"[dim]Dependencies: {', '.join(func.metadata.dependencies) or 'None'}[/dim]")
-                            self.console.print(f"[dim]Created: {datetime.fromtimestamp(func.metadata.created_at).strftime('%Y-%m-%d %H:%M')}[/dim]")
-                            self.console.print(f"[dim]Usage count: {func.metadata.usage_count}[/dim]")
+                            self.console.print(
+                                f"[dim]Description: {func.metadata.description}[/dim]"
+                            )
+                            self.console.print(
+                                f"[dim]Dependencies: {', '.join(func.metadata.dependencies) or 'None'}[/dim]"
+                            )
+                            self.console.print(
+                                f"[dim]Created: {datetime.fromtimestamp(func.metadata.created_at).strftime('%Y-%m-%d %H:%M')}[/dim]"
+                            )
+                            self.console.print(
+                                f"[dim]Usage count: {func.metadata.usage_count}[/dim]"
+                            )
                             self.console.print("\n[bold]Code:[/bold]")
                             self.console.print(func.code)
                         else:
                             self.console.print(f"[red]❌ Function '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /function-show <name>[/yellow]")
-                
+
                 # ============ llama.cpp Commands ============
                 elif command == "/llama-status":
                     status = self.local_llm.status()
                     table = Table(title="🦙 llama.cpp Status")
                     table.add_column("Property", style="cyan")
                     table.add_column("Value")
-                    
-                    table.add_row("Preferred Backend", status['preferred_backend'])
-                    table.add_row("llama.cpp Available", "✅ Yes" if status['llama_cpp_available'] else "❌ No")
-                    table.add_row("Models Loaded", str(len(status['models'])))
-                    
+
+                    table.add_row("Preferred Backend", status["preferred_backend"])
+                    table.add_row(
+                        "llama.cpp Available",
+                        "✅ Yes" if status["llama_cpp_available"] else "❌ No",
+                    )
+                    table.add_row("Models Loaded", str(len(status["models"])))
+
                     self.console.print(table)
-                    
-                    if not status['llama_cpp_available']:
+
+                    if not status["llama_cpp_available"]:
                         self.console.print("\n[yellow]To start llama.cpp server:[/yellow]")
                         self.console.print("[dim]  llama-server -m model.gguf --port 8080[/dim]")
-                
+
                 elif command == "/llama-models":
                     models = self.llama_client.get_models()
                     if models:
@@ -2349,63 +2556,77 @@ plan Design a microservices architecture for an e-commerce app
                         for model in models:
                             self.console.print(f"  • {model}")
                     else:
-                        self.console.print("[dim]No models loaded. Start llama.cpp server with a model.[/dim]")
-                
+                        self.console.print(
+                            "[dim]No models loaded. Start llama.cpp server with a model.[/dim]"
+                        )
+
                 # ============ Clan Backstories Commands ============
                 elif command == "/backstory":
                     if args:
                         backstory_data = get_clan_backstory(args)
                         if backstory_data:
-                            self.console.print(f"\n[bold]📖 {args.title()} - {backstory_data['role']}[/bold]\n")
-                            self.console.print(backstory_data['backstory'])
-                            self.console.print(f"\n[bold]Personality:[/bold] {backstory_data['personality']}")
+                            self.console.print(
+                                f"\n[bold]📖 {args.title()} - {backstory_data['role']}[/bold]\n"
+                            )
+                            self.console.print(backstory_data["backstory"])
+                            self.console.print(
+                                f"\n[bold]Personality:[/bold] {backstory_data['personality']}"
+                            )
                         else:
                             self.console.print(f"[red]❌ Clan member '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /backstory <member_name>[/yellow]")
                         self.console.print("[dim]   Example: /backstory goliath[/dim]")
-                        self.console.print(f"[dim]   Available: {', '.join(CLAN_BACKSTORIES.keys())}[/dim]")
-                
+                        self.console.print(
+                            f"[dim]   Available: {', '.join(CLAN_BACKSTORIES.keys())}[/dim]"
+                        )
+
                 elif command == "/personalities":
                     self.console.print("[bold]🎭 Clan Personalities:[/bold]\n")
-                    
+
                     table = Table()
                     table.add_column("Member", style="cyan")
                     table.add_column("Role", style="bright_blue")
                     table.add_column("Personality", max_width=50)
-                    
+
                     for name, data in CLAN_BACKSTORIES.items():
-                        emoji = self.clan.get(name, ClanMember(name, "👤", "Unknown", "white")).emoji
-                        table.add_row(
-                            f"{emoji} {name.title()}",
-                            data['role'],
-                            data['personality']
-                        )
-                    
+                        emoji = self.clan.get(
+                            name, ClanMember(name, "👤", "Unknown", "white")
+                        ).emoji
+                        table.add_row(f"{emoji} {name.title()}", data["role"], data["personality"])
+
                     self.console.print(table)
-                
+
                 # ============ nanoGPT Commands ============
                 elif command == "/nanogpt-create":
                     if args:
                         result = self.clan_model_manager.create_clan_model(args)
                         self.console.print(result)
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /nanogpt-create <member_name>[/yellow]")
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /nanogpt-create <member_name>[/yellow]"
+                        )
                         self.console.print("[dim]   Example: /nanogpt-create lexington[/dim]")
-                        self.console.print(f"[dim]   Available: {', '.join(self.clan_model_manager.SPECIALTIES.keys())}[/dim]")
-                
+                        self.console.print(
+                            f"[dim]   Available: {', '.join(self.clan_model_manager.SPECIALTIES.keys())}[/dim]"
+                        )
+
                 elif command == "/nanogpt-train":
                     if args:
                         dry_run = "--dry-run" in args
                         config_name = args.replace("--dry-run", "").strip()
-                        
-                        with self.console.status(f"[cyan]Preparing training for {config_name}...[/cyan]"):
+
+                        with self.console.status(
+                            f"[cyan]Preparing training for {config_name}...[/cyan]"
+                        ):
                             result = self.nanogpt.train(config_name, dry_run=dry_run)
-                        
+
                         self.console.print(result)
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /nanogpt-train <config_name> [--dry-run][/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /nanogpt-train <config_name> [--dry-run][/yellow]"
+                        )
+
                 elif command == "/nanogpt-list":
                     configs = self.nanogpt.list_configs()
                     if configs:
@@ -2414,98 +2635,128 @@ plan Design a microservices architecture for an e-commerce app
                         table.add_column("Clan Member")
                         table.add_column("Specialty")
                         table.add_column("Base Model")
-                        
+
                         for config in configs:
                             table.add_row(
-                                config['name'],
-                                config.get('clan_member', 'N/A') or 'General',
-                                config.get('specialty', 'N/A') or 'General',
-                                config['base_model']
+                                config["name"],
+                                config.get("clan_member", "N/A") or "General",
+                                config.get("specialty", "N/A") or "General",
+                                config["base_model"],
                             )
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No training configs yet[/dim]")
                         self.console.print("[dim]Create one with /nanogpt-create <member>[/dim]")
-                
+
                 elif command == "/nanogpt-sample":
                     if args:
                         parts = args.split(maxsplit=1)
                         model_name = parts[0]
                         prompt = parts[1] if len(parts) > 1 else "Hello"
-                        
+
                         with self.console.status(f"[cyan]Generating from {model_name}...[/cyan]"):
                             result = self.nanogpt.generate_sample(model_name, prompt)
-                        
+
                         self.console.print(result)
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /nanogpt-sample <model> [prompt][/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /nanogpt-sample <model> [prompt][/yellow]"
+                        )
+
                 # ============ Knowledge Graph Commands (KAG) ============
                 elif command == "/kg-status":
                     stats = self.knowledge_graph.get_stats()
-                    
+
                     table = Table(title="🧠 Clan Knowledge Graph (KAG)")
                     table.add_column("Metric", style="cyan")
                     table.add_column("Value")
-                    
-                    table.add_row("Total Entities", str(stats['total_entities']))
-                    table.add_row("Total Relationships", str(stats['total_relationships']))
-                    
+
+                    table.add_row("Total Entities", str(stats["total_entities"]))
+                    table.add_row("Total Relationships", str(stats["total_relationships"]))
+
                     # Entity types
-                    if stats['entity_types']:
-                        entity_summary = ", ".join([f"{k}: {v}" for k, v in stats['entity_types'].items()])
+                    if stats["entity_types"]:
+                        entity_summary = ", ".join(
+                            [f"{k}: {v}" for k, v in stats["entity_types"].items()]
+                        )
                         table.add_row("Entity Types", entity_summary)
-                    
+
                     # Relation types
-                    if stats['relation_types']:
-                        rel_summary = ", ".join([f"{k}: {v}" for k, v in stats['relation_types'].items()])
+                    if stats["relation_types"]:
+                        rel_summary = ", ".join(
+                            [f"{k}: {v}" for k, v in stats["relation_types"].items()]
+                        )
                         table.add_row("Relation Types", rel_summary)
-                    
+
                     self.console.print(table)
-                    
-                    if stats['total_entities'] == 0:
-                        self.console.print("\n[dim]Knowledge graph is empty. Start adding entities![/dim]")
+
+                    if stats["total_entities"] == 0:
+                        self.console.print(
+                            "\n[dim]Knowledge graph is empty. Start adding entities![/dim]"
+                        )
                         self.console.print("[dim]Try: /kg-add-entity 'Lexington' ClanMember[/dim]")
-                
+
                 elif command == "/kg-add-entity":
                     if args:
                         parts = args.split(maxsplit=1)
                         if len(parts) >= 2:
                             name = parts[0]
                             type = parts[1]
-                            
+
                             try:
                                 entity = self.knowledge_graph.add_entity(name, type)
-                                self.console.print(f"[green]✅ Added entity: {entity.name} ({entity.type})[/green]")
+                                self.console.print(
+                                    f"[green]✅ Added entity: {entity.name} ({entity.type})[/green]"
+                                )
                                 self.console.print(f"[dim]   ID: {entity.id}[/dim]")
                             except ValueError as e:
                                 self.console.print(f"[red]❌ Error: {e}[/red]")
                         else:
-                            self.console.print("[yellow]⚠️  Usage: /kg-add-entity <name> <type>[/yellow]")
-                            self.console.print("[dim]   Types: ClanMember, Technology, Project, Decision, SecurityIssue, Task[/dim]")
+                            self.console.print(
+                                "[yellow]⚠️  Usage: /kg-add-entity <name> <type>[/yellow]"
+                            )
+                            self.console.print(
+                                "[dim]   Types: ClanMember, Technology, Project, Decision, SecurityIssue, Task[/dim]"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /kg-add-entity <name> <type>[/yellow]")
-                        self.console.print("[dim]   Example: /kg-add-entity 'Lexington' ClanMember[/dim]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /kg-add-entity <name> <type>[/yellow]"
+                        )
+                        self.console.print(
+                            "[dim]   Example: /kg-add-entity 'Lexington' ClanMember[/dim]"
+                        )
+
                 elif command == "/kg-add-rel":
                     if args:
                         parts = args.split(maxsplit=2)
                         if len(parts) >= 3:
                             source, relation, target = parts
-                            
+
                             try:
-                                rel = self.knowledge_graph.add_relationship(source, relation, target)
-                                self.console.print(f"[green]✅ Added relationship: {source} → {relation} → {target}[/green]")
+                                rel = self.knowledge_graph.add_relationship(
+                                    source, relation, target
+                                )
+                                self.console.print(
+                                    f"[green]✅ Added relationship: {source} → {relation} → {target}[/green]"
+                                )
                             except (ValueError, KeyError) as e:
                                 self.console.print(f"[red]❌ Error: {e}[/red]")
                         else:
-                            self.console.print("[yellow]⚠️  Usage: /kg-add-rel <source> <relation> <target>[/yellow]")
-                            self.console.print("[dim]   Relations: suggested, reviewed, implemented, involves, depends_on, discovered, leads[/dim]")
+                            self.console.print(
+                                "[yellow]⚠️  Usage: /kg-add-rel <source> <relation> <target>[/yellow]"
+                            )
+                            self.console.print(
+                                "[dim]   Relations: suggested, reviewed, implemented, involves, depends_on, discovered, leads[/dim]"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /kg-add-rel <source> <relation> <target>[/yellow]")
-                        self.console.print("[dim]   Example: /kg-add-rel 'Lexington' suggested 'OAuth2'[/dim]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /kg-add-rel <source> <relation> <target>[/yellow]"
+                        )
+                        self.console.print(
+                            "[dim]   Example: /kg-add-rel 'Lexington' suggested 'OAuth2'[/dim]"
+                        )
+
                 elif command == "/kg-query":
                     if args:
                         # Multi-hop query: /kg-query Lexington suggested Project
@@ -2513,470 +2764,597 @@ plan Design a microservices architecture for an e-commerce app
                         if len(parts) >= 2:
                             start = parts[0]
                             path = parts[1:]
-                            
+
                             results = self.knowledge_graph.multi_hop_query(start, path)
-                            
+
                             if results:
                                 self.console.print(f"[bold]🧠 Multi-hop query results:[/bold]\n")
                                 for i, path_result in enumerate(results, 1):
-                                    path_str = " → ".join([p[1].name if hasattr(p[1], 'name') else str(p[0]) for p in path_result])
+                                    path_str = " → ".join(
+                                        [
+                                            p[1].name if hasattr(p[1], "name") else str(p[0])
+                                            for p in path_result
+                                        ]
+                                    )
                                     self.console.print(f"  {i}. {path_str}")
                             else:
                                 self.console.print("[dim]No paths found matching the query[/dim]")
                         else:
-                            self.console.print("[yellow]⚠️  Usage: /kg-query <start_entity> <relation1> [relation2] ...[/yellow]")
+                            self.console.print(
+                                "[yellow]⚠️  Usage: /kg-query <start_entity> <relation1> [relation2] ...[/yellow]"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /kg-query <start_entity> <relation1> [relation2] ...[/yellow]")
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /kg-query <start_entity> <relation1> [relation2] ...[/yellow]"
+                        )
                         self.console.print("[dim]   Example: /kg-query Lexington suggested[/dim]")
-                
+
                 elif command == "/kg-reason":
                     if args:
                         result = self.knowledge_graph.logical_reasoning(args)
-                        
+
                         self.console.print(f"[bold]🧠 Reasoning Result:[/bold]\n")
                         self.console.print(f"Query: {result.get('query', args)}")
-                        self.console.print(f"Type: {result.get('reasoning_type', result.get('query_type', 'unknown'))}")
-                        
-                        if 'suggestions' in result:
+                        self.console.print(
+                            f"Type: {result.get('reasoning_type', result.get('query_type', 'unknown'))}"
+                        )
+
+                        if "suggestions" in result:
                             self.console.print(f"\n[bold]Suggestions ({result['count']}):[/bold]")
-                            for s in result['suggestions']:
+                            for s in result["suggestions"]:
                                 self.console.print(f"  • {s['suggestion']} ({s['type']})")
-                        
-                        if 'people' in result:
+
+                        if "people" in result:
                             self.console.print(f"\n[bold]People ({result['count']}):[/bold]")
-                            for p in result['people']:
+                            for p in result["people"]:
                                 self.console.print(f"  • {p['name']} ({p['role']})")
-                        
-                        if 'projects' in result:
+
+                        if "projects" in result:
                             self.console.print(f"\n[bold]Projects ({result['count']}):[/bold]")
-                            for p in result['projects']:
+                            for p in result["projects"]:
                                 self.console.print(f"  • {p['project']} - {p['status']}")
-                        
-                        if 'suggestions' in result and result.get('suggestions'):
+
+                        if "suggestions" in result and result.get("suggestions"):
                             self.knowledge_graph.save_graph()
                     else:
                         self.console.print("[yellow]⚠️  Usage: /kg-reason <question>[/yellow]")
-                        self.console.print("[dim]   Example: /kg-reason 'What did Lexington suggest for authentication?'[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Example: /kg-reason 'What did Lexington suggest for authentication?'[/dim]"
+                        )
+
                 elif command == "/kg-extract":
                     if args:
                         extracted = self.knowledge_graph.extract_from_text(args)
-                        
+
                         self.console.print(f"[bold]🧠 Extracted from text:[/bold]\n")
-                        
-                        if extracted['entities']:
-                            self.console.print(f"[bold]Entities ({len(extracted['entities'])}):[/bold]")
-                            for e in extracted['entities']:
+
+                        if extracted["entities"]:
+                            self.console.print(
+                                f"[bold]Entities ({len(extracted['entities'])}):[/bold]"
+                            )
+                            for e in extracted["entities"]:
                                 self.console.print(f"  • {e.name} ({e.type})")
-                        
-                        if extracted['relationships']:
-                            self.console.print(f"\n[bold]Relationships ({len(extracted['relationships'])}):[/bold]")
-                            for r in extracted['relationships']:
+
+                        if extracted["relationships"]:
+                            self.console.print(
+                                f"\n[bold]Relationships ({len(extracted['relationships'])}):[/bold]"
+                            )
+                            for r in extracted["relationships"]:
                                 self.console.print(f"  • {r.source} → {r.relation} → {r.target}")
-                        
-                        if not extracted['entities'] and not extracted['relationships']:
+
+                        if not extracted["entities"] and not extracted["relationships"]:
                             self.console.print("[dim]No entities or relationships found[/dim]")
-                        
+
                         # Save the graph
                         self.knowledge_graph.save_graph()
                     else:
                         self.console.print("[yellow]⚠️  Usage: /kg-extract <text>[/yellow]")
-                        self.console.print("[dim]   Example: /kg-extract 'Lexington suggested using OAuth2 for authentication'[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Example: /kg-extract 'Lexington suggested using OAuth2 for authentication'[/dim]"
+                        )
+
                 elif command == "/kg-visualize":
                     stats = self.knowledge_graph.get_stats()
-                    
+
                     self.console.print("[bold]🧠 Knowledge Graph Structure:[/bold]\n")
-                    
+
                     # Show entity types
                     self.console.print("[bold]Entity Types:[/bold]")
-                    for entity_type, count in stats['entity_types'].items():
+                    for entity_type, count in stats["entity_types"].items():
                         entities = list(self.knowledge_graph.get_entities_by_type(entity_type))[:5]
                         names = [e.name for e in entities]
                         self.console.print(f"  • {entity_type}: {count} entities")
                         if names:
                             self.console.print(f"    Examples: {', '.join(names)}")
-                    
+
                     # Show relation types
                     self.console.print(f"\n[bold]Relationship Types:[/bold]")
-                    for rel_type, count in stats['relation_types'].items():
+                    for rel_type, count in stats["relation_types"].items():
                         self.console.print(f"  • {rel_type}: {count} relationships")
-                
+
                 elif command == "/kg-export":
                     if args:
                         parts = args.split(maxsplit=1)
                         format_type = parts[0].lower()
-                        output_file = parts[1] if len(parts) > 1 else f"knowledge_graph.{format_type}"
-                        
+                        output_file = (
+                            parts[1] if len(parts) > 1 else f"knowledge_graph.{format_type}"
+                        )
+
                         with self.console.status(f"[cyan]Exporting to {format_type}...[/cyan]"):
                             try:
-                                if format_type == 'json':
+                                if format_type == "json":
                                     content = self.kg_exporter.to_json()
                                     Path(output_file).write_text(content)
-                                    self.console.print(f"[green]✅ Exported to {output_file}[/green]")
-                                
-                                elif format_type in ['dot', 'mermaid']:
-                                    result = self.kg_visualizer.export_to_file(output_file, format_type)
+                                    self.console.print(
+                                        f"[green]✅ Exported to {output_file}[/green]"
+                                    )
+
+                                elif format_type in ["dot", "mermaid"]:
+                                    result = self.kg_visualizer.export_to_file(
+                                        output_file, format_type
+                                    )
                                     self.console.print(f"[green]✅ Exported to {result}[/green]")
-                                
-                                elif format_type in ['png', 'svg', 'pdf']:
-                                    result = self.kg_visualizer.export_to_file(output_file, format_type)
+
+                                elif format_type in ["png", "svg", "pdf"]:
+                                    result = self.kg_visualizer.export_to_file(
+                                        output_file, format_type
+                                    )
                                     if result.startswith("Error"):
                                         self.console.print(f"[red]❌ {result}[/red]")
                                     else:
-                                        self.console.print(f"[green]✅ Exported to {result}[/green]")
-                                
-                                elif format_type == 'csv':
+                                        self.console.print(
+                                            f"[green]✅ Exported to {result}[/green]"
+                                        )
+
+                                elif format_type == "csv":
                                     entities_csv, rels_csv = self.kg_exporter.to_csv()
-                                    entities_file = output_file.replace('.csv', '_entities.csv')
-                                    rels_file = output_file.replace('.csv', '_relationships.csv')
+                                    entities_file = output_file.replace(".csv", "_entities.csv")
+                                    rels_file = output_file.replace(".csv", "_relationships.csv")
                                     Path(entities_file).write_text(entities_csv)
                                     Path(rels_file).write_text(rels_csv)
-                                    self.console.print(f"[green]✅ Exported to {entities_file} and {rels_file}[/green]")
-                                
+                                    self.console.print(
+                                        f"[green]✅ Exported to {entities_file} and {rels_file}[/green]"
+                                    )
+
                                 else:
-                                    self.console.print(f"[red]❌ Unsupported format: {format_type}[/red]")
-                                    self.console.print("[dim]   Supported: json, dot, mermaid, png, svg, pdf, csv[/dim]")
-                            
+                                    self.console.print(
+                                        f"[red]❌ Unsupported format: {format_type}[/red]"
+                                    )
+                                    self.console.print(
+                                        "[dim]   Supported: json, dot, mermaid, png, svg, pdf, csv[/dim]"
+                                    )
+
                             except Exception as e:
                                 self.console.print(f"[red]❌ Export failed: {str(e)}[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /kg-export <format> [file][/yellow]")
-                        self.console.print("[dim]   Formats: json, dot, mermaid, png, svg, pdf, csv[/dim]")
+                        self.console.print(
+                            "[dim]   Formats: json, dot, mermaid, png, svg, pdf, csv[/dim]"
+                        )
                         self.console.print("[dim]   Example: /kg-export json my_graph.json[/dim]")
-                
+
                 elif command == "/kg-path":
                     if args:
                         parts = args.split(maxsplit=1)
                         if len(parts) >= 2:
                             start, end = parts[0], parts[1]
-                            
-                            with self.console.status(f"[cyan]Finding path from {start} to {end}...[/cyan]"):
+
+                            with self.console.status(
+                                f"[cyan]Finding path from {start} to {end}...[/cyan]"
+                            ):
                                 paths = self.kg_query.find_path(start, end)
-                            
+
                             if paths:
                                 self.console.print(f"[green]✅ Found {len(paths)} path(s):[/green]")
                                 for i, path in enumerate(paths[:5], 1):  # Show max 5
-                                    path_names = [self.knowledge_graph.entities[eid].name if eid in self.knowledge_graph.entities else eid for eid in path]
+                                    path_names = [
+                                        (
+                                            self.knowledge_graph.entities[eid].name
+                                            if eid in self.knowledge_graph.entities
+                                            else eid
+                                        )
+                                        for eid in path
+                                    ]
                                     self.console.print(f"  Path {i}: {' → '.join(path_names)}")
                             else:
-                                self.console.print("[dim]No path found between these entities[/dim]")
+                                self.console.print(
+                                    "[dim]No path found between these entities[/dim]"
+                                )
                         else:
-                            self.console.print("[yellow]⚠️  Usage: /kg-path <start_entity> <end_entity>[/yellow]")
+                            self.console.print(
+                                "[yellow]⚠️  Usage: /kg-path <start_entity> <end_entity>[/yellow]"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /kg-path <start_entity> <end_entity>[/yellow]")
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /kg-path <start_entity> <end_entity>[/yellow]"
+                        )
                         self.console.print("[dim]   Example: /kg-path Lexington OAuth2[/dim]")
-                
+
                 elif command == "/kg-report":
                     output_file = args if args else "knowledge_graph_report.md"
-                    
+
                     with self.console.status("[cyan]Generating report...[/cyan]"):
                         try:
                             result = self.kg_exporter.export_report(output_file)
                             self.console.print(f"[green]✅ Report generated: {result}[/green]")
-                            
+
                             # Show summary
                             summary = self.kg_visualizer.get_graph_summary()
                             self.console.print(f"\n[dim]Report includes:[/dim]")
                             self.console.print(f"  • {summary['total_nodes']} entities")
                             self.console.print(f"  • {summary['total_edges']} relationships")
-                            self.console.print(f"  • {summary['avg_degree']:.2f} average connections")
-                        
+                            self.console.print(
+                                f"  • {summary['avg_degree']:.2f} average connections"
+                            )
+
                         except Exception as e:
                             self.console.print(f"[red]❌ Report generation failed: {str(e)}[/red]")
-                
+
                 # ============ Visual Automation Commands (OmniParser) ============
                 elif command == "/visual-status":
                     status = self.visual_automation.get_status()
-                    
+
                     table = Table(title="👁️ Visual Automation (OmniParser)")
                     table.add_column("Property", style="cyan")
                     table.add_column("Value")
-                    
-                    table.add_row("Available", "✅ Yes" if status['available'] else "❌ No")
-                    table.add_row("Screen Analyzed", "✅ Yes" if status['current_screen'] else "❌ No")
-                    table.add_row("Elements on Screen", str(status['elements_on_screen']))
-                    table.add_row("Action History", str(status['action_history']))
-                    
+
+                    table.add_row("Available", "✅ Yes" if status["available"] else "❌ No")
+                    table.add_row(
+                        "Screen Analyzed", "✅ Yes" if status["current_screen"] else "❌ No"
+                    )
+                    table.add_row("Elements on Screen", str(status["elements_on_screen"]))
+                    table.add_row("Action History", str(status["action_history"]))
+
                     self.console.print(table)
-                    
-                    self.console.print("\n[dim]Visual automation enables GUI control through screenshots.[/dim]")
-                    self.console.print("[dim]Start with /visual-scan to analyze the current screen.[/dim]")
-                
+
+                    self.console.print(
+                        "\n[dim]Visual automation enables GUI control through screenshots.[/dim]"
+                    )
+                    self.console.print(
+                        "[dim]Start with /visual-scan to analyze the current screen.[/dim]"
+                    )
+
                 elif command == "/visual-scan":
                     with self.console.status("[cyan]Analyzing screen with OmniParser...[/cyan]"):
                         screen = self.visual_automation.analyze_screen()
-                    
+
                     self.console.print(f"[green]✅ Screen analyzed![/green]")
                     self.console.print(f"[dim]   Elements found: {len(screen.elements)}[/dim]")
-                    self.console.print(f"[dim]   Interactive: {len(screen.get_interactive_elements())}[/dim]")
-                    
+                    self.console.print(
+                        f"[dim]   Interactive: {len(screen.get_interactive_elements())}[/dim]"
+                    )
+
                     # Show summary
                     self.console.print("\n" + self.visual_automation.get_element_summary())
-                
+
                 elif command == "/visual-click":
                     if args:
                         with self.console.status(f"[cyan]Clicking '{args}'...[/cyan]"):
                             result = self.visual_automation.click(args)
-                        
-                        if result['success']:
+
+                        if result["success"]:
                             self.console.print(f"[green]✅ {result['message']}[/green]")
                         else:
                             self.console.print(f"[red]❌ {result['error']}[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /visual-click <target>[/yellow]")
                         self.console.print("[dim]   Example: /visual-click 'submit button'[/dim]")
-                
+
                 elif command == "/visual-type":
                     if args:
                         parts = args.split(maxsplit=1)
                         text = parts[0]
                         target = parts[1] if len(parts) > 1 else None
-                        
+
                         with self.console.status(f"[cyan]Typing text...[/cyan]"):
                             result = self.visual_automation.type_text(text, target)
-                        
-                        if result['success']:
+
+                        if result["success"]:
                             self.console.print(f"[green]✅ {result['message']}[/green]")
                         else:
                             self.console.print(f"[red]❌ {result['error']}[/red]")
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /visual-type <text> [target][/yellow]")
-                        self.console.print("[dim]   Example: /visual-type 'username' 'username field'[/dim]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /visual-type <text> [target][/yellow]"
+                        )
+                        self.console.print(
+                            "[dim]   Example: /visual-type 'username' 'username field'[/dim]"
+                        )
+
                 elif command == "/visual-browser-start":
                     with self.console.status("[cyan]Starting visual browser session...[/cyan]"):
                         result = self.visual_browser.start_session()
-                    
-                    if result['success']:
+
+                    if result["success"]:
                         self.console.print(f"[green]✅ Visual browser session started![/green]")
-                        self.console.print(f"[dim]   Elements detected: {result['elements_detected']}[/dim]")
-                        self.console.print("\n" + result['summary'])
+                        self.console.print(
+                            f"[dim]   Elements detected: {result['elements_detected']}[/dim]"
+                        )
+                        self.console.print("\n" + result["summary"])
                     else:
                         self.console.print(f"[red]❌ Failed to start session[/red]")
-                
+
                 elif command == "/visual-browser-task":
                     if args:
                         with self.console.status(f"[cyan]Executing: {args}[/cyan]"):
                             result = self.visual_browser.execute_task(args)
-                        
-                        if result['success']:
+
+                        if result["success"]:
                             self.console.print(f"[green]✅ Task executed![/green]")
-                            if 'message' in result:
+                            if "message" in result:
                                 self.console.print(f"[dim]   {result['message']}[/dim]")
                         else:
-                            self.console.print(f"[red]❌ {result.get('error', 'Task failed')}[/red]")
+                            self.console.print(
+                                f"[red]❌ {result.get('error', 'Task failed')}[/red]"
+                            )
                     else:
                         self.console.print("[yellow]⚠️  Usage: /visual-browser-task <task>[/yellow]")
-                        self.console.print("[dim]   Example: /visual-browser-task 'Click the login button'[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Example: /visual-browser-task 'Click the login button'[/dim]"
+                        )
+
                 elif command == "/visual-browser-end":
                     result = self.visual_browser.end_session()
-                    
-                    if result['success']:
+
+                    if result["success"]:
                         self.console.print(f"[green]✅ Visual browser session ended![/green]")
-                        self.console.print(f"[dim]   Actions performed: {result['actions_performed']}[/dim]")
+                        self.console.print(
+                            f"[dim]   Actions performed: {result['actions_performed']}[/dim]"
+                        )
                     else:
                         self.console.print(f"[red]❌ Failed to end session[/red]")
-                
+
                 # ============ Enhanced Visual Automation Commands ============
                 elif command == "/visual-macro-login":
                     if args:
                         parts = args.split(maxsplit=1)
                         if len(parts) >= 2:
                             username, password = parts[0], parts[1]
-                            
+
                             with self.console.status("[cyan]Executing login macro...[/cyan]"):
                                 result = self.visual_macro.login_sequence(username, password)
-                            
-                            if result['success']:
-                                self.console.print(f"[green]✅ Login macro completed successfully![/green]")
+
+                            if result["success"]:
+                                self.console.print(
+                                    f"[green]✅ Login macro completed successfully![/green]"
+                                )
                             else:
                                 self.console.print(f"[red]❌ Login macro failed[/red]")
-                            
-                            self.console.print(f"[dim]   Steps completed: {len(result['steps'])}[/dim]")
+
+                            self.console.print(
+                                f"[dim]   Steps completed: {len(result['steps'])}[/dim]"
+                            )
                         else:
-                            self.console.print("[yellow]⚠️  Usage: /visual-macro-login <username> <password>[/yellow]")
+                            self.console.print(
+                                "[yellow]⚠️  Usage: /visual-macro-login <username> <password>[/yellow]"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /visual-macro-login <username> <password>[/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /visual-macro-login <username> <password>[/yellow]"
+                        )
+
                 elif command == "/visual-debug":
                     if args:
                         with self.console.status(f"[cyan]Debugging click on '{args}'...[/cyan]"):
                             debug_info = self.visual_debugger.debug_click(args)
-                        
+
                         self.console.print(f"[bold]🐛 Debug Info for '{args}':[/bold]\n")
                         self.console.print(f"Screen analyzed: {debug_info['screen_analyzed']}")
                         self.console.print(f"Total elements: {debug_info['total_elements']}")
-                        self.console.print(f"Interactive elements: {debug_info['interactive_elements']}")
-                        self.console.print(f"Matching elements: {len(debug_info['matching_elements'])}")
-                        
-                        if debug_info['matching_elements']:
+                        self.console.print(
+                            f"Interactive elements: {debug_info['interactive_elements']}"
+                        )
+                        self.console.print(
+                            f"Matching elements: {len(debug_info['matching_elements'])}"
+                        )
+
+                        if debug_info["matching_elements"]:
                             self.console.print(f"\n[bold]Matching elements:[/bold]")
-                            for match in debug_info['matching_elements']:
-                                self.console.print(f"  • {match['type']}: '{match['text']}' at {match['center']}")
-                        
-                        if debug_info['suggestions']:
+                            for match in debug_info["matching_elements"]:
+                                self.console.print(
+                                    f"  • {match['type']}: '{match['text']}' at {match['center']}"
+                                )
+
+                        if debug_info["suggestions"]:
                             self.console.print(f"\n[bold]Suggestions:[/bold]")
-                            for sugg in debug_info['suggestions'][:3]:
+                            for sugg in debug_info["suggestions"][:3]:
                                 self.console.print(f"  • Try: '{sugg['text']}' ({sugg['type']})")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /visual-debug <target>[/yellow]")
                         self.console.print("[dim]   Example: /visual-debug 'submit button'[/dim]")
-                
+
                 elif command == "/visual-sessions":
                     sessions = self.session_recorder.list_sessions()
-                    
+
                     if sessions:
                         table = Table(title="📹 Recorded Sessions")
                         table.add_column("Session ID", style="cyan")
                         table.add_column("Duration", justify="right")
                         table.add_column("Actions", justify="right")
                         table.add_column("Success Rate", justify="right")
-                        
+
                         for session in sessions[:10]:  # Show last 10
                             duration = f"{session['duration']:.1f}s"
                             success_rate = f"{session['success_rate']*100:.1f}%"
                             table.add_row(
-                                session['id'][:20],
-                                duration,
-                                str(session['actions']),
-                                success_rate
+                                session["id"][:20], duration, str(session["actions"]), success_rate
                             )
-                        
+
                         self.console.print(table)
                     else:
                         self.console.print("[dim]No recorded sessions yet[/dim]")
                         self.console.print("[dim]Use visual automation to record sessions[/dim]")
-                
+
                 elif command == "/visual-replay":
                     if args:
                         with self.console.status(f"[cyan]Replaying session {args}...[/cyan]"):
-                            result = self.session_recorder.replay_session(args, self.visual_automation)
-                        
-                        if result['success']:
+                            result = self.session_recorder.replay_session(
+                                args, self.visual_automation
+                            )
+
+                        if result["success"]:
                             self.console.print(f"[green]✅ Session replayed![/green]")
-                            self.console.print(f"[dim]   Actions replayed: {result['actions_replayed']}[/dim]")
-                            self.console.print(f"[dim]   Succeeded: {result['actions_succeeded']}[/dim]")
+                            self.console.print(
+                                f"[dim]   Actions replayed: {result['actions_replayed']}[/dim]"
+                            )
+                            self.console.print(
+                                f"[dim]   Succeeded: {result['actions_succeeded']}[/dim]"
+                            )
                             self.console.print(f"[dim]   Failed: {result['actions_failed']}[/dim]")
                         else:
-                            self.console.print(f"[red]❌ Replay failed: {result.get('error', 'Unknown error')}[/red]")
+                            self.console.print(
+                                f"[red]❌ Replay failed: {result.get('error', 'Unknown error')}[/red]"
+                            )
                     else:
                         self.console.print("[yellow]⚠️  Usage: /visual-replay <session_id>[/yellow]")
-                        self.console.print("[dim]   Use /visual-sessions to see available sessions[/dim]")
-                
+                        self.console.print(
+                            "[dim]   Use /visual-sessions to see available sessions[/dim]"
+                        )
+
                 # ============ Agent Coordination Commands ============
                 elif command == "/coord-status":
                     stats = self.coordination.coordination.get_coordination_stats()
-                    
+
                     table = Table(title="🔄 Agent Coordination System")
                     table.add_column("Metric", style="cyan")
                     table.add_column("Value")
-                    
-                    table.add_row("Registered Agents", str(stats['registered_agents']))
-                    table.add_row("Active Tasks", str(stats['active_tasks']))
-                    table.add_row("Completed Tasks", str(stats['completed_tasks']))
-                    table.add_row("Failed Tasks", str(stats['failed_tasks']))
+
+                    table.add_row("Registered Agents", str(stats["registered_agents"]))
+                    table.add_row("Active Tasks", str(stats["active_tasks"]))
+                    table.add_row("Completed Tasks", str(stats["completed_tasks"]))
+                    table.add_row("Failed Tasks", str(stats["failed_tasks"]))
                     table.add_row("Success Rate", f"{stats['success_rate']*100:.1f}%")
                     table.add_row("Avg Team Size", f"{stats['avg_team_size']:.1f}")
-                    
+
                     self.console.print(table)
-                    
-                    self.console.print("\n[dim]Coordination loop: MATCH → EXCHANGE → EXECUTE → SCORE → RE-MATCH[/dim]")
-                
+
+                    self.console.print(
+                        "\n[dim]Coordination loop: MATCH → EXCHANGE → EXECUTE → SCORE → RE-MATCH[/dim]"
+                    )
+
                 elif command == "/coord-team":
                     if args:
                         parts = args.split(maxsplit=1)
                         task_desc = parts[0]
-                        requirements = parts[1].split(',') if len(parts) > 1 else ["general"]
-                        
+                        requirements = parts[1].split(",") if len(parts) > 1 else ["general"]
+
                         with self.console.status("[cyan]Finding optimal team...[/cyan]"):
                             team = self.coordination.get_optimal_team(task_desc, requirements)
-                        
+
                         if team:
                             self.console.print(f"[green]✅ Optimal team for '{task_desc}':[/green]")
                             for agent_id in team:
                                 agent_stats = self.coordination.get_agent_performance(agent_id)
                                 if agent_stats:
-                                    self.console.print(f"  • {agent_stats['name']} ({agent_stats['specialization']})")
-                                    self.console.print(f"    Score: {agent_stats['performance_score']:.2f}")
+                                    self.console.print(
+                                        f"  • {agent_stats['name']} ({agent_stats['specialization']})"
+                                    )
+                                    self.console.print(
+                                        f"    Score: {agent_stats['performance_score']:.2f}"
+                                    )
                         else:
                             self.console.print("[yellow]⚠️  No suitable team found[/yellow]")
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /coord-team <task_description> [req1,req2,...][/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /coord-team <task_description> [req1,req2,...][/yellow]"
+                        )
+
                 elif command == "/coord-run":
                     if args:
                         parts = args.split(maxsplit=1)
                         description = parts[0]
-                        requirements = parts[1].split(',') if len(parts) > 1 else ["general"]
-                        
-                        self.console.print(f"[cyan]🔄 Running coordination loop: {description}[/cyan]")
+                        requirements = parts[1].split(",") if len(parts) > 1 else ["general"]
+
+                        self.console.print(
+                            f"[cyan]🔄 Running coordination loop: {description}[/cyan]"
+                        )
                         result = self.coordination.coordinate_task(description, requirements)
-                        
-                        self.console.print(f"[green]✅ Completed! Score: {result['performance_score']:.2f}[/green]")
+
+                        self.console.print(
+                            f"[green]✅ Completed! Score: {result['performance_score']:.2f}[/green]"
+                        )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /coord-run <description> [req1,req2,...][/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /coord-run <description> [req1,req2,...][/yellow]"
+                        )
+
                 elif command == "/coord-agents":
                     agents = self.coordination.coordination.get_all_agents()
                     for agent in agents:
                         if agent:
-                            self.console.print(f"  • {agent['name']}: {agent['performance_score']:.2f}")
-                
+                            self.console.print(
+                                f"  • {agent['name']}: {agent['performance_score']:.2f}"
+                            )
+
                 elif command == "/coord-agent":
                     if args:
                         stats = self.coordination.get_agent_performance(args.lower())
                         if stats:
-                            self.console.print(f"[bold]{stats['name']}[/bold] - {stats['specialization']}")
+                            self.console.print(
+                                f"[bold]{stats['name']}[/bold] - {stats['specialization']}"
+                            )
                             self.console.print(f"  Performance: {stats['performance_score']:.2f}")
                         else:
                             self.console.print(f"[red]❌ Agent '{args}' not found[/red]")
                     else:
                         self.console.print("[yellow]⚠️  Usage: /coord-agent <agent_name>[/yellow]")
-                
+
                 elif command == "/coord-analytics":
                     with self.console.status("[cyan]Calculating analytics...[/cyan]"):
                         metrics = self.coord_analytics.calculate_metrics()
-                    
+
                     self.console.print("[bold]📊 Coordination Analytics[/bold]\n")
-                    
+
                     self.console.print(f"Total Tasks: {metrics.total_tasks}")
-                    self.console.print(f"Success Rate: {metrics.successful_tasks / metrics.total_tasks * 100:.1f}%" if metrics.total_tasks > 0 else "N/A")
+                    self.console.print(
+                        f"Success Rate: {metrics.successful_tasks / metrics.total_tasks * 100:.1f}%"
+                        if metrics.total_tasks > 0
+                        else "N/A"
+                    )
                     self.console.print(f"Avg Team Size: {metrics.avg_team_size:.2f}")
                     self.console.print(f"Avg Execution Time: {metrics.avg_execution_time:.2f}s\n")
-                    
+
                     if metrics.best_performing_agents:
                         self.console.print("[bold]Top Performing Agents:[/bold]")
                         for name, score in metrics.best_performing_agents:
                             self.console.print(f"  • {name}: {score:.2f}")
-                    
+
                     if metrics.most_collaborative_pairs:
                         self.console.print("\n[bold]Most Collaborative Pairs:[/bold]")
                         for (a1, a2), score in metrics.most_collaborative_pairs:
-                            name1 = self.coordination.coordination.agents[a1].name if a1 in self.coordination.coordination.agents else a1
-                            name2 = self.coordination.coordination.agents[a2].name if a2 in self.coordination.coordination.agents else a2
+                            name1 = (
+                                self.coordination.coordination.agents[a1].name
+                                if a1 in self.coordination.coordination.agents
+                                else a1
+                            )
+                            name2 = (
+                                self.coordination.coordination.agents[a2].name
+                                if a2 in self.coordination.coordination.agents
+                                else a2
+                            )
                             self.console.print(f"  • {name1} + {name2}: {score:.2f}")
-                
+
                 elif command == "/coord-optimize":
                     if args:
                         parts = args.split(maxsplit=1)
                         task = parts[0]
-                        requirements = parts[1].split(',') if len(parts) > 1 else ["general"]
-                        
+                        requirements = parts[1].split(",") if len(parts) > 1 else ["general"]
+
                         with self.console.status("[cyan]Optimizing team...[/cyan]"):
                             optimal_team = self.coord_optimizer.optimize_team(requirements)
-                        
+
                         self.console.print(f"[green]✅ Optimized team for '{task}':[/green]")
                         for agent_id in optimal_team:
                             agent = self.coordination.coordination.agents[agent_id]
                             self.console.print(f"  • {agent.name} ({agent.specialization})")
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /coord-optimize <task> [req1,req2,...][/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /coord-optimize <task> [req1,req2,...][/yellow]"
+                        )
+
                 elif command == "/coord-report":
                     output_file = args if args else "coordination_report.md"
-                    
+
                     with self.console.status("[cyan]Generating report...[/cyan]"):
                         try:
                             report = self.coord_report.generate_report()
@@ -2984,46 +3362,60 @@ plan Design a microservices architecture for an e-commerce app
                             self.console.print(f"[green]✅ Report generated: {output_file}[/green]")
                         except Exception as e:
                             self.console.print(f"[red]❌ Report generation failed: {str(e)}[/red]")
-                
+
                 elif command == "/coord-compare":
                     if args:
                         parts = args.split(maxsplit=2)
                         if len(parts) >= 3:
-                            team1 = parts[0].split(',')
-                            team2 = parts[1].split(',')
-                            requirements = parts[2].split(',') if len(parts) > 2 else ["general"]
-                            
-                            comparison = self.coord_optimizer.compare_teams(team1, team2, requirements)
-                            
+                            team1 = parts[0].split(",")
+                            team2 = parts[1].split(",")
+                            requirements = parts[2].split(",") if len(parts) > 2 else ["general"]
+
+                            comparison = self.coord_optimizer.compare_teams(
+                                team1, team2, requirements
+                            )
+
                             self.console.print("[bold]📊 Team Comparison[/bold]\n")
-                            self.console.print(f"Team 1: {', '.join(comparison['team1']['agents'])} (Score: {comparison['team1']['score']:.2f})")
-                            self.console.print(f"Team 2: {', '.join(comparison['team2']['agents'])} (Score: {comparison['team2']['score']:.2f})")
+                            self.console.print(
+                                f"Team 1: {', '.join(comparison['team1']['agents'])} (Score: {comparison['team1']['score']:.2f})"
+                            )
+                            self.console.print(
+                                f"Team 2: {', '.join(comparison['team2']['agents'])} (Score: {comparison['team2']['score']:.2f})"
+                            )
                             self.console.print(f"\nWinner: {comparison['winner']}")
                             self.console.print(f"Difference: {comparison['difference']:.2f}")
                         else:
-                            self.console.print("[yellow]⚠️  Usage: /coord-compare <team1_agents> <team2_agents> [reqs][/yellow]")
-                            self.console.print("[dim]   Example: /coord-compare lexington,xanatos brooklyn,hudson coding,security[/dim]")
+                            self.console.print(
+                                "[yellow]⚠️  Usage: /coord-compare <team1_agents> <team2_agents> [reqs][/yellow]"
+                            )
+                            self.console.print(
+                                "[dim]   Example: /coord-compare lexington,xanatos brooklyn,hudson coding,security[/dim]"
+                            )
                     else:
-                        self.console.print("[yellow]⚠️  Usage: /coord-compare <team1> <team2> [requirements][/yellow]")
-                
+                        self.console.print(
+                            "[yellow]⚠️  Usage: /coord-compare <team1> <team2> [requirements][/yellow]"
+                        )
+
                 elif command in ["ask", "code", "review", "summarize", "plan"]:
                     if args:
                         self.route_and_respond(args)
                     else:
-                        self.console.print(f"[yellow]⚠️  Please provide a {command} request.[/yellow]")
-                
+                        self.console.print(
+                            f"[yellow]⚠️  Please provide a {command} request.[/yellow]"
+                        )
+
                 else:
                     # Check if this looks like a command (starts with /)
-                    if command.startswith('/'):
+                    if command.startswith("/"):
                         # Show helpful error message with suggestions
                         error_msg = self.enhanced_prompt.get_error_suggestion(command)
                         self.console.print(f"[red]{error_msg}[/red]")
                     else:
                         # Treat as general ask
                         self.route_and_respond(user_input)
-                
+
                 self.console.print()  # Empty line for spacing
-                
+
             except KeyboardInterrupt:
                 self.console.print("\n\n[dim]🏰 Castle Wyvern sleeps...[/dim]")
                 # Save command history before exiting
@@ -3032,17 +3424,19 @@ plan Design a microservices architecture for an e-commerce app
             except Exception as e:
                 error_msg = str(e)
                 self.console.print(f"\n[red]⚠️  Error: {error_msg}[/red]")
-                
+
                 # Provide recovery suggestions
                 if "Connection" in error_msg or "connection" in error_msg:
                     self.console.print("[dim]💡 Try: /api-start to start the API server[/dim]")
                 elif "Permission" in error_msg or "permission" in error_msg:
-                    self.console.print("[dim]💡 Check file permissions or run with appropriate access[/dim]")
+                    self.console.print(
+                        "[dim]💡 Check file permissions or run with appropriate access[/dim]"
+                    )
                 elif "Module" in error_msg or "module" in error_msg:
                     self.console.print("[dim]💡 Try: pip install -r requirements.txt[/dim]")
                 elif "Memory" in error_msg or "memory" in error_msg:
                     self.console.print("[dim]💡 Try: /memory-consolidate to free up memory[/dim]")
-                
+
                 self.console.print()
 
     # New methods for argparse/JSON support
@@ -3057,7 +3451,7 @@ plan Design a microservices architecture for an e-commerce app
                     "agent": agent,
                     "input": user_input,
                     "response": response,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
             else:
                 # Use intent router
@@ -3067,20 +3461,16 @@ plan Design a microservices architecture for an e-commerce app
                     "intent": result.intent,
                     "agents": result.agents,
                     "input": user_input,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
-    
+            return {"success": False, "error": str(e), "timestamp": datetime.now().isoformat()}
+
     def generate_code(self, description: str) -> str:
         """Generate code via Lexington."""
         self.clan["lexington"].set_busy(f"Coding: {description[:40]}...")
         return f"# Code generated by Lexington for: {description}\n# (Full implementation would use Phoenix Gate)"
-    
+
     def generate_code_json(self, description: str, language: str = "python") -> dict:
         """Generate code and return JSON response."""
         code = self.generate_code(description)
@@ -3089,14 +3479,14 @@ plan Design a microservices architecture for an e-commerce app
             "language": language,
             "description": description,
             "code": code,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-    
+
     def review_code(self, code: str) -> str:
         """Review code via Xanatos."""
         self.clan["xanatos"].set_busy("Reviewing code...")
         return f"# Code review by Xanatos:\n# Found: No issues (mock review)\n# Code length: {len(code)} chars"
-    
+
     def review_code_json(self, code: str) -> dict:
         """Review code and return JSON response."""
         review = self.review_code(code)
@@ -3105,15 +3495,14 @@ plan Design a microservices architecture for an e-commerce app
             "reviewer": "xanatos",
             "review": review,
             "issues_found": 0,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-    
+
     def start_api_server(self) -> bool:
         """Start the API server."""
         if not self.api_server:
             self.api_server = CastleWyvernAPI(
-                phoenix_gate=self.phoenix_gate,
-                grimoorum=self.grimoorum
+                phoenix_gate=self.phoenix_gate, grimoorum=self.grimoorum
             )
         try:
             self.api_server.start()
@@ -3121,7 +3510,7 @@ plan Design a microservices architecture for an e-commerce app
         except Exception as e:
             self.logger.error(f"Failed to start API: {e}")
             return False
-    
+
     def stop_api_server(self) -> bool:
         """Stop the API server."""
         if self.api_server:
@@ -3132,19 +3521,18 @@ plan Design a microservices architecture for an e-commerce app
                 self.logger.error(f"Failed to stop API: {e}")
                 return False
         return False
-    
+
     def get_api_status(self) -> dict:
         """Get API server status."""
         if self.api_server:
             return {"status": "running" if self.api_server.is_running() else "stopped"}
         return {"status": "not_initialized"}
-    
+
     def start_web_dashboard(self) -> bool:
         """Start the web dashboard."""
         if not self.web_dashboard:
             self.web_dashboard = WebDashboard(
-                phoenix_gate=self.phoenix_gate,
-                grimoorum=self.grimoorum
+                phoenix_gate=self.phoenix_gate, grimoorum=self.grimoorum
             )
         try:
             self.web_dashboard.start()
@@ -3152,7 +3540,7 @@ plan Design a microservices architecture for an e-commerce app
         except Exception as e:
             self.logger.error(f"Failed to start web dashboard: {e}")
             return False
-    
+
     def stop_web_dashboard(self) -> bool:
         """Stop the web dashboard."""
         if self.web_dashboard:
@@ -3163,24 +3551,28 @@ plan Design a microservices architecture for an e-commerce app
                 self.logger.error(f"Failed to stop web dashboard: {e}")
                 return False
         return False
-    
+
     def get_web_status(self) -> dict:
         """Get web dashboard status."""
         if self.web_dashboard:
             return {"status": "running" if self.web_dashboard.is_running() else "stopped"}
         return {"status": "not_initialized"}
-    
+
     def get_system_status(self) -> dict:
         """Get full system status."""
         return {
             "version": "0.2.0",
-            "phoenix_gate": self.phoenix_gate.health_check() if hasattr(self.phoenix_gate, 'health_check') else {"status": "unknown"},
+            "phoenix_gate": (
+                self.phoenix_gate.health_check()
+                if hasattr(self.phoenix_gate, "health_check")
+                else {"status": "unknown"}
+            ),
             "clan_members": len(self.clan),
             "api_server": self.get_api_status(),
             "web_dashboard": self.get_web_status(),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-    
+
     def get_clan_members(self) -> list:
         """Get list of clan members."""
         return [
@@ -3188,18 +3580,22 @@ plan Design a microservices architecture for an e-commerce app
                 "name": member.name,
                 "emoji": member.emoji,
                 "role": member.role,
-                "status": member.status
+                "status": member.status,
             }
             for member in self.clan.values()
         ]
-    
+
     def get_clan_status(self) -> dict:
         """Get status of all clan members."""
         return {
             name: {
                 "status": member.status,
                 "task": member.current_task,
-                "last_active": member.last_active.isoformat() if hasattr(member.last_active, 'isoformat') else str(member.last_active)
+                "last_active": (
+                    member.last_active.isoformat()
+                    if hasattr(member.last_active, "isoformat")
+                    else str(member.last_active)
+                ),
             }
             for name, member in self.clan.items()
         }
@@ -3208,8 +3604,8 @@ plan Design a microservices architecture for an e-commerce app
 def main():
     """Entry point for Castle Wyvern CLI with argparse support."""
     parser = argparse.ArgumentParser(
-        prog='wyvern',
-        description='Castle Wyvern - A Decentralized Multi-Agent AI Infrastructure',
+        prog="wyvern",
+        description="Castle Wyvern - A Decentralized Multi-Agent AI Infrastructure",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -3219,69 +3615,74 @@ Examples:
   wyvern api start                # Start API server
   wyvern status --json            # Get status as JSON
   echo "task" | wyvern --stdin    # Pipe input to wyvern
-        """
+        """,
     )
-    
+
     # Global flags
-    parser.add_argument('--version', '-v', action='version', version='%(prog)s 0.2.0')
-    parser.add_argument('--json', '-j', action='store_true', help='Output in JSON format (for scripting)')
-    parser.add_argument('--config', '-c', help='Path to config file')
-    parser.add_argument('--stdin', action='store_true', help='Read input from stdin')
-    parser.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
-    
+    parser.add_argument("--version", "-v", action="version", version="%(prog)s 0.2.0")
+    parser.add_argument(
+        "--json", "-j", action="store_true", help="Output in JSON format (for scripting)"
+    )
+    parser.add_argument("--config", "-c", help="Path to config file")
+    parser.add_argument("--stdin", action="store_true", help="Read input from stdin")
+    parser.add_argument("--debug", "-d", action="store_true", help="Enable debug mode")
+
     # Subcommands
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
     # ask command
-    ask_parser = subparsers.add_parser('ask', help='Ask the clan a question')
-    ask_parser.add_argument('question', nargs='+', help='The question to ask')
-    ask_parser.add_argument('--agent', '-a', help='Specific agent to ask (goliath, lexington, etc.)')
-    
+    ask_parser = subparsers.add_parser("ask", help="Ask the clan a question")
+    ask_parser.add_argument("question", nargs="+", help="The question to ask")
+    ask_parser.add_argument(
+        "--agent", "-a", help="Specific agent to ask (goliath, lexington, etc.)"
+    )
+
     # code command
-    code_parser = subparsers.add_parser('code', help='Request code from Lexington')
-    code_parser.add_argument('description', nargs='+', help='Description of code to write')
-    code_parser.add_argument('--language', '-l', default='python', help='Programming language')
-    
+    code_parser = subparsers.add_parser("code", help="Request code from Lexington")
+    code_parser.add_argument("description", nargs="+", help="Description of code to write")
+    code_parser.add_argument("--language", "-l", default="python", help="Programming language")
+
     # review command
-    review_parser = subparsers.add_parser('review', help='Request code review from Xanatos')
-    review_parser.add_argument('code', nargs='+', help='Code to review (or use --file)')
-    review_parser.add_argument('--file', '-f', help='File to review')
-    
+    review_parser = subparsers.add_parser("review", help="Request code review from Xanatos")
+    review_parser.add_argument("code", nargs="+", help="Code to review (or use --file)")
+    review_parser.add_argument("--file", "-f", help="File to review")
+
     # api subcommand group
-    api_parser = subparsers.add_parser('api', help='API server commands')
-    api_subparsers = api_parser.add_subparsers(dest='api_action')
-    api_subparsers.add_parser('start', help='Start API server')
-    api_subparsers.add_parser('stop', help='Stop API server')
-    api_subparsers.add_parser('status', help='Check API server status')
-    
+    api_parser = subparsers.add_parser("api", help="API server commands")
+    api_subparsers = api_parser.add_subparsers(dest="api_action")
+    api_subparsers.add_parser("start", help="Start API server")
+    api_subparsers.add_parser("stop", help="Stop API server")
+    api_subparsers.add_parser("status", help="Check API server status")
+
     # web subcommand group
-    web_parser = subparsers.add_parser('web', help='Web dashboard commands')
-    web_subparsers = web_parser.add_subparsers(dest='web_action')
-    web_subparsers.add_parser('start', help='Start web dashboard')
-    web_subparsers.add_parser('stop', help='Stop web dashboard')
-    web_subparsers.add_parser('status', help='Check web dashboard status')
-    
+    web_parser = subparsers.add_parser("web", help="Web dashboard commands")
+    web_subparsers = web_parser.add_subparsers(dest="web_action")
+    web_subparsers.add_parser("start", help="Start web dashboard")
+    web_subparsers.add_parser("stop", help="Stop web dashboard")
+    web_subparsers.add_parser("status", help="Check web dashboard status")
+
     # status command
-    subparsers.add_parser('status', help='Show Castle Wyvern status')
-    
+    subparsers.add_parser("status", help="Show Castle Wyvern status")
+
     # clan command
-    clan_parser = subparsers.add_parser('clan', help='Clan management')
-    clan_subparsers = clan_parser.add_subparsers(dest='clan_action')
-    clan_subparsers.add_parser('list', help='List all clan members')
-    clan_subparsers.add_parser('status', help='Show clan status')
-    
+    clan_parser = subparsers.add_parser("clan", help="Clan management")
+    clan_subparsers = clan_parser.add_subparsers(dest="clan_action")
+    clan_subparsers.add_parser("list", help="List all clan members")
+    clan_subparsers.add_parser("status", help="Show clan status")
+
     # Parse arguments
     args = parser.parse_args()
-    
+
     # If no command specified, run interactive mode
     if not args.command and not args.stdin:
         cli = CastleWyvernCLI()
         cli.run()
         return
-    
+
     # Handle stdin mode
     if args.stdin:
         import select
+
         if select.select([sys.stdin], [], [], 0.0)[0]:
             stdin_input = sys.stdin.read().strip()
             if stdin_input:
@@ -3294,85 +3695,85 @@ Examples:
                     result = cli.route_and_respond(stdin_input)
                     print(result)
                 return
-    
+
     # Handle specific commands
     cli = CastleWyvernCLI()
-    
-    if args.command == 'ask':
-        question = ' '.join(args.question)
+
+    if args.command == "ask":
+        question = " ".join(args.question)
         if args.json:
             result = cli.route_and_respond_json(question, agent=args.agent)
             print(json.dumps(result))
         else:
             result = cli.route_and_respond(question)
             print(result)
-    
-    elif args.command == 'code':
-        description = ' '.join(args.description)
+
+    elif args.command == "code":
+        description = " ".join(args.description)
         if args.json:
             result = cli.generate_code_json(description, language=args.language)
             print(json.dumps(result))
         else:
             result = cli.generate_code(description)
             print(result)
-    
-    elif args.command == 'review':
+
+    elif args.command == "review":
         if args.file:
-            with open(args.file, 'r') as f:
+            with open(args.file, "r") as f:
                 code = f.read()
         else:
-            code = ' '.join(args.code)
+            code = " ".join(args.code)
         if args.json:
             result = cli.review_code_json(code)
             print(json.dumps(result))
         else:
             result = cli.review_code(code)
             print(result)
-    
-    elif args.command == 'api':
-        if args.api_action == 'start':
+
+    elif args.command == "api":
+        if args.api_action == "start":
             result = cli.start_api_server()
             print(json.dumps({"status": "started"}) if args.json else "API server started")
-        elif args.api_action == 'stop':
+        elif args.api_action == "stop":
             result = cli.stop_api_server()
             print(json.dumps({"status": "stopped"}) if args.json else "API server stopped")
-        elif args.api_action == 'status':
+        elif args.api_action == "status":
             status = cli.get_api_status()
             if args.json:
                 print(json.dumps(status))
             else:
                 print(f"API Server: {status.get('status', 'unknown')}")
-    
-    elif args.command == 'web':
-        if args.web_action == 'start':
+
+    elif args.command == "web":
+        if args.web_action == "start":
             cli.start_web_dashboard()
             print(json.dumps({"status": "started"}) if args.json else "Web dashboard started")
-        elif args.web_action == 'stop':
+        elif args.web_action == "stop":
             cli.stop_web_dashboard()
             print(json.dumps({"status": "stopped"}) if args.json else "Web dashboard stopped")
-        elif args.web_action == 'status':
+        elif args.web_action == "status":
             status = cli.get_web_status()
             if args.json:
                 print(json.dumps(status))
             else:
                 print(f"Web Dashboard: {status.get('status', 'unknown')}")
-    
-    elif args.command == 'status':
+
+    elif args.command == "status":
         status = cli.get_system_status()
         if args.json:
             print(json.dumps(status, indent=2))
         else:
             cli.print_dashboard()
-    
-    elif args.command == 'clan':
-        if args.clan_action == 'list':
+
+    elif args.command == "clan":
+        if args.clan_action == "list":
             members = cli.get_clan_members()
             if args.json:
                 print(json.dumps(members))
             else:
                 for member in members:
                     print(f"{member['emoji']} {member['name']} - {member['role']}")
-        elif args.clan_action == 'status':
+        elif args.clan_action == "status":
             status = cli.get_clan_status()
             if args.json:
                 print(json.dumps(status))

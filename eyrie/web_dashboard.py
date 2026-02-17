@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from flask import Flask, render_template, jsonify, request, Response, send_from_directory
     from flask_cors import CORS
+
     FLASK_AVAILABLE = True
 except ImportError:
     FLASK_AVAILABLE = False
@@ -38,18 +39,18 @@ from grimoorum.memory_manager import GrimoorumV2
 class WebDashboard:
     """
     Castle Wyvern Web Dashboard.
-    
+
     Serves a beautiful web interface for interacting with
     the Manhattan Clan, monitoring nodes, and viewing memory.
     """
-    
+
     def __init__(self, host: str = "0.0.0.0", port: int = 18792):
         if not FLASK_AVAILABLE:
             raise ImportError("Flask not installed. Run: pip install flask flask-cors")
-        
+
         self.host = host
         self.port = port
-        
+
         # Initialize components
         self.phoenix_gate = PhoenixGate()
         self.intent_router = IntentRouter(use_ai_classification=True)
@@ -57,115 +58,180 @@ class WebDashboard:
         self.node_manager = NodeManager()
         self.workflow_manager = WorkflowManager()
         self.workflow_executor = WorkflowExecutor()
-        
+
         # Create Flask app
-        self.app = Flask(__name__, 
-                        template_folder=self._get_template_dir(),
-                        static_folder=self._get_static_dir())
+        self.app = Flask(
+            __name__, template_folder=self._get_template_dir(), static_folder=self._get_static_dir()
+        )
         CORS(self.app)
-        
+
         # Register routes
         self._register_routes()
-    
+
     def _get_template_dir(self) -> str:
         """Get or create template directory."""
         base_dir = os.path.dirname(os.path.abspath(__file__))
         template_dir = os.path.join(base_dir, "templates")
         os.makedirs(template_dir, exist_ok=True)
         return template_dir
-    
+
     def _get_static_dir(self) -> str:
         """Get or create static directory."""
         base_dir = os.path.dirname(os.path.abspath(__file__))
         static_dir = os.path.join(base_dir, "static")
         os.makedirs(static_dir, exist_ok=True)
         return static_dir
-    
+
     def _register_routes(self):
         """Register all web routes."""
-        
+
         @self.app.route("/")
         def index():
             """Main dashboard page."""
             return render_template("dashboard.html")
-        
+
         @self.app.route("/api/status")
         def api_status():
             """Get current system status."""
-            return jsonify({
-                "castle_wyvern": {
-                    "version": "0.2.0",
-                    "timestamp": datetime.now().isoformat(),
-                    "phoenix_gate": {
-                        "primary": {
-                            "provider": "z.ai",
-                            "state": self.phoenix_gate.circuit_breakers["primary"].state.value
+            return jsonify(
+                {
+                    "castle_wyvern": {
+                        "version": "0.2.0",
+                        "timestamp": datetime.now().isoformat(),
+                        "phoenix_gate": {
+                            "primary": {
+                                "provider": "z.ai",
+                                "state": self.phoenix_gate.circuit_breakers["primary"].state,
+                            },
+                            "fallback": {
+                                "provider": "openai",
+                                "state": self.phoenix_gate.circuit_breakers["fallback"].state,
+                            },
                         },
-                        "fallback": {
-                            "provider": "openai",
-                            "state": self.phoenix_gate.circuit_breakers["fallback"].state.value
-                        }
                     }
                 }
-            })
-        
+            )
+
         @self.app.route("/api/clan")
         def api_clan():
             """Get clan member information."""
             clan = [
-                {"id": "goliath", "name": "Goliath", "role": "Leader", 
-                 "emoji": "🦁", "color": "#FFD700", "specialty": "High-level reasoning",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "lexington", "name": "Lexington", "role": "Technician", 
-                 "emoji": "🔧", "color": "#00CED1", "specialty": "Code & automation",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "brooklyn", "name": "Brooklyn", "role": "Strategist", 
-                 "emoji": "🎯", "color": "#FF6347", "specialty": "Architecture & planning",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "broadway", "name": "Broadway", "role": "Chronicler", 
-                 "emoji": "📜", "color": "#32CD32", "specialty": "Documentation",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "hudson", "name": "Hudson", "role": "Archivist", 
-                 "emoji": "📚", "color": "#4169E1", "specialty": "Historical context",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "bronx", "name": "Bronx", "role": "Watchdog", 
-                 "emoji": "🐕", "color": "#8B4513", "specialty": "Security monitoring",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "elisa", "name": "Elisa", "role": "Bridge", 
-                 "emoji": "🌉", "color": "#F0F8FF", "specialty": "Human context",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "xanatos", "name": "Xanatos", "role": "Red Team", 
-                 "emoji": "🎭", "color": "#2F4F4F", "specialty": "Adversarial testing",
-                 "status": "Ready", "current_task": "Standing by"},
-                {"id": "demona", "name": "Demona", "role": "Failsafe", 
-                 "emoji": "🔥", "color": "#DC143C", "specialty": "Error prediction",
-                 "status": "Ready", "current_task": "Standing by"}
+                {
+                    "id": "goliath",
+                    "name": "Goliath",
+                    "role": "Leader",
+                    "emoji": "🦁",
+                    "color": "#FFD700",
+                    "specialty": "High-level reasoning",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "lexington",
+                    "name": "Lexington",
+                    "role": "Technician",
+                    "emoji": "🔧",
+                    "color": "#00CED1",
+                    "specialty": "Code & automation",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "brooklyn",
+                    "name": "Brooklyn",
+                    "role": "Strategist",
+                    "emoji": "🎯",
+                    "color": "#FF6347",
+                    "specialty": "Architecture & planning",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "broadway",
+                    "name": "Broadway",
+                    "role": "Chronicler",
+                    "emoji": "📜",
+                    "color": "#32CD32",
+                    "specialty": "Documentation",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "hudson",
+                    "name": "Hudson",
+                    "role": "Archivist",
+                    "emoji": "📚",
+                    "color": "#4169E1",
+                    "specialty": "Historical context",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "bronx",
+                    "name": "Bronx",
+                    "role": "Watchdog",
+                    "emoji": "🐕",
+                    "color": "#8B4513",
+                    "specialty": "Security monitoring",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "elisa",
+                    "name": "Elisa",
+                    "role": "Bridge",
+                    "emoji": "🌉",
+                    "color": "#F0F8FF",
+                    "specialty": "Human context",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "xanatos",
+                    "name": "Xanatos",
+                    "role": "Red Team",
+                    "emoji": "🎭",
+                    "color": "#2F4F4F",
+                    "specialty": "Adversarial testing",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
+                {
+                    "id": "demona",
+                    "name": "Demona",
+                    "role": "Failsafe",
+                    "emoji": "🔥",
+                    "color": "#DC143C",
+                    "specialty": "Error prediction",
+                    "status": "Ready",
+                    "current_task": "Standing by",
+                },
             ]
             return jsonify({"clan": clan})
-        
+
         @self.app.route("/api/chat", methods=["POST"])
         def api_chat():
             """Chat with the clan via web interface."""
             data = request.get_json() or {}
             message = data.get("message", "")
-            
+
             if not message:
                 return jsonify({"error": "Message is required"}), 400
-            
+
             try:
                 # Classify intent
                 intent_result = self.intent_router.classify_intent(message)
                 member = self._get_member_for_intent(intent_result.intent)
-                
+
                 # Get response from AI
                 system_prompt = self._get_system_prompt(member)
                 messages = [
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": message}
+                    {"role": "user", "content": message},
                 ]
-                
+
                 response = self.phoenix_gate.chat_completion(messages)
-                
+
                 # Save to memory
                 self.grimoorum.record(
                     user_input=message,
@@ -173,71 +239,69 @@ class WebDashboard:
                     agent_response=response,
                     intent=intent_result.intent.value,
                     importance=2,
-                    session_id="web_dashboard"
+                    session_id="web_dashboard",
                 )
-                
-                return jsonify({
-                    "message": message,
-                    "response": response,
-                    "member": member,
-                    "intent": intent_result.intent.value,
-                    "confidence": intent_result.confidence,
-                    "timestamp": datetime.now().isoformat()
-                })
-                
+
+                return jsonify(
+                    {
+                        "message": message,
+                        "response": response,
+                        "member": member,
+                        "intent": intent_result.intent.value,
+                        "confidence": intent_result.confidence,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route("/api/nodes")
         def api_nodes():
             """Get all connected nodes."""
             nodes = self.node_manager.list_nodes()
-            return jsonify({
-                "count": len(nodes),
-                "nodes": [
-                    {
-                        "id": n.id,
-                        "name": n.name,
-                        "host": n.host,
-                        "port": n.port,
-                        "status": n.status,
-                        "capabilities": n.capabilities,
-                        "load": n.load
-                    }
-                    for n in nodes
-                ]
-            })
-        
+            return jsonify(
+                {
+                    "count": len(nodes),
+                    "nodes": [
+                        {
+                            "id": n.id,
+                            "name": n.name,
+                            "host": n.host,
+                            "port": n.port,
+                            "status": n.status,
+                            "capabilities": n.capabilities,
+                            "load": n.load,
+                        }
+                        for n in nodes
+                    ],
+                }
+            )
+
         @self.app.route("/api/memory/recent")
         def api_memory_recent():
             """Get recent conversations."""
             try:
                 conversations = self.grimoorum.get_recent_conversations(limit=20)
-                return jsonify({
-                    "count": len(conversations),
-                    "conversations": conversations
-                })
+                return jsonify({"count": len(conversations), "conversations": conversations})
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route("/api/memory/search", methods=["POST"])
         def api_memory_search():
             """Search memory."""
             data = request.get_json() or {}
             query = data.get("query", "")
-            
+
             if not query:
                 return jsonify({"error": "Query is required"}), 400
-            
+
             try:
                 results = self.grimoorum.search(query, limit=10)
-                return jsonify({
-                    "query": query,
-                    "results": results
-                })
+                return jsonify({"query": query, "results": results})
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route("/api/stats")
         def api_stats():
             """Get system statistics."""
@@ -246,30 +310,30 @@ class WebDashboard:
                 return jsonify(stats)
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
-        
+
         # ============ Workflow Builder API Routes ============
-        
+
         @self.app.route("/workflows")
         def workflows_page():
             """Workflow builder page."""
             return render_template("workflows.html")
-        
+
         @self.app.route("/api/workflows", methods=["GET"])
         def api_list_workflows():
             """List all workflows."""
             workflows = self.workflow_manager.list_workflows()
             return jsonify({"workflows": workflows})
-        
+
         @self.app.route("/api/workflows", methods=["POST"])
         def api_create_workflow():
             """Create a new workflow."""
             data = request.get_json() or {}
             name = data.get("name", "New Workflow")
             description = data.get("description", "")
-            
+
             wf = self.workflow_manager.create_workflow(name, description)
             return jsonify(wf.to_dict()), 201
-        
+
         @self.app.route("/api/workflows/<workflow_id>", methods=["GET"])
         def api_get_workflow(workflow_id):
             """Get a workflow by ID."""
@@ -277,57 +341,57 @@ class WebDashboard:
             if wf:
                 return jsonify(wf.to_dict())
             return jsonify({"error": "Workflow not found"}), 404
-        
+
         @self.app.route("/api/workflows/<workflow_id>", methods=["PUT"])
         def api_update_workflow(workflow_id):
             """Update a workflow."""
             wf = self.workflow_manager.get_workflow(workflow_id)
             if not wf:
                 return jsonify({"error": "Workflow not found"}), 404
-            
+
             data = request.get_json() or {}
             wf.name = data.get("name", wf.name)
             wf.description = data.get("description", wf.description)
             wf.nodes = [WorkflowNode.from_dict(n) for n in data.get("nodes", [])]
             wf.edges = [WorkflowEdge.from_dict(e) for e in data.get("edges", [])]
-            
+
             self.workflow_manager.save_workflow(wf)
             return jsonify(wf.to_dict())
-        
+
         @self.app.route("/api/workflows/<workflow_id>", methods=["DELETE"])
         def api_delete_workflow(workflow_id):
             """Delete a workflow."""
             if self.workflow_manager.delete_workflow(workflow_id):
                 return jsonify({"message": "Workflow deleted"})
             return jsonify({"error": "Workflow not found"}), 404
-        
+
         @self.app.route("/api/workflows/<workflow_id>/execute", methods=["POST"])
         def api_execute_workflow(workflow_id):
             """Execute a workflow."""
             wf = self.workflow_manager.get_workflow(workflow_id)
             if not wf:
                 return jsonify({"error": "Workflow not found"}), 404
-            
+
             result = self.workflow_executor.execute_workflow(wf)
             return jsonify(result)
-        
+
         @self.app.route("/api/workflows/templates", methods=["GET"])
         def api_list_templates():
             """List workflow templates."""
             templates = self.workflow_manager.get_templates()
             return jsonify({"templates": templates})
-        
+
         @self.app.route("/api/workflows/templates", methods=["POST"])
         def api_create_from_template():
             """Create workflow from template."""
             data = request.get_json() or {}
             template_id = data.get("template_id")
-            
+
             wf = self.workflow_manager.create_from_template(template_id)
             if wf:
                 return jsonify(wf.to_dict()), 201
             return jsonify({"error": "Template not found"}), 400
-    
+
     def _get_member_for_intent(self, intent: IntentType) -> str:
         """Map intent to clan member."""
         mapping = {
@@ -337,10 +401,10 @@ class WebDashboard:
             IntentType.SUMMARIZE: "Broadway",
             IntentType.RESEARCH: "Hudson",
             IntentType.SECURITY: "Bronx",
-            IntentType.CHAT: "Goliath"
+            IntentType.CHAT: "Goliath",
         }
         return mapping.get(intent, "Goliath")
-    
+
     def _get_system_prompt(self, member: str) -> str:
         """Get system prompt for a clan member."""
         prompts = {
@@ -352,16 +416,16 @@ class WebDashboard:
             "Bronx": "You are Bronx, the watchdog. Focus on security, threats, and protection.",
             "Elisa": "You are Elisa, the bridge to humanity. Connect technical concepts to human understanding.",
             "Xanatos": "You are Xanatos, the red team. Challenge assumptions and find weaknesses.",
-            "Demona": "You are Demona, the failsafe. Consider edge cases and failure modes."
+            "Demona": "You are Demona, the failsafe. Consider edge cases and failure modes.",
         }
         return prompts.get(member, prompts["Goliath"])
-    
+
     def create_templates(self):
         """Create HTML template files."""
         template_dir = self._get_template_dir()
-        
+
         # Main dashboard HTML
-        dashboard_html = '''
+        dashboard_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -842,13 +906,13 @@ class WebDashboard:
     </script>
 </body>
 </html>
-'''
-        
+"""
+
         with open(os.path.join(template_dir, "dashboard.html"), "w") as f:
             f.write(dashboard_html.strip())
-        
+
         # Workflows HTML
-        workflows_html = '''
+        workflows_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1251,38 +1315,38 @@ class WebDashboard:
     </script>
 </body>
 </html>
-'''
-        
+"""
+
         with open(os.path.join(template_dir, "workflows.html"), "w") as f:
             f.write(workflows_html.strip())
-    
+
     def run(self, debug: bool = False):
         """Start the web dashboard server."""
         # Create templates
         self.create_templates()
-        
+
         print(f"🏰 Castle Wyvern Web Dashboard")
         print(f"   URL: http://{self.host}:{self.port}")
         print(f"   Open your browser and navigate to the URL above")
         print()
-        
+
         self.app.run(host=self.host, port=self.port, debug=debug)
 
 
 # Standalone usage
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Castle Wyvern Web Dashboard")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
     parser.add_argument("--port", type=int, default=18792, help="Port to listen on")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-    
+
     args = parser.parse_args()
-    
+
     if not FLASK_AVAILABLE:
         print("⚠️  Flask not installed. Run: pip install flask flask-cors")
         exit(1)
-    
+
     dashboard = WebDashboard(host=args.host, port=args.port)
     dashboard.run(debug=args.debug)

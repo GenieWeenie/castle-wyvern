@@ -203,7 +203,9 @@ class VectorMemoryStore:
         embedding = self.embedder.generate_embedding(content)
 
         # Create memory
-        mem_id = hashlib.md5(f"{content}{datetime.now()}".encode(), usedforsecurity=False).hexdigest()[:16]
+        mem_id = hashlib.md5(
+            f"{content}{datetime.now()}".encode(), usedforsecurity=False
+        ).hexdigest()[:16]
 
         memory = MemoryEmbedding(
             id=mem_id,

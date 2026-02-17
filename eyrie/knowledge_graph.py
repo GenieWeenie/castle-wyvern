@@ -282,9 +282,7 @@ class KnowledgeGraph:
             raise ValueError(f"Invalid target type {target_type} for relation {relation}")
 
         # Generate ID
-        rel_id = (
-            f"rel_{hashlib.md5(f'{source_id}_{relation}_{target_id}'.encode(), usedforsecurity=False).hexdigest()[:16]}"
-        )
+        rel_id = f"rel_{hashlib.md5(f'{source_id}_{relation}_{target_id}'.encode(), usedforsecurity=False).hexdigest()[:16]}"
 
         relationship = Relationship(
             id=rel_id,

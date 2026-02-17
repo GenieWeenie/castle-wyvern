@@ -41,6 +41,7 @@ jobs:
     - name: Type check with mypy
       run: |
         mypy eyrie/ --ignore-missing-imports --no-strict-optional
+      # TODO: fix ~118 mypy errors then remove continue-on-error to enforce types
       continue-on-error: true
     
     - name: Test with pytest

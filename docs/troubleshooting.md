@@ -50,6 +50,19 @@ Copy `.env.example` to `.env` and fill in at least one AI provider key.
 
 ---
 
+## FAQ
+
+**How do I run the REST API?**  
+From the repo root: `python -m eyrie.api_server` (default port 18791). Or from the CLI: type `api-start` in interactive mode.
+
+**Where is the CLI?**  
+Run `python castle_wyvern_cli.py` from the repo root. For non-interactive commands: `python castle_wyvern_cli.py ask "your question"` or `python castle_wyvern_cli.py status`.
+
+**Request body too large (413)?**  
+The API limits request bodies to 5MB. Split large payloads or use a different upload strategy.
+
+---
+
 ## Getting help
 
 - **Docs:** [Architecture](architecture.md), [API examples](api-examples.md), [Features](features/README.md).

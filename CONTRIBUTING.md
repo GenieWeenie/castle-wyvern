@@ -28,6 +28,14 @@ cp .env.example .env
 
 3. **Open a PR against `main`.** Keep the change focused; describe what and why.
 
+**Quick smoke check (optional):** Start the API and hit health or metrics:
+
+```bash
+python -m eyrie.api_server &
+sleep 2 && curl -s http://localhost:18791/health | head -1
+kill %1 2>/dev/null || true
+```
+
 ## What to contribute
 
 - **Code:** Bug fixes, tests, or small features. If you change the API or architecture, update [docs/architecture.md](docs/architecture.md) or [docs/roadmap.md](docs/roadmap.md) as needed.

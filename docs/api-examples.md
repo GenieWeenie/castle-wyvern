@@ -33,7 +33,7 @@ Light observability: total request count since server start.
 curl -s http://localhost:18791/metrics | jq
 ```
 
-Example: `{"requests_total": 42}`. The API also logs each request as `METHOD path status_code` to the `castle_wyvern.api` logger.
+Example: `{"requests_total": 42, "started_at": "...", "uptime_seconds": 123.4}`. The API also logs each request as `METHOD path status_code` to the `castle_wyvern.api` logger.
 
 Example response:
 

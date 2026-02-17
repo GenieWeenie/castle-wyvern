@@ -81,9 +81,12 @@ class CastleWyvernAPI:
         # Create Flask app
         self.app = Flask("CastleWyvern")
         CORS(self.app)  # Enable CORS for all routes
+        # Request size limit (5MB) to avoid huge payloads
+        self.app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
-        # Light observability: request count and access log
+        # Light observability: request count, start time, access log
         self._request_count = 0
+        self._started_at = datetime.now()
 
         @self.app.after_request
         def _log_request(response):
@@ -93,6 +96,10 @@ class CastleWyvernAPI:
 
         # Register routes
         self._register_routes()
+
+        @self.app.errorhandler(413)
+        def _payload_too_large(_e):
+            return self._error("Request body too large (max 5MB)", "payload_too_large", 413)
 
     def _require_api_key(self, f):
         """Decorator to require API key for protected endpoints."""
@@ -140,8 +147,15 @@ class CastleWyvernAPI:
 
         @self.app.route("/metrics", methods=["GET"])
         def metrics():
-            """Light observability: request count (no auth for easy scraping)."""
-            return jsonify({"requests_total": self._request_count})
+            """Light observability: request count and uptime (no auth for easy scraping)."""
+            uptime_seconds = (datetime.now() - self._started_at).total_seconds()
+            return jsonify(
+                {
+                    "requests_total": self._request_count,
+                    "started_at": self._started_at.isoformat(),
+                    "uptime_seconds": round(uptime_seconds, 1),
+                }
+            )
 
         @self.app.route("/status", methods=["GET"])
         @self._require_api_key

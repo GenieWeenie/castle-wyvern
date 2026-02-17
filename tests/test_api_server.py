@@ -3,6 +3,7 @@ Smoke tests for Castle Wyvern REST API (eyrie.api_server).
 Requires Flask; skipped if Flask not installed.
 """
 
+import json
 import os
 import pytest
 
@@ -39,6 +40,23 @@ class TestCastleWyvernAPI:
         assert "requests_total" in data
         assert isinstance(data["requests_total"], int)
         assert data["requests_total"] >= 0
+        assert "started_at" in data
+        assert "uptime_seconds" in data
+        assert data["uptime_seconds"] >= 0
+
+    def test_request_body_over_5mb_returns_413(self):
+        api = CastleWyvernAPI()
+        client = api.app.test_client()
+        # Payload slightly over 5MB
+        huge = "x" * (5 * 1024 * 1024 + 1)
+        r = client.post(
+            "/memory/ingest",
+            data=json.dumps({"content": huge, "type": "note"}),
+            content_type="application/json",
+        )
+        assert r.status_code == 413
+        data = r.get_json()
+        assert data.get("code") == "payload_too_large"
 
     def test_clan_list_returns_200_and_members(self):
         api = CastleWyvernAPI()

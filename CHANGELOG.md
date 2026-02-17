@@ -8,10 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- (none yet)
+- **API:** Request body size limit (5MB); 413 with `payload_too_large` when exceeded.
+- **API /metrics:** `started_at` (ISO timestamp) and `uptime_seconds`.
+- **CONTRIBUTING:** Quick smoke check (start API, curl /health).
+- **docs/troubleshooting.md:** FAQ (run API, run CLI, 413 payload too large).
+- **CI:** Bandit security job fails on high-severity findings only (`-l 3`).
+- **Test:** Request body over 5MB returns 413 and `payload_too_large`.
 
 ### Changed
-- (none yet)
+- **docs/api-examples.md:** /metrics example includes `started_at` and `uptime_seconds`.
 
 ### Fixed
 - (none yet)

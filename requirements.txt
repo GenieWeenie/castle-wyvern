@@ -2,9 +2,10 @@
 
 # Core
 python-dotenv>=1.0.0
-requests>=2.31.0
+requests>=2.32.0
 
-# CLI Experience Enhancements
+# CLI Experience (Rich UI)
+rich>=13.0.0
 prompt_toolkit>=3.0.0
 
 # Feature 11: Auto-Discovery (mDNS/Zeroconf)

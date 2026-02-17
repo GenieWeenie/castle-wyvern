@@ -27,10 +27,20 @@ classifiers = [
 
 dependencies = [
     "python-dotenv>=1.0.0",
-    "requests>=2.31.0",
+    "requests>=2.32.0",
 ]
 
 [project.optional-dependencies]
+run = [
+    "rich>=13.0.0",
+    "prompt_toolkit>=3.0.0",
+    "zeroconf>=0.131.0",
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+    "psutil>=5.9.0",
+    "numpy>=1.24.0",
+    "aiohttp>=3.9.0",
+]
 local = [
     "ollama>=0.1.0",
 ]

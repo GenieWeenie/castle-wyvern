@@ -25,6 +25,14 @@ Castle Wyvern complements [OpenClaw](https://openclaw.ai) — the multi-channel 
 
 ---
 
+## What's unique
+
+- **KAG over RAG** — A **Knowledge-Assisted Graph (KAG)** drives logical reasoning over structured facts and relationships, not just vector similarity. Use it for "why" and "how" questions, consistency checks, and multi-hop inference.
+- **Self-organizing agent coordination** — The clan uses a **match → exchange → execute → score** loop: tasks get matched to an optimal team, agents exchange context, execute, and get scored so the system learns who does what best.
+- **MCP + A2A in one stack** — Model Context Protocol (MCP) tools and Agent-to-Agent (A2A) workflows live in the same codebase. One CLI and API for tools, memory, reasoning, and multi-agent coordination.
+
+---
+
 ## The Manhattan Clan
 
 | Agent   | Role        | Specialty                          |
@@ -49,7 +57,7 @@ git clone https://github.com/GenieWeenie/castle-wyvern.git
 cd castle-wyvern
 
 pip install -r requirements.txt
-pip install rich
+# Or: pip install -e ".[run]"   # install package with runtime deps
 
 cp .env.example .env
 # Edit .env with your API keys (Z.ai, OpenAI optional)

@@ -32,6 +32,8 @@ from eyrie.phoenix_gate import PhoenixGate
 from eyrie.intent_router import IntentRouter, IntentType
 from eyrie.document_ingestion import DocumentIngestion
 from eyrie.node_manager import NodeManager
+from eyrie.knowledge_graph import KnowledgeGraph
+from eyrie.agent_coordination import ClanCoordinationManager
 from grimoorum.memory_manager import GrimoorumV2
 from bmad.bmad_workflow import BMADWorkflow
 
@@ -70,6 +72,8 @@ class CastleWyvernAPI:
         self.intent_router = IntentRouter(use_ai_classification=True)
         self.grimoorum = GrimoorumV2()
         self.node_manager = NodeManager()
+        self.knowledge_graph = KnowledgeGraph()
+        self.coordination = ClanCoordinationManager()
 
         # Create Flask app
         self.app = Flask("CastleWyvern")
@@ -564,6 +568,76 @@ Maintain the original meaning and key details."""
             try:
                 conversations = self.grimoorum.get_recent_conversations(limit=50)
                 return jsonify({"count": len(conversations), "conversations": conversations})
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
+        # ============ Knowledge Graph (KAG) ============
+
+        @self.app.route("/kg/status", methods=["GET"])
+        @self._require_api_key
+        def kg_status():
+            """Get knowledge graph statistics."""
+            try:
+                stats = self.knowledge_graph.get_stats()
+                return jsonify({"knowledge_graph": stats})
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/kg/reason", methods=["POST"])
+        @self._require_api_key
+        def kg_reason():
+            """Run logical reasoning over the knowledge graph."""
+            data = request.get_json() or {}
+            query = data.get("query")
+
+            if not query:
+                return jsonify({"error": "query is required"}), 400
+
+            try:
+                result = self.knowledge_graph.logical_reasoning(query)
+                return jsonify(result)
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
+        # ============ Agent Coordination ============
+
+        @self.app.route("/coord/status", methods=["GET"])
+        @self._require_api_key
+        def coord_status():
+            """Get coordination system status."""
+            try:
+                stats = self.coordination.coordination.get_coordination_stats()
+                return jsonify({"coordination": stats})
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/coord/team", methods=["POST"])
+        @self._require_api_key
+        def coord_team():
+            """Get optimal team for a task (no execution)."""
+            data = request.get_json() or {}
+            task = data.get("task") or data.get("description")
+            requirements = data.get("requirements", ["general"])
+            if isinstance(requirements, str):
+                requirements = [r.strip() for r in requirements.split(",")]
+
+            if not task:
+                return jsonify({"error": "task (or description) is required"}), 400
+
+            try:
+                team_ids = self.coordination.get_optimal_team(task, requirements)
+                team = []
+                for agent_id in team_ids:
+                    perf = self.coordination.get_agent_performance(agent_id)
+                    team.append(
+                        {
+                            "id": agent_id,
+                            "name": (perf or {}).get("name", agent_id),
+                            "specialization": (perf or {}).get("specialization", ""),
+                            "performance_score": (perf or {}).get("performance_score", 0),
+                        }
+                    )
+                return jsonify({"task": task, "requirements": requirements, "team": team})
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
 

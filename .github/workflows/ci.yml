@@ -58,13 +58,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Run Bandit security checks
-      uses: PyCQA/bandit@main
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        args: "-r eyrie/ -f json -o bandit-report.json || true"
+        python-version: '3.11'
+
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit trufflehog3
+
+    - name: Run Bandit security checks
+      run: |
+        bandit -r eyrie/ -f json -o bandit-report.json || true
+        cat bandit-report.json || echo "Bandit check completed"
       continue-on-error: true
-    
+
     - name: Check for hardcoded secrets
-      uses: trufflesecurity/trufflehog@main
+      run: |
+        trufflehog3 --repo_path . --output json || true
       continue-on-error: true

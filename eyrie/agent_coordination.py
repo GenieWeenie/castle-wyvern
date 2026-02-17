@@ -12,7 +12,7 @@ Based on research from r/LocalLLaMA community:
 import random
 import time
 import json
-from typing import Dict, List, Optional, Callable, Tuple, Any
+from typing import Dict, List, Optional, Callable, Tuple, Any, cast
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -417,7 +417,7 @@ class AgentCoordinationLoop:
         # Create task
         task = self.create_task(description, requirements)
 
-        results = {"task_id": task.id, "description": description, "phases": {}}
+        results: Dict[str, Any] = {"task_id": task.id, "description": description, "phases": {}}
 
         # Phase 1: MATCH
         team = self.match_phase(task.id)
@@ -442,9 +442,9 @@ class AgentCoordinationLoop:
         results["final_status"] = scoring["status"]
         results["performance_score"] = scoring["performance_score"]
 
-        return results
+        return cast(Dict[str, Any], results)
 
-    def get_agent_stats(self, agent_id: str) -> Optional[Dict]:
+    def get_agent_stats(self, agent_id: str) -> Optional[Dict[str, Any]]:
         """Get statistics for an agent."""
         agent = self.agents.get(agent_id)
         if not agent:
@@ -463,11 +463,11 @@ class AgentCoordinationLoop:
             "collaboration_score": agent.collaboration_score,
         }
 
-    def get_all_agents(self) -> List[Dict]:
+    def get_all_agents(self) -> List[Optional[Dict[str, Any]]]:
         """Get all registered agents."""
         return [self.get_agent_stats(aid) for aid in self.agents.keys()]
 
-    def get_coordination_stats(self) -> Dict:
+    def get_coordination_stats(self) -> Dict[str, Any]:
         """Get overall coordination system statistics."""
         total_tasks = len(self.completed_tasks) + len(self.tasks)
         completed = len([t for t in self.completed_tasks if t.status == TaskStatus.COMPLETED])
@@ -555,7 +555,7 @@ class ClanCoordinationManager:
                 ["security", "coding", "technical"]
             )
         """
-        return self.coordination.run_coordination_loop(description, requirements)
+        return cast(Dict[str, Any], self.coordination.run_coordination_loop(description, requirements))
 
     def get_optimal_team(self, task_description: str, requirements: List[str]) -> List[str]:
         """Get the optimal team for a task without executing."""
@@ -566,11 +566,11 @@ class ClanCoordinationManager:
         if task.id in self.coordination.tasks:
             del self.coordination.tasks[task.id]
 
-        return team.agents
+        return list(team.agents)
 
-    def get_agent_performance(self, clan_member: str) -> Optional[Dict]:
+    def get_agent_performance(self, clan_member: str) -> Optional[Dict[str, Any]]:
         """Get performance stats for a clan member."""
-        return self.coordination.get_agent_stats(clan_member)
+        return cast(Optional[Dict[str, Any]], self.coordination.get_agent_stats(clan_member))
 
 
 __all__ = [

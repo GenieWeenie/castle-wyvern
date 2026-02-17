@@ -13,7 +13,7 @@ import os
 import json
 import hashlib
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -106,7 +106,7 @@ class SimpleEmbeddingGenerator:
 
         # Average word vectors with TF-IDF weighting
         vectors = []
-        token_counts = defaultdict(int)
+        token_counts: Dict[str, int] = defaultdict(int)
 
         for token in tokens:
             token_counts[token] += 1
@@ -121,7 +121,7 @@ class SimpleEmbeddingGenerator:
         embedding = np.mean(vectors, axis=0)
         embedding = embedding / (np.linalg.norm(embedding) + 1e-8)
 
-        return embedding.tolist()
+        return cast(List[float], embedding.tolist())
 
 
 class VectorMemoryStore:
@@ -406,7 +406,7 @@ class EnhancedGrimoorum:
             content=content, metadata=vector_metadata, importance=importance
         )
 
-        return vector_id
+        return cast(str, vector_id)
 
     def search(self, query: str, limit: int = 10, use_semantic: bool = True) -> List[Dict]:
         """
@@ -419,20 +419,23 @@ class EnhancedGrimoorum:
         """
         if use_semantic:
             results = self.vector_store.search_similar(query, top_k=limit)
-            return [
-                {
-                    "id": mem.id,
-                    "content": mem.content,
-                    "similarity": score,
-                    "metadata": mem.metadata,
-                    "timestamp": mem.timestamp,
-                }
-                for mem, score in results
-            ]
+            return cast(
+                List[Dict[str, Any]],
+                [
+                    {
+                        "id": mem.id,
+                        "content": mem.content,
+                        "similarity": score,
+                        "metadata": mem.metadata,
+                        "timestamp": mem.timestamp,
+                    }
+                    for mem, score in results
+                ],
+            )
         else:
             # Fallback to original search
             if self.original:
-                return self.original.search(query, limit)
+                return cast(List[Dict[str, Any]], self.original.search(query, limit))
             return []
 
     def get_context(self, query: str, max_items: int = 5) -> str:

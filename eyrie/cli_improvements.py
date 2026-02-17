@@ -17,7 +17,7 @@ import sys
 import json
 import readline
 import atexit
-from typing import Dict, List, Optional, Callable, Any, Tuple
+from typing import Dict, List, Optional, Callable, Any, Tuple, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
@@ -495,7 +495,7 @@ class ConfigWizard:
                             for subkey, subvalue in value.items():
                                 if subkey not in loaded[key]:
                                     loaded[key][subkey] = subvalue
-                    return loaded
+                    return cast(Dict[str, Any], loaded)
             except Exception:
                 pass
 
@@ -596,7 +596,7 @@ class ExportImportManager:
     def export_all(self, output_file: str) -> bool:
         """Export all data to a JSON file."""
         try:
-            export_data = {
+            export_data: Dict[str, Any] = {
                 "version": "0.2.0",
                 "exported_at": datetime.now().isoformat(),
                 "data": {},
@@ -650,7 +650,7 @@ class ExportImportManager:
                 print("[Import] Invalid export file format")
                 return False
 
-            data = import_data["data"]
+            data = cast(Dict[str, Any], import_data["data"])
 
             # Import config
             if "config" in data:
@@ -663,8 +663,8 @@ class ExportImportManager:
                 aliases_file = os.path.join(self.base_dir, "aliases.json")
                 if merge and os.path.exists(aliases_file):
                     with open(aliases_file, "r") as f:
-                        existing = json.load(f)
-                    existing.update(data["aliases"])
+                        existing = cast(Dict[str, Any], json.load(f))
+                    existing.update(cast(Dict[str, Any], data["aliases"]))
                     data["aliases"] = existing
 
                 with open(aliases_file, "w") as f:
@@ -675,9 +675,9 @@ class ExportImportManager:
                 history_file = os.path.join(self.base_dir, "history.json")
                 if merge and os.path.exists(history_file):
                     with open(history_file, "r") as f:
-                        existing = json.load(f)
-                    existing.extend(data["history"])
-                    data["history"] = existing[-1000:]  # Keep last 1000
+                        existing_history = cast(List[Any], json.load(f))
+                    existing_history.extend(cast(List[Any], data["history"]))
+                    data["history"] = existing_history[-1000:]  # Keep last 1000
 
                 with open(history_file, "w") as f:
                     json.dump(data["history"], f, indent=2)
@@ -687,7 +687,7 @@ class ExportImportManager:
                 sessions_dir = os.path.join(self.base_dir, "sessions")
                 os.makedirs(sessions_dir, exist_ok=True)
 
-                for name, session_data in data["sessions"].items():
+                for name, session_data in cast(Dict[str, Any], data["sessions"]).items():
                     filepath = os.path.join(sessions_dir, f"{name}.json")
                     with open(filepath, "w") as f:
                         json.dump(session_data, f, indent=2)
@@ -717,7 +717,7 @@ class CLIImprovements:
 
     def expand_command(self, command: str) -> str:
         """Expand aliases in a command."""
-        return self.aliases.expand(command)
+        return cast(str, self.aliases.expand(command))
 
     def record_command(self, command: str, success: bool = True, result: str = ""):
         """Record a command execution."""

@@ -6,7 +6,7 @@ With robust error handling, retry logic, and circuit breakers.
 import os
 import requests
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 from dotenv import load_dotenv
 
 from eyrie.error_handler import (
@@ -76,11 +76,11 @@ class PhoenixGate:
             raise PhoenixGateError("Prompt cannot be empty", severity=ErrorSeverity.LOW)
 
         if mode == "cloud":
-            return self._call_with_fallback(prompt, system_message)
+            return cast(str, self._call_with_fallback(prompt, system_message))
         elif mode == "local":
-            return self._call_local(prompt, system_message)
+            return cast(str, self._call_local(prompt, system_message))
         elif mode == "openai":
-            return self._call_openai(prompt, system_message)
+            return cast(str, self._call_openai(prompt, system_message))
         else:
             raise PhoenixGateError(
                 f"Unknown mode: {mode}",
@@ -95,7 +95,7 @@ class PhoenixGate:
         # Try Z.ai (primary)
         try:
             logger.info("Attempting Z.ai API call...")
-            return self._call_zai(prompt, system_message)
+            return cast(str, self._call_zai(prompt, system_message))
         except Exception as e:
             logger.warning(f"Z.ai failed: {e}")
             errors.append(f"Z.ai: {e}")
@@ -105,7 +105,7 @@ class PhoenixGate:
         if openai_key:
             try:
                 logger.info("Falling back to OpenAI...")
-                return self._call_openai(prompt, system_message)
+                return cast(str, self._call_openai(prompt, system_message))
             except Exception as e:
                 logger.warning(f"OpenAI fallback failed: {e}")
                 errors.append(f"OpenAI: {e}")
@@ -115,7 +115,7 @@ class PhoenixGate:
         # Try local (last resort)
         try:
             logger.info("Falling back to local AI...")
-            return self._call_local(prompt, system_message)
+            return cast(str, self._call_local(prompt, system_message))
         except Exception as e:
             logger.warning(f"Local AI failed: {e}")
             errors.append(f"Local: {e}")
@@ -133,7 +133,7 @@ class PhoenixGate:
                 "No Z.ai API Key found. Set AI_API_KEY in .env", severity=ErrorSeverity.HIGH
             )
 
-        return zai_circuit_breaker.call(self._execute_zai_call, prompt, system_message)
+        return cast(str, zai_circuit_breaker.call(self._execute_zai_call, prompt, system_message))
 
     def _execute_zai_call(self, prompt: str, system_message: str) -> str:
         """Execute the actual Z.ai API call."""
@@ -198,7 +198,7 @@ class PhoenixGate:
                 f"{usage.get('total_tokens', 0)} total"
             )
 
-        return content
+        return str(content)
 
     @retry_on_error(max_retries=2, delay=1.0, exceptions=(requests.exceptions.RequestException,))
     def _call_openai(self, prompt: str, system_message: str) -> str:
@@ -209,8 +209,11 @@ class PhoenixGate:
                 "No OpenAI API Key found for fallback", severity=ErrorSeverity.HIGH
             )
 
-        return openai_circuit_breaker.call(
-            self._execute_openai_call, prompt, system_message, openai_key
+        return cast(
+            str,
+            openai_circuit_breaker.call(
+                self._execute_openai_call, prompt, system_message, openai_key
+            ),
         )
 
     def _execute_openai_call(self, prompt: str, system_message: str, api_key: str) -> str:
@@ -235,7 +238,7 @@ class PhoenixGate:
         response.raise_for_status()
         data = response.json()
 
-        return data["choices"][0]["message"]["content"]
+        return str(data["choices"][0]["message"]["content"])
 
     def _call_local(self, prompt: str, system_message: str) -> str:
         """Standard logic for local inference engines (Ollama)."""
@@ -258,7 +261,7 @@ class PhoenixGate:
                     "Local AI returned empty response", severity=ErrorSeverity.MEDIUM
                 )
 
-            return content
+            return str(content)
         except requests.exceptions.ConnectionError:
             raise PhoenixGateError(
                 "Local AI (Ollama) not running. Start with: ollama run llama3",

@@ -14,7 +14,7 @@ import os
 import json
 import time
 import asyncio
-from typing import Dict, List, Optional, Callable, Any, AsyncGenerator, Tuple
+from typing import Dict, List, Optional, Callable, Any, AsyncGenerator, Tuple, cast
 from dataclasses import dataclass
 from datetime import datetime
 from collections import defaultdict
@@ -418,7 +418,7 @@ class AdvancedAIManager:
 
     def optimize_prompt(self, prompt: str, context: str = "") -> str:
         """Optimize a prompt for better results."""
-        return self.optimizer.optimize(prompt, context)
+        return cast(str, self.optimizer.optimize(prompt, context))
 
     def manage_context(self, messages: List[Dict]) -> List[Dict]:
         """Manage context window for messages."""
@@ -427,13 +427,13 @@ class AdvancedAIManager:
         for msg in messages:
             self.context.add_message(msg["role"], msg["content"])
 
-        return self.context.get_context()
+        return cast(List[Dict[str, Any]], self.context.get_context())
 
-    def execute_code_safely(self, code: str) -> Dict:
+    def execute_code_safely(self, code: str) -> Dict[str, Any]:
         """Execute code safely."""
-        return self.executor.execute(code)
+        return cast(Dict[str, Any], self.executor.execute(code))
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> Dict[str, Any]:
         """Get advanced AI feature statistics."""
         return {
             "context_window": self.context.get_stats(),

@@ -6,7 +6,7 @@ Polish features for production use
 import json
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
 
 
@@ -69,22 +69,22 @@ class KnowledgeGraphVisualizer:
             output_path: Path to output file
             format: 'dot', 'mermaid', 'png' (requires graphviz), 'svg' (requires graphviz)
         """
-        output_path = Path(output_path)
+        path = Path(output_path)
 
         if format in ["dot", "txt"]:
             content = self.to_dot()
-            output_path.write_text(content)
-            return str(output_path)
+            path.write_text(content)
+            return str(path)
 
         elif format == "mermaid":
             content = self.to_mermaid()
-            output_path.write_text(content)
-            return str(output_path)
+            path.write_text(content)
+            return str(path)
 
         elif format in ["png", "svg", "pdf"]:
             # Requires graphviz installed
             dot_content = self.to_dot()
-            dot_path = output_path.with_suffix(".dot")
+            dot_path = path.with_suffix(".dot")
             dot_path.write_text(dot_content)
 
             try:
@@ -97,7 +97,7 @@ class KnowledgeGraphVisualizer:
 
                 if result.returncode == 0:
                     dot_path.unlink()  # Clean up dot file
-                    return str(output_path)
+                    return str(path)
                 else:
                     return f"Error: {result.stderr}"
             except FileNotFoundError:
@@ -203,11 +203,11 @@ class SmartEntityExtractor:
         else:
             return self.extract_rule_based(text)
 
-    def extract_rule_based(self, text: str) -> Dict:
+    def extract_rule_based(self, text: str) -> Dict[str, Any]:
         """Extract entities using enhanced rule-based approach."""
         import re
 
-        extracted = {"entities": [], "relationships": []}
+        extracted: Dict[str, Any] = {"entities": [], "relationships": []}
 
         # Extract clan members
         clan_members = [
@@ -244,8 +244,8 @@ class SmartEntityExtractor:
 
         # Extract actions (relationships)
         for pattern in self.extraction_patterns["actions"]:
-            matches = re.finditer(pattern, text, re.IGNORECASE)
-            for match in matches:
+            action_matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in action_matches:
                 person = match.group(1)
                 action = match.group(2).lower()
 
@@ -282,8 +282,8 @@ class SmartEntityExtractor:
 
         # Extract projects
         for pattern in self.extraction_patterns["project_indicators"]:
-            matches = re.finditer(pattern, text, re.IGNORECASE)
-            for match in matches:
+            project_matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in project_matches:
                 project_name = match.group(2).strip()
                 if len(project_name) > 2:
                     extracted["entities"].append(

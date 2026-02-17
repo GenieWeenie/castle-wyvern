@@ -6,7 +6,7 @@ Custom model training and fine-tuning capabilities
 import os
 import json
 import subprocess
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, cast
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -49,11 +49,11 @@ class NanoGPTTrainer:
         self.config_file = self.workspace_dir / "configs.json"
         self.configs = self._load_configs()
 
-    def _load_configs(self) -> Dict:
+    def _load_configs(self) -> Dict[str, Any]:
         """Load saved training configurations."""
         if self.config_file.exists():
             with open(self.config_file, "r") as f:
-                return json.load(f)
+                return cast(Dict[str, Any], json.load(f))
         return {}
 
     def _save_configs(self):

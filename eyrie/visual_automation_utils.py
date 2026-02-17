@@ -349,7 +349,7 @@ class VisualDebugger:
         # Analyze screen first
         screen = self.va.analyze_screen()
 
-        debug_info = {
+        debug_info: Dict[str, Any] = {
             "target": target,
             "screen_analyzed": True,
             "total_elements": len(screen.elements),

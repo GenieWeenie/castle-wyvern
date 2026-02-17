@@ -167,7 +167,7 @@ class LocalLLM:
         """Chat with local LLM."""
         if self.preferred == "llama.cpp":
             response = self.llama.chat_completion(messages, **kwargs)
-            return response.text
+            return str(response.text)
         else:
             # Fall back to Ollama
             import requests
@@ -180,7 +180,7 @@ class LocalLLM:
                     "stream": False,
                 },
             )
-            return response.json()["message"]["content"]
+            return str(response.json()["message"]["content"])
 
     def status(self) -> dict:
         """Get status of local LLM."""

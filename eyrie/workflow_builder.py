@@ -558,7 +558,7 @@ class WorkflowManager:
             return wf
         except Exception as e:
             print(f"[Workflow] Import error: {e}")
-            return False
+            return None
 
 
 class WorkflowExecutor:
@@ -605,7 +605,7 @@ class WorkflowExecutor:
         execution_id = str(uuid.uuid4())
         context = initial_context or {}
 
-        execution = {
+        execution: Dict[str, Any] = {
             "id": execution_id,
             "workflow_id": workflow.id,
             "status": "running",

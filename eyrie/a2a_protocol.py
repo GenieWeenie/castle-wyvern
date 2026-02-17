@@ -15,7 +15,7 @@ import json
 import uuid
 import asyncio
 import aiohttp
-from typing import Dict, List, Optional, Callable, Any, AsyncGenerator
+from typing import Dict, List, Optional, Callable, Any, AsyncGenerator, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
@@ -62,8 +62,8 @@ class A2AArtifact:
     last_chunk: Optional[bool] = None
     metadata: Optional[Dict] = None
 
-    def to_dict(self) -> Dict:
-        result = {"name": self.name}
+    def to_dict(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {"name": self.name}
         if self.description:
             result["description"] = self.description
         if self.parts:
@@ -78,20 +78,20 @@ class A2AMessage:
     """A message in an A2A conversation."""
 
     role: str
-    parts: List[Dict]
-    metadata: Optional[Dict] = None
+    parts: List[Dict[str, Any]]
+    metadata: Optional[Dict[str, Any]] = None
 
-    def to_dict(self) -> Dict:
-        result = {"role": self.role, "parts": self.parts}
+    def to_dict(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {"role": self.role, "parts": self.parts}
         if self.metadata:
             result["metadata"] = self.metadata
         return result
 
     @classmethod
-    def from_dict(cls, data: Dict) -> "A2AMessage":
+    def from_dict(cls, data: Dict[str, Any]) -> "A2AMessage":
         return cls(
-            role=data.get("role", "user"),
-            parts=data.get("parts", []),
+            role=str(data.get("role", "user")),
+            parts=cast(List[Dict[str, Any]], data.get("parts", [])),
             metadata=data.get("metadata"),
         )
 

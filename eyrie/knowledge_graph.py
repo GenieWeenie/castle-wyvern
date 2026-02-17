@@ -349,7 +349,7 @@ class KnowledgeGraph:
 
         return results
 
-    def multi_hop_query(self, start_entity: str, path: List[str]) -> List[Dict]:
+    def multi_hop_query(self, start_entity: str, path: List[str]) -> List[List[Any]]:
         """
         Execute a multi-hop query along a relationship path.
 
@@ -365,9 +365,9 @@ class KnowledgeGraph:
             return []
 
         start_id = list(start_entities)[0].id
-        results = []
+        results: List[List[Any]] = []
 
-        def traverse(current_id: str, path_idx: int, current_path: List):
+        def traverse(current_id: str, path_idx: int, current_path: List[Any]) -> None:
             if path_idx >= len(path):
                 results.append(current_path.copy())
                 return
@@ -527,14 +527,14 @@ class KnowledgeGraph:
             "count": len(results),
         }
 
-    def extract_from_text(self, text: str, source: str = "") -> Dict:
+    def extract_from_text(self, text: str, source: str = "") -> Dict[str, Any]:
         """
         Extract entities and relationships from text.
 
         In production, this would use an LLM for extraction.
         For now, we use rule-based extraction.
         """
-        extracted = {"entities": [], "relationships": []}
+        extracted: Dict[str, Any] = {"entities": [], "relationships": []}
 
         # Extract clan members
         clan_members = [

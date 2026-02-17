@@ -6,7 +6,7 @@ Analyzes user input and routes to the appropriate clan member.
 import os
 import json
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, cast
 from dataclasses import dataclass
 from enum import Enum
 import logging
@@ -33,6 +33,9 @@ class IntentType(Enum):
     CREATIVE = "creative"  # Stories, creative writing
     QUESTION = "question"  # General knowledge questions
     CHAT = "chat"  # Casual conversation
+    REVIEW = "review"  # Alias for ANALYZE (review code)
+    SUMMARIZE = "summarize"  # Alias for DOCUMENT (summarize content)
+    RESEARCH = "research"  # Research, information gathering
     UNKNOWN = "unknown"  # Could not determine
 
 
@@ -134,6 +137,21 @@ class IntentRouter:
             "fallback": ["elisa", "broadway"],
             "reason": "Goliath leads - he handles general conversation",
         },
+        IntentType.REVIEW: {
+            "primary": "xanatos",
+            "fallback": ["demona", "goliath"],
+            "reason": "Xanatos is the red team - he critiques and finds issues",
+        },
+        IntentType.SUMMARIZE: {
+            "primary": "broadway",
+            "fallback": ["hudson", "goliath"],
+            "reason": "Broadway is the chronicler - he summarizes",
+        },
+        IntentType.RESEARCH: {
+            "primary": "hudson",
+            "fallback": ["jade", "broadway"],
+            "reason": "Hudson is the archivist - he has the knowledge",
+        },
         IntentType.UNKNOWN: {
             "primary": "goliath",
             "fallback": ["brooklyn", "lexington"],
@@ -204,7 +222,7 @@ class IntentRouter:
 
     def _keyword_classify(self, user_input: str) -> Tuple[IntentType, float]:
         """Classify based on keyword patterns."""
-        scores = {intent: 0 for intent in IntentType}
+        scores: Dict[IntentType, float] = {intent: 0.0 for intent in IntentType}
         user_lower = user_input.lower()
 
         for intent, patterns in self.compiled_patterns.items():
@@ -219,7 +237,7 @@ class IntentRouter:
 
         # Find highest scoring intent
         best_intent = max(scores, key=scores.get)
-        best_score = scores[best_intent]
+        best_score = float(scores[best_intent])
 
         # Normalize confidence
         confidence = min(best_score, 1.0) if best_score > 0 else 0.3
@@ -228,7 +246,7 @@ class IntentRouter:
         if best_score == 0:
             return IntentType.UNKNOWN, 0.3
 
-        return best_intent, confidence
+        return best_intent, float(confidence)
 
     def _ai_classify(self, user_input: str, context: Optional[str]) -> Tuple[IntentType, float]:
         """Use AI to classify intent (more accurate for complex queries)."""
@@ -286,11 +304,13 @@ Confidence should be 0.0 to 1.0 based on how certain you are."""
         """Create IntentMatch from intent and confidence."""
         routing = self.AGENT_ROUTING.get(intent, self.AGENT_ROUTING[IntentType.UNKNOWN])
 
+        primary = cast(str, routing["primary"])
+        fallback = cast(List[str], list(routing["fallback"]))
         return IntentMatch(
             intent=intent,
             confidence=confidence,
-            primary_agent=routing["primary"],
-            fallback_agents=routing["fallback"],
+            primary_agent=primary,
+            fallback_agents=fallback,
             reasoning=f"{routing['reason']} (detected via {method})",
         )
 

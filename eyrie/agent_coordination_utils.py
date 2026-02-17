@@ -5,7 +5,7 @@ Polish features for production use
 
 import json
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, cast
 from dataclasses import dataclass, field
 from pathlib import Path
 from collections import defaultdict
@@ -54,7 +54,7 @@ class CoordinationAnalytics:
         metrics.best_performing_agents = sorted(agent_scores, key=lambda x: x[1], reverse=True)[:5]
 
         # Most collaborative pairs
-        pair_collaboration = defaultdict(float)
+        pair_collaboration: Dict[Tuple[str, str], float] = defaultdict(float)
         for task in all_tasks:
             agents = task.assigned_agents
             for i, a1 in enumerate(agents):
@@ -155,7 +155,7 @@ class CoordinationAnalytics:
             if aid in self.coordination.agents
         ]
         if team_scores:
-            return sum(team_scores) / len(team_scores)
+            return cast(float, sum(team_scores) / len(team_scores))
 
         return 0.5  # Default prediction
 

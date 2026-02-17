@@ -181,7 +181,7 @@ class NodeManager:
             s.connect(("8.8.8.8", 80))
             ip = s.getsockname()[0]
             s.close()
-            return ip
+            return str(ip)
         except Exception:
             return "127.0.0.1"
 
@@ -389,23 +389,25 @@ class NodeManager:
 
     def list_tasks(self, status: str = None) -> List[Dict]:
         """List tasks, optionally filtered by status."""
-        tasks = self.tasks.values()
+        task_iter = self.tasks.values()
 
         if status:
-            tasks = [t for t in tasks if t.status == status]
+            task_list = [t for t in task_iter if t.status == status]
+        else:
+            task_list = list(task_iter)
 
-        return [asdict(t) for t in tasks]
+        return [asdict(t) for t in task_list]
 
     def get_stats(self) -> Dict:
         """Get node network statistics."""
         total_nodes = len(self.nodes)
         online_nodes = len(self.get_online_nodes())
 
-        status_counts = {}
+        status_counts: Dict[str, int] = {}
         for node in self.nodes.values():
             status_counts[node.status] = status_counts.get(node.status, 0) + 1
 
-        task_counts = {}
+        task_counts: Dict[str, int] = {}
         for task in self.tasks.values():
             task_counts[task.status] = task_counts.get(task.status, 0) + 1
 

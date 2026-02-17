@@ -14,7 +14,7 @@ import os
 import sys
 import difflib
 from pathlib import Path
-from typing import List, Optional, Set, Dict, Any, Tuple
+from typing import Generator, List, Optional, Set, Dict, Any, Tuple, cast
 
 # Try to import prompt_toolkit, fall back to basic implementation
 try:
@@ -252,7 +252,7 @@ class CommandCompleter(Completer):
         self.members = self.CLAN_MEMBERS
         self.member_commands = self.MEMBER_COMMANDS
 
-    def get_completions(self, document, complete_event) -> List[Completion]:
+    def get_completions(self, document: Any, complete_event: Any) -> Generator[Completion, None, None]:
         """Generate completions based on current input."""
         text = document.text_before_cursor
         words = text.split()
@@ -486,7 +486,7 @@ class EnhancedPrompt:
         """
         if self.session and PROMPT_TOOLKIT_AVAILABLE:
             try:
-                return self.session.prompt(message)
+                return cast(str, self.session.prompt(message))
             except KeyboardInterrupt:
                 raise
             except EOFError:
@@ -495,9 +495,9 @@ class EnhancedPrompt:
                 # Fall back to basic input on error
                 if self.console:
                     self.console.print(f"[dim]Prompt error: {e}. Using basic input.[/dim]")
-                return input(message)
+                return cast(str, input(message))
         else:
-            return input(message)
+            return cast(str, input(message))
 
     def save_history(self):
         """Save command history to file (readline fallback)."""
@@ -518,7 +518,7 @@ class EnhancedPrompt:
         Returns:
             Formatted error message with suggestions
         """
-        return self.error_suggester.format_error_message(invalid_command)
+        return cast(str, self.error_suggester.format_error_message(invalid_command))
 
     def is_valid_command(self, command: str) -> bool:
         """

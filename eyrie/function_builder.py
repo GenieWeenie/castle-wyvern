@@ -39,7 +39,7 @@ class BuiltFunction:
         """Execute the function."""
         if self.func is None:
             # Compile the function
-            namespace = {}
+            namespace: Dict[str, Any] = {}
             exec(self.code, namespace)
             # Find the function in namespace
             for name, obj in namespace.items():

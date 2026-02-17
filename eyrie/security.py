@@ -18,7 +18,7 @@ import hashlib
 import hmac
 import secrets
 import threading
-from typing import Dict, List, Optional, Callable, Any, Set
+from typing import Dict, List, Optional, Callable, Any, Set, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -397,10 +397,10 @@ class SecurityScanner:
     """
 
     def __init__(self):
-        self.checks: List[Dict] = []
+        self.checks: List[Dict[str, Any]] = []
         self._register_default_checks()
 
-    def _register_default_checks(self):
+    def _register_default_checks(self) -> None:
         """Register default security checks."""
         self.checks = [
             {
@@ -495,9 +495,9 @@ class SecurityScanner:
 
         return issues
 
-    def run_scan(self) -> Dict:
+    def run_scan(self) -> Dict[str, Any]:
         """Run all security checks."""
-        results = {
+        results: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "checks_run": len(self.checks),
             "issues": [],
@@ -506,7 +506,7 @@ class SecurityScanner:
 
         for check in self.checks:
             try:
-                issues = check["check"]()
+                issues = cast(List[Dict[str, Any]], check["check"]())
                 for issue in issues:
                     issue["check"] = check["name"]
                     results["issues"].append(issue)
@@ -611,13 +611,13 @@ class SecurityManager:
     def encrypt_sensitive(self, data: str) -> str:
         """Encrypt sensitive data."""
         if self.config["encryption_enabled"]:
-            return self.encryption.encrypt(data)
+            return str(self.encryption.encrypt(data))
         return data
 
     def decrypt_sensitive(self, encrypted: str) -> str:
         """Decrypt sensitive data."""
         if self.config["encryption_enabled"]:
-            return self.encryption.decrypt(encrypted)
+            return str(self.encryption.decrypt(encrypted))
         return encrypted
 
     def validate_api_key(self, key: str, permission: str = None) -> bool:
@@ -627,11 +627,11 @@ class SecurityManager:
         # Log the attempt
         self.log_auth("api", "api_key_validation", valid, permission=permission)
 
-        return valid
+        return bool(valid)
 
-    def run_security_scan(self) -> Dict:
+    def run_security_scan(self) -> Dict[str, Any]:
         """Run a security scan."""
-        results = self.scanner.run_scan()
+        results = cast(Dict[str, Any], self.scanner.run_scan())
 
         # Log scan completion
         self.audit.log(
@@ -643,7 +643,7 @@ class SecurityManager:
 
         return results
 
-    def check_intrusions(self) -> List[Dict]:
+    def check_intrusions(self) -> List[Dict[str, Any]]:
         """Check for intrusion attempts."""
         if not self.config["intrusion_detection_enabled"]:
             return []
@@ -658,9 +658,9 @@ class SecurityManager:
                 severity="warning" if detection["severity"] == "warning" else "info",
             )
 
-        return detections
+        return cast(List[Dict[str, Any]], detections)
 
-    def get_status(self) -> Dict:
+    def get_status(self) -> Dict[str, Any]:
         """Get security status."""
         return {
             "audit_enabled": self.config["audit_enabled"],

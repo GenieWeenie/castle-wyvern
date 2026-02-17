@@ -8,7 +8,7 @@ import tempfile
 import os
 import json
 import time
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, cast
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -403,7 +403,7 @@ class SafeCodeExecutor:
     def execute(self, code: str, language: str = "python", **kwargs) -> SandboxResult:
         """Execute code safely."""
         if self.use_sandbox:
-            return self.sandbox.execute(code, language=language, **kwargs)
+            return cast(SandboxResult, self.sandbox.execute(code, language=language, **kwargs))
         else:
             # Fallback: Return error with instructions
             return SandboxResult(

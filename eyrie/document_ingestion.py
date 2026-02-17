@@ -6,7 +6,7 @@ Feature 9: Document ingestion with Retrieval Augmented Generation
 import os
 import json
 import hashlib
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
@@ -178,7 +178,7 @@ class SimpleEmbedding:
         if magnitude1 == 0 or magnitude2 == 0:
             return 0.0
 
-        return dot_product / (magnitude1 * magnitude2)
+        return cast(float, dot_product / (magnitude1 * magnitude2))
 
 
 class DocumentIngestion:
@@ -245,21 +245,21 @@ class DocumentIngestion:
         Returns:
             Document ID
         """
-        file_path = Path(file_path)
+        path = Path(file_path)
 
-        if not file_path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {path}")
 
         # Extract content based on file type
-        content = self._extract_content(file_path)
+        content = self._extract_content(path)
 
         # Generate document ID
         doc_id = hashlib.md5(
-            f"{file_path}{datetime.now().isoformat()}".encode(), usedforsecurity=False
+            f"{path}{datetime.now().isoformat()}".encode(), usedforsecurity=False
         ).hexdigest()[:12]
 
         # Chunk the content
-        chunks = self._chunk_content(content, doc_id, file_path.name)
+        chunks = self._chunk_content(content, doc_id, path.name)
         chunk_ids = [c.id for c in chunks]
 
         # Store chunks
@@ -269,9 +269,9 @@ class DocumentIngestion:
         # Create document record
         document = Document(
             id=doc_id,
-            filename=file_path.name,
-            file_path=str(file_path),
-            file_type=file_path.suffix.lower(),
+            filename=path.name,
+            file_path=str(path),
+            file_type=path.suffix.lower(),
             content=(
                 content[:1000] + "..." if len(content) > 1000 else content
             ),  # Truncate for storage
@@ -339,7 +339,7 @@ class DocumentIngestion:
         # Simple sentence-based chunking
         sentences = re.split(r"(?<=[.!?])\s+", content)
 
-        current_chunk = []
+        current_chunk: List[str] = []
         current_size = 0
         chunk_index = 0
 

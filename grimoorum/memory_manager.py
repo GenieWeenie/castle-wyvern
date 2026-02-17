@@ -188,7 +188,7 @@ class GrimoorumV2:
             self.threads[thread_id].last_activity = entry.timestamp
 
         self._save_data()
-        return entry.id
+        return str(entry.id)
 
     def _extract_tags(self, text: str) -> List[str]:
         """Auto-extract tags from text."""

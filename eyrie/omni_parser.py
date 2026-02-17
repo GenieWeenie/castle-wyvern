@@ -12,7 +12,7 @@ Uses Microsoft OmniParser to:
 import base64
 import json
 import subprocess
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, cast
 from dataclasses import dataclass
 from pathlib import Path
 import tempfile
@@ -422,12 +422,12 @@ class VisualBrowserAgent:
         if "click" in task_lower:
             # Extract what to click
             target = task_lower.replace("click", "").strip()
-            return self.visual.click(target)
+            return cast(Dict[str, Any], self.visual.click(target))
 
         elif "type" in task_lower or "enter" in task_lower:
             # Extract text and target
             # Simplified parsing
-            return self.visual.type_text("sample text", "input field")
+            return cast(Dict[str, Any], self.visual.type_text("sample text", "input field"))
 
         elif "analyze" in task_lower or "scan" in task_lower:
             screen = self.visual.analyze_screen()

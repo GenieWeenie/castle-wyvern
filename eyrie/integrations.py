@@ -17,7 +17,7 @@ import json
 import smtplib
 import requests
 import threading
-from typing import Dict, List, Optional, Callable, Any
+from typing import Dict, List, Optional, Callable, Any, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
@@ -104,7 +104,7 @@ class SlackIntegration:
 
         try:
             response = requests.post(self.webhook_url, json=payload, timeout=10)
-            return response.status_code == 200
+            return bool(response.status_code == 200)
         except Exception as e:
             print(f"[Slack] Error sending message: {e}")
             return False
@@ -146,7 +146,7 @@ class SlackIntegration:
 
         try:
             response = requests.post(self.webhook_url, json=payload, timeout=10)
-            return response.status_code == 200
+            return bool(response.status_code == 200)
         except Exception as e:
             print(f"[Slack] Error sending alert: {e}")
             return False
@@ -530,12 +530,12 @@ class IntegrationManager:
         # Apply saved config
         self._apply_config()
 
-    def _load_config(self) -> Dict:
+    def _load_config(self) -> Dict[str, Any]:
         """Load integration configuration."""
         if os.path.exists(self.config_file):
             try:
                 with open(self.config_file, "r") as f:
-                    return json.load(f)
+                    return cast(Dict[str, Any], json.load(f))
             except Exception:
                 pass
         return {}

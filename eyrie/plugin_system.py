@@ -16,7 +16,7 @@ import json
 import importlib
 import importlib.util
 import inspect
-from typing import Dict, List, Optional, Callable, Any
+from typing import Dict, List, Optional, Callable, Any, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from abc import ABC, abstractmethod
@@ -77,22 +77,25 @@ class PluginAPI:
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        return self._phoenix_gate.chat_completion(messages)
+        return cast(str, self._phoenix_gate.chat_completion(messages))
 
     def store_memory(self, content: str, metadata: Dict = None) -> str:
         """Store something in Grimoorum memory."""
         metadata = metadata or {}
-        return self._grimoorum.record(
-            user_input=content,
-            agent_name=metadata.get("agent", "plugin"),
-            agent_response="",  # Plugin memories don't have responses
-            importance=metadata.get("importance", 3),
-            tags=metadata.get("tags", []),
+        return cast(
+            str,
+            self._grimoorum.record(
+                user_input=content,
+                agent_name=metadata.get("agent", "plugin"),
+                agent_response="",  # Plugin memories don't have responses
+                importance=metadata.get("importance", 3),
+                tags=metadata.get("tags", []),
+            ),
         )
 
-    def search_memory(self, query: str, limit: int = 10) -> List[Dict]:
+    def search_memory(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Search Grimoorum memory."""
-        return self._grimoorum.search_by_keyword(query, limit=limit)
+        return cast(List[Dict[str, Any]], self._grimoorum.search_by_keyword(query, limit=limit))
 
     def register_hook(self, hook_name: str, callback: Callable):
         """Register a callback for a plugin hook."""
@@ -294,7 +297,7 @@ class PluginManager:
 
     def discover_plugins(self) -> List[str]:
         """Discover available plugins in the plugins directory."""
-        plugin_names = []
+        plugin_names: List[str] = []
 
         if not os.path.exists(self.plugins_dir):
             return plugin_names

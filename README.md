@@ -202,6 +202,7 @@ MIT — see [LICENSE](LICENSE).
 
 ## Docs and roadmap
 
+- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) — setup, run tests, Black, open a PR.
 - **Architecture:** [docs/architecture.md](docs/architecture.md) — layers, data flow, where components live.
 - **API examples:** [docs/api-examples.md](docs/api-examples.md) — curl examples for all endpoints.
 - **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md) — configuration and common errors.

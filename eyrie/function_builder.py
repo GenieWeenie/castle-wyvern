@@ -143,7 +143,7 @@ class FunctionBuilder:
             func_name = name_match.group(1).lower()
         else:
             # Generate from hash
-            func_name = f"func_{hashlib.md5(description.encode()).hexdigest()[:8]}"
+            func_name = f"func_{hashlib.md5(description.encode(), usedforsecurity=False).hexdigest()[:8]}"
 
         # Check for common patterns
         if (

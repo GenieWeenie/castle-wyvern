@@ -218,7 +218,7 @@ class PromptOptimizer:
         - Clarify instructions
         """
         # Check cache
-        cache_key = hashlib.md5(f"{context}:{prompt}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"{context}:{prompt}".encode(), usedforsecurity=False).hexdigest()
         if cache_key in self.cache:
             return self.cache[cache_key]
 

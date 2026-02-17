@@ -254,7 +254,7 @@ class DocumentIngestion:
         content = self._extract_content(file_path)
 
         # Generate document ID
-        doc_id = hashlib.md5(f"{file_path}{datetime.now().isoformat()}".encode()).hexdigest()[:12]
+        doc_id = hashlib.md5(f"{file_path}{datetime.now().isoformat()}".encode(), usedforsecurity=False).hexdigest()[:12]
 
         # Chunk the content
         chunks = self._chunk_content(content, doc_id, file_path.name)

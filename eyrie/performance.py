@@ -50,7 +50,7 @@ class ResponseCache:
     def _generate_key(self, prompt: str, model: str = "default") -> str:
         """Generate cache key from prompt."""
         content = f"{model}:{prompt}"
-        return hashlib.md5(content.encode()).hexdigest()
+        return hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()
 
     def get(self, prompt: str, model: str = "default") -> Optional[Any]:
         """Get cached response if available and not expired."""

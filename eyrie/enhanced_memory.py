@@ -84,7 +84,7 @@ class SimpleEmbeddingGenerator:
     def _get_word_vector(self, word: str) -> np.ndarray:
         """Get vector for a word using hash-based approach."""
         # Use hash to generate consistent vectors
-        hash_val = int(hashlib.md5(word.encode()).hexdigest(), 16)
+        hash_val = int(hashlib.md5(word.encode(), usedforsecurity=False).hexdigest(), 16)
         np.random.seed(hash_val)
         vec = np.random.randn(self.dimension)
         np.random.seed()  # Reset seed
@@ -203,7 +203,7 @@ class VectorMemoryStore:
         embedding = self.embedder.generate_embedding(content)
 
         # Create memory
-        mem_id = hashlib.md5(f"{content}{datetime.now()}".encode()).hexdigest()[:16]
+        mem_id = hashlib.md5(f"{content}{datetime.now()}".encode(), usedforsecurity=False).hexdigest()[:16]
 
         memory = MemoryEmbedding(
             id=mem_id,

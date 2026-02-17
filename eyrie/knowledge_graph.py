@@ -239,7 +239,7 @@ class KnowledgeGraph:
             raise ValueError(f"Unknown entity type: {type}")
 
         # Generate ID
-        entity_id = f"{type}_{hashlib.md5(name.encode()).hexdigest()[:12]}"
+        entity_id = f"{type}_{hashlib.md5(name.encode(), usedforsecurity=False).hexdigest()[:12]}"
 
         entity = Entity(
             id=entity_id, name=name, type=type, properties=properties or {}, source=source
@@ -283,7 +283,7 @@ class KnowledgeGraph:
 
         # Generate ID
         rel_id = (
-            f"rel_{hashlib.md5(f'{source_id}_{relation}_{target_id}'.encode()).hexdigest()[:16]}"
+            f"rel_{hashlib.md5(f'{source_id}_{relation}_{target_id}'.encode(), usedforsecurity=False).hexdigest()[:16]}"
         )
 
         relationship = Relationship(

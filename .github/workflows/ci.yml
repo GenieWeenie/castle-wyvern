@@ -73,9 +73,8 @@ jobs:
       run: |
         bandit -r eyrie/ --ini .bandit -f json -o bandit-report.json || true
         cat bandit-report.json
-        # Fail the job only on high-severity findings (8 currently in repo; fix then remove continue-on-error)
+        # Fail the job on high-severity findings (MD5 etc. fixed with usedforsecurity=False)
         bandit -r eyrie/ --ini .bandit --severity-level high
-      continue-on-error: true
 
     - name: Check for hardcoded secrets
       run: |

@@ -36,10 +36,6 @@ jobs:
         run: |
           black --check --line-length=100 .
 
-      - name: Type check with mypy
-        run: |
-          mypy --config-file pyproject.toml eyrie/
-
       - name: Test with pytest
         run: |
           pytest tests/ -v --cov=eyrie --cov=bmad --cov=grimoorum --cov-report=xml

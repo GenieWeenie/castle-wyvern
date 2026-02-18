@@ -11,7 +11,7 @@ requests>=2.31.0
 # faiss-cpu>=1.7.4
 # chromadb>=0.4.0
 
-# Development
+# Development (CI installs these separately)
 # pytest>=7.4.0
 # pytest-cov>=4.1.0
 # black>=23.0.0

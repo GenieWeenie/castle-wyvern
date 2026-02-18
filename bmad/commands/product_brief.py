@@ -7,19 +7,21 @@ Invokes: Goliath (vision) + Elisa (human context)
 
 import sys
 import os
+
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from clan_wyvern import CastleWyvern
 
+
 def product_brief(product_idea):
     """Create a product brief."""
     wyvern = CastleWyvern()
-    
+
     print("=== PRODUCT BRIEF COMMAND ===")
     print(f"Product: {product_idea}")
     print()
-    
+
     # Goliath defines the vision
     print("[GOLIATH]: 'Let me define what we're building...'")
     goliath_prompt = f"""
@@ -34,14 +36,11 @@ def product_brief(product_idea):
     
     Think like a leader. Be inspiring but realistic.
     """
-    
-    vision = wyvern.gate._call_zai(
-        goliath_prompt,
-        wyvern.spells['goliath'][:1000]
-    )
+
+    vision = wyvern.gate._call_zai(goliath_prompt, wyvern.spells["goliath"][:1000])
     print(f"[GOLIATH]: {vision[:600]}...")
     print()
-    
+
     # Elisa adds human context
     print("[ELISA]: 'Let me add the human perspective...'")
     elisa_prompt = f"""
@@ -56,14 +55,11 @@ def product_brief(product_idea):
     
     Ground this in human reality. What's the practical impact?
     """
-    
-    human_context = wyvern.gate._call_zai(
-        elisa_prompt,
-        wyvern.spells['elisa'][:1000]
-    )
+
+    human_context = wyvern.gate._call_zai(elisa_prompt, wyvern.spells["elisa"][:1000])
     print(f"[ELISA]: {human_context[:600]}...")
     print()
-    
+
     # Combined brief
     brief = f"""
 # Product Brief
@@ -85,20 +81,21 @@ def product_brief(product_idea):
 ---
 Castle Wyvern BMAD System
 """
-    
+
     brief_file = f"products/brief_{product_idea.replace(' ', '_')[:20]}.md"
-    os.makedirs('products', exist_ok=True)
-    with open(brief_file, 'w') as f:
+    os.makedirs("products", exist_ok=True)
+    with open(brief_file, "w") as f:
         f.write(brief)
-    
+
     print(f"✅ Product brief saved to: {brief_file}")
     print("\nNext: Run `/create-prd` for detailed requirements")
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python product_brief.py 'product description'")
         print("Example: python product_brief.py 'AI chatbot for customer service'")
         sys.exit(1)
-    
+
     product_idea = " ".join(sys.argv[1:])
     product_brief(product_idea)

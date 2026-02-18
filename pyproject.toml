@@ -82,3 +82,9 @@ python_functions = ["test_*"]
 python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
+explicit_package_bases = true
+no_implicit_optional = false
+
+[[tool.mypy.overrides]]
+module = ["PyPDF2", "docx"]
+ignore_missing_imports = true

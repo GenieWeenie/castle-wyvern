@@ -26,8 +26,8 @@ try:
     PROMPT_TOOLKIT_AVAILABLE = True
 except ImportError:
     PROMPT_TOOLKIT_AVAILABLE = False
-    Completer = object  # Base class fallback
-    Completion = object  # Type fallback
+    Completer = object  # type: ignore[assignment,misc]
+    Completion = object  # type: ignore[assignment,misc]
     # We'll use a basic readline fallback
     import readline
 

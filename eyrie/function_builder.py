@@ -235,7 +235,7 @@ def {name}(text: str) -> List[Dict[str, Any]]:
     
     # Example: Extract URLs
     if 'url' in """{description}""".lower():
-        pattern = r'https?://[^\\s<>"\']+|www\.[^\\s<>"\']+'
+        pattern = r"https?://[^\s<>\"']+|www\.[^\s<>\"']+"
         matches = re.findall(pattern, text)
         for match in matches:
             results.append({{'type': 'url', 'value': match}})

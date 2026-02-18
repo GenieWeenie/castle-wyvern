@@ -352,6 +352,10 @@ class GrimoorumV2:
         with open(filepath, "w") as f:
             json.dump(session_memories, f, indent=2)
 
+    def consult_archives(self, limit: int = 10) -> List[Dict]:
+        """Backward-compatible: return recent memories (e.g. for summon_council)."""
+        return self.get_recent_memories(limit=limit)
+
     def get_formatted_context(self, agent_name: str = None, limit: int = 5) -> str:
         """
         Get formatted context string for AI prompts.

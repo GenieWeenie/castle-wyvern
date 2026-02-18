@@ -36,6 +36,10 @@ jobs:
         run: |
           black --check --line-length=100 .
 
+      - name: Type check with mypy (core modules)
+        run: |
+          mypy eyrie/phoenix_gate.py eyrie/error_handler.py eyrie/intent_router.py eyrie/document_ingestion.py eyrie/node_manager.py eyrie/sentinel_ping.py grimoorum/memory_manager.py --config-file pyproject.toml
+
       - name: Test with pytest
         run: |
           pytest tests/ -v --cov=eyrie --cov=bmad --cov=grimoorum --cov-report=xml

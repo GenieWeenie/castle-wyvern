@@ -1,0 +1,10 @@
+{
+  "name": "example_plugin",
+  "version": "1.0.0",
+  "description": "Example plugin demonstrating Castle Wyvern plugin system",
+  "author": "Castle Wyvern Team",
+  "main_file": "plugin.py",
+  "main_class": "ExamplePlugin",
+  "requires": [],
+  "permissions": ["log", "memory_read"]
+}

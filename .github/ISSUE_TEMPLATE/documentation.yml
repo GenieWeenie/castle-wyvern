@@ -1,0 +1,27 @@
+---
+name: 📚 Documentation Issue
+description: Report missing or incorrect documentation
+title: "[DOCS] "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: issue
+    attributes:
+      label: Documentation Issue
+      description: What's wrong or missing?
+      placeholder: The README doesn't explain how to configure Ollama...
+    validations:
+      required: true
+      
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Where is this documentation (file, URL, section)?
+      placeholder: README.md, line 45
+      
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: What should it say instead?

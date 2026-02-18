@@ -1,204 +1,198 @@
 # Castle Wyvern
+
 ## A Decentralized Multi-Agent AI Infrastructure
 
 **Project Castle Wyvern** is a hardware-agnostic, modular framework for building a personal AI infrastructure. It bridges local "Stone" nodes (Desktops/Laptops) with "Cloud" keeps to create a resilient, private, and agentic assistant ecosystem.
 
 > "One thousand years ago, superstition and the sword ruled. It was a time of darkness. It was a world of fear. It was the age of gargoyles."
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![Python](https://img.shields.io/badge/python-3.9+-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![OpenClaw](https://img.shields.io/badge/works%20with-OpenClaw-purple)](https://openclaw.ai)
+
+<p align="center">
+  <img src="assets/castle-wyvern-logo.png" alt="Castle Wyvern - Personal AI Infrastructure" width="480">
+</p>
 
 ---
 
-## 🏰 The Manhattan Clan
+## Works with OpenClaw
 
-Castle Wyvern features a council of specialized AI agents, each with unique personalities and capabilities:
+Castle Wyvern complements [OpenClaw](https://openclaw.ai) — the multi-channel AI assistant (Telegram, WhatsApp, Discord). **OpenClaw** = conversational front-end; **Castle Wyvern** = technical infrastructure (CLI, API, multi-agent system). Use them together for chat-anywhere, execute-everywhere workflows.
 
-| Agent | Role | Specialty |
-|-------|------|-----------|
-| 🦁 **Goliath** | Leader | High-level reasoning, orchestration |
-| 🔧 **Lexington** | Technician | Code, automation, technical execution |
-| 🎯 **Brooklyn** | Strategist | Multi-path planning, architecture |
-| 📜 **Broadway** | Chronicler | Documentation, summarization |
-| 📚 **Hudson** | Archivist | Historical context, long-term memory |
-| 🐕 **Bronx** | Watchdog | Security monitoring, alerts |
-| 🌉 **Elisa** | Bridge | Human context, ethics, legal |
-| 🎭 **Xanatos** | Red Team | Adversarial testing, vulnerabilities |
-| 🔥 **Demona** | Failsafe | Error prediction, worst-case scenarios |
+**Setup and examples:** [docs/openclaw.md](docs/openclaw.md)
 
 ---
 
-## 🚀 Quick Start
+## What's unique
+
+- **KAG over RAG** — A **Knowledge-Assisted Graph (KAG)** drives logical reasoning over structured facts and relationships, not just vector similarity. Use it for "why" and "how" questions, consistency checks, and multi-hop inference.
+- **Self-organizing agent coordination** — The clan uses a **match → exchange → execute → score** loop: tasks get matched to an optimal team, agents exchange context, execute, and get scored so the system learns who does what best.
+- **MCP + A2A in one stack** — Model Context Protocol (MCP) tools and Agent-to-Agent (A2A) workflows live in the same codebase. One CLI and API for tools, memory, reasoning, and multi-agent coordination.
+
+---
+
+## The Manhattan Clan
+
+| Agent   | Role        | Specialty                          |
+|---------|-------------|------------------------------------|
+| Goliath | Leader      | High-level reasoning, orchestration |
+| Lexington | Technician | Code, automation, technical execution |
+| Brooklyn | Strategist | Multi-path planning, architecture  |
+| Broadway | Chronicler | Documentation, summarization       |
+| Hudson  | Archivist   | Historical context, long-term memory |
+| Bronx   | Watchdog    | Security monitoring, alerts        |
+| Elisa   | Bridge      | Human context, ethics, legal       |
+| Xanatos | Red Team    | Adversarial testing, vulnerabilities |
+| Demona  | Failsafe    | Error prediction, worst-case scenarios |
+| Jade    | Web Surfer  | Autonomous web browsing, research  |
+
+---
+
+## Quick Start
 
 ```bash
-# Clone the repository
 git clone https://github.com/GenieWeenie/castle-wyvern.git
 cd castle-wyvern
 
-# Install dependencies
 pip install -r requirements.txt
-pip install rich  # For beautiful CLI
+# Or: pip install -e ".[run]"   # install package with runtime deps
 
-# Configure
 cp .env.example .env
 # Edit .env with your API keys (Z.ai, OpenAI optional)
 
-# Awaken the clan (interactive CLI)
 python castle_wyvern_cli.py
 ```
 
+### Optional features
+
+| Feature          | Install                                      | Usage |
+|------------------|----------------------------------------------|--------|
+| **Local LLM (Ollama)** | `pip install ollama` or `pip install -e ".[local]"` | Set `OLLAMA_HOST` in `.env`. Use `mode=local` for Phoenix Gate. |
+| **RAG (vector search)** | `pip install faiss-cpu chromadb` or `pip install -e ".[rag]"` | Enables vector memory and semantic search. |
+
 ---
 
-## 🎮 Using Castle Wyvern
-
-### Interactive CLI (New!)
-
-The Rich-powered CLI provides a beautiful interface to interact with the clan:
+## Using the CLI
 
 ```bash
 python castle_wyvern_cli.py
 ```
 
-**Commands:**
-- `ask <question>` - Ask the clan anything
-- `code <description>` - Request code from Lexington
-- `review <code/description>` - Get code review from Xanatos
-- `summarize <text>` - Request summary from Broadway
-- `plan <description>` - Get architecture from Brooklyn
-- `status` - Show full dashboard
-- `health` - Check Phoenix Gate status
-- `members` - List clan members
-- `help` - Show all commands
-- `quit` - Exit Castle Wyvern
+**Commands:** `ask <question>` · `code <description>` · `review <code>` · `summarize <text>` · `plan <description>` · `status` · `health` · `members` · `help` · `quit`
 
-**Example Session:**
-```
-🏰 CASTLE WYVERN v0.2.0
-
-👤 You: code Write a function to calculate fibonacci
-🎯 Intent: code (95% confidence)
-🛡️  Routed to: 🔧 Lexington
-
-🔧 Lexington:
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n-1) + fibonacci(n-2)
-```
+**Example:** `code Write a function to calculate fibonacci` → routed to Lexington; returns code.
 
 ---
 
-## 📂 Project Structure
+## API
 
-```
-Castle-Wyvern/
-├── bmad/                   # BMAD Method integration
-│   ├── agents/             # Agent BMAD specializations
-│   ├── commands/           # BMAD workflow commands
-│   ├── templates/          # Reusable templates
-│   └── workflows/          # Phase workflows
-├── clan_members/           # Custom agent implementations
-├── eyrie/                  # Connectivity & routing
-│   ├── phoenix_gate.py     # AI API gateway with retry/circuit breaker
-│   ├── intent_router.py    # Smart agent routing
-│   └── error_handler.py    # Error handling & logging
-├── grimoorum/              # Memory & archives
-│   └── memory_manager.py   # Conversation persistence
-├── prompts/                # Agent system prompts
-├── spells/                 # Reusable prompt templates
-├── tests/                  # Test suite (31 tests)
-├── castle_wyvern_cli.py    # 🆕 Rich interactive CLI
-├── clan_wyvern.py          # Main entry point
-├── pyproject.toml          # Package configuration
-├── install.sh              # Installation script
-├── .env.example            # Configuration template
-└── README.md               # This file
-```
-
----
-
-## 🧪 Running Tests
+The REST API (default port **18791**) exposes clan, memory, KAG, coordination, and BMAD. Start with the CLI (`api-start`) or `python -m eyrie.api_server`.
 
 ```bash
-# Install pytest
+# No auth required
+curl -s http://localhost:18791/health | jq
+
+# With API key (if configured)
+curl -s -H "X-API-Key: YOUR_KEY" http://localhost:18791/status | jq
+curl -s -X POST http://localhost:18791/clan/ask -H "Content-Type: application/json" -H "X-API-Key: YOUR_KEY" \
+  -d '{"question": "How do I structure a Python project?"}' | jq
+```
+
+**Full examples:** [docs/api-examples.md](docs/api-examples.md) — health, status, clan/ask, memory, kg/reason, coord/team, BMAD.
+
+---
+
+## Project Structure
+
+```
+castle-wyvern/
+├── bmad/              # BMAD Method (quick_spec, dev_story, code_review, product_brief)
+├── eyrie/             # Phoenix Gate, intent router, API server, plugins, security, etc.
+├── grimoorum/         # Memory
+├── tests/             # Test suite (117 tests)
+├── docs/              # Architecture, API examples, features, roadmap
+├── castle_wyvern_cli.py
+├── clan_wyvern.py
+├── pyproject.toml
+└── .env.example
+```
+
+---
+
+## Running Tests
+
+```bash
 pip install pytest pytest-cov
-
-# Run all tests
-pytest tests/test_castle_wyvern.py -v
-
-# Run with coverage
-pytest tests/test_castle_wyvern.py --cov=eyrie
+pytest tests/ -v
+# With coverage: pytest tests/ --cov=eyrie --cov=bmad --cov=grimoorum
 ```
 
-**Current Status:** 31 tests passing ✅
+**Status:** 117 tests. For full backpressure commands see [AGENTS.md](AGENTS.md).
 
 ---
 
-## 🎯 BMAD Integration
+## BMAD Integration
 
-Castle Wyvern implements the **BMAD Method** (Build, Measure, Analyze, Deploy):
+Build–Measure–Analyze–Deploy workflows:
 
 ```bash
-# Simple path (bug fixes, small features)
 python bmad/commands/quick_spec.py "fix login button"
 python bmad/commands/dev_story.py
 python bmad/commands/code_review.py
-
-# Full planning (products, complex features)
-python bmad/commands/product_brief.py "build AI feature"
 ```
 
----
-
-## 🛡️ Security & Privacy
-
-- **Local-first:** Prioritizes local LLM processing (Ollama)
-- **Circuit breakers:** Prevents cascading failures
-- **Automatic retry:** Exponential backoff for API calls
-- **Encrypted memory:** Conversations stored securely
-- **No data sharing:** Your data stays on your machines
-- **Audit logging:** Full transparency of system actions
+Full planning: `python bmad/commands/product_brief.py "build AI feature"`
 
 ---
 
-## 🌟 Features
+## Security & Privacy
 
-### Phase 1 ✅ Complete
-- ✅ Real AI API calls via Phoenix Gate (Z.ai/GLM-4-Plus)
-- ✅ Dependency management (pyproject.toml)
-- ✅ Error handling with retry logic & circuit breakers
-- ✅ Comprehensive logging
-
-### Phase 2 ✅ Complete
-- ✅ Intent-based routing (smart agent selection)
-- ✅ 31-test pytest suite
-- ✅ Rich CLI interface with beautiful dashboard
-- ✅ Live clan status monitoring
-
-### Phase 3 (Planned)
-- 🔄 Document ingestion (RAG)
-- 🔄 Memory improvements (Grimoorum upgrades)
-- 🔄 Multi-node distribution
+- **Local-first** (Ollama) · **Circuit breakers** · **Automatic retry** (exponential backoff)
+- **Encrypted memory** · **No data sharing** · **Audit logging**
 
 ---
 
-## 🛠️ Tech Stack
+## Features at a Glance
 
-- **Python 3.9+**
-- **Local LLM:** Ollama
-- **Cloud Primary:** Z.ai (GLM-4-Plus)
-- **Cloud Fallback:** OpenAI (GPT-3.5)
-- **CLI:** Rich (beautiful terminal UI)
-- **Testing:** pytest
-- **Memory:** JSON-based Grimoorum
-- **Routing:** Hybrid keyword + AI classification
+**Core:** Multi-agent routing, memory, workflows · **Distribution:** Multi-node, auto-discovery · **Interfaces:** REST API, Web Dashboard, CLI · **Integrations:** Slack, Discord, Email, Webhooks · **Protocols:** MCP, A2A
+
+**Detailed docs:**
+
+| Feature              | Doc |
+|----------------------|-----|
+| Visual Workflow Builder | [docs/features/visual-workflows.md](docs/features/visual-workflows.md) |
+| Enhanced Memory      | [docs/features/enhanced-memory.md](docs/features/enhanced-memory.md) |
+| Browser Agent (Jade) | [docs/features/browser-agent.md](docs/features/browser-agent.md) |
+| Natural Language Clan Creation | [docs/features/clan-creation.md](docs/features/clan-creation.md) |
+| Docker Sandbox      | [docs/features/docker-sandbox.md](docs/features/docker-sandbox.md) |
+| Goal-Based Agent    | [docs/features/goal-agent.md](docs/features/goal-agent.md) |
+| Extended Workflow Nodes | [docs/features/extended-nodes.md](docs/features/extended-nodes.md) |
+| Knowledge Graph (KAG) | [docs/features/knowledge-graph.md](docs/features/knowledge-graph.md) |
+| Visual Automation (OmniParser) | [docs/features/visual-automation.md](docs/features/visual-automation.md) |
+| Agent Coordination  | [docs/features/agent-coordination.md](docs/features/agent-coordination.md) |
+| MCP & A2A           | [docs/features/mcp-a2a.md](docs/features/mcp-a2a.md) |
+
+**Index:** [docs/features/README.md](docs/features/README.md)
 
 ---
 
-## 📜 License
+## Tech Stack
 
-MIT License — see LICENSE for details.
+Python 3.9+ · **Local LLM:** Ollama · **Cloud:** Z.ai (GLM-4-Plus), OpenAI fallback · **CLI:** Rich · **Testing:** pytest · **Memory:** Grimoorum · **Protocols:** MCP, A2A
+
+---
+
+## Project Status
+
+**39+ features complete.** Phases 1–4 (core, distribution, interfaces, security) and research (BabyAGI, llama.cpp, CrewAI, nanoGPT, KAG, OmniParser, agent coordination) are done.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ---
 
@@ -206,13 +200,11 @@ MIT License — see LICENSE for details.
 
 ---
 
-## 🗺️ Roadmap
+## Docs and roadmap
 
-See [docs/cli_research.md](docs/cli_research.md) for CLI research and [roadmap.json](roadmap.json) for full feature roadmap.
-
-**Recent Commits:**
-- `fd95d09` Phase 2: Rich CLI Interface (Awesome UI)
-- `d8fd427` Phase 2: Tests (Feature 6)
-- `0dcca3b` Phase 2: Intent-Based Routing (Feature 7)
-- `b71c00f` Phase 1: Enhanced Error Handling + Logging
-- `bab1933` Phase 1: Dependency Management
+- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) — setup, run tests, Black, open a PR.
+- **Architecture:** [docs/architecture.md](docs/architecture.md) — layers, data flow, where components live.
+- **API examples:** [docs/api-examples.md](docs/api-examples.md) — curl examples for all endpoints.
+- **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md) — configuration and common errors.
+- **Roadmap:** [docs/roadmap.md](docs/roadmap.md) — short/medium-term direction and how to contribute.
+- **Recent changes:** [CHANGELOG.md](CHANGELOG.md) and [releases](https://github.com/GenieWeenie/castle-wyvern/releases).

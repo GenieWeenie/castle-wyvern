@@ -52,6 +52,8 @@ logs/
 # Runtime data
 grimoorum/clan_memory.json
 grimoorum/*.json
+grimoorum/documents/
+grimoorum/nodes/
 !/grimoorum/.gitkeep
 
 # Test outputs
@@ -64,3 +66,15 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+
+# Images (keep locally, don't commit) - EXCEPT brand image
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+# *.png - Brand Image.png is allowed for README display
+
+# Marketing materials (keep in repo but not in releases)
+docs/launch_post_*.md
+docs/logo_concepts.md
+marketing/

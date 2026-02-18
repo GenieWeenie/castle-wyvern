@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "castle-wyvern": {
+      "command": "python",
+      "args": ["-m", "eyrie.mcp_server"],
+      "description": "Castle Wyvern - The Manhattan Clan MCP Server",
+      "env": {
+        "CASTLE_WYVERN_HOME": "~/.castle_wyvern"
+      }
+    }
+  }
+}

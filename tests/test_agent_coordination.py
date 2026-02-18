@@ -10,7 +10,6 @@ from eyrie.agent_coordination import (
     TaskStatus,
 )
 
-
 # --- AgentProfile tests ---
 
 

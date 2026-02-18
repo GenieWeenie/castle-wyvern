@@ -33,6 +33,9 @@ class IntentType(Enum):
     CREATIVE = "creative"  # Stories, creative writing
     QUESTION = "question"  # General knowledge questions
     CHAT = "chat"  # Casual conversation
+    REVIEW = "review"  # Alias for ANALYZE
+    SUMMARIZE = "summarize"  # Alias for DOCUMENT
+    RESEARCH = "research"  # Research, information gathering
     UNKNOWN = "unknown"  # Could not determine
 
 
@@ -85,6 +88,15 @@ class IntentRouter:
         IntentType.CREATIVE: [
             r"\b(story|poem|creative|write\s+(a|an)\s+(story|poem|script|dialogue)|character|plot|scene|imagine)\b",
         ],
+        IntentType.REVIEW: [
+            r"\b(review|analyze|check|evaluate|assess|critique)\b",
+        ],
+        IntentType.SUMMARIZE: [
+            r"\b(summarize|summary|sum up|recap)\b",
+        ],
+        IntentType.RESEARCH: [
+            r"\b(research|investigate|find out|look up|search)\b",
+        ],
     }
 
     # Agent routing map
@@ -133,6 +145,21 @@ class IntentRouter:
             "primary": "goliath",
             "fallback": ["elisa", "broadway"],
             "reason": "Goliath leads - he handles general conversation",
+        },
+        IntentType.REVIEW: {
+            "primary": "xanatos",
+            "fallback": ["demona", "goliath"],
+            "reason": "Xanatos is the red team - he critiques and finds issues",
+        },
+        IntentType.SUMMARIZE: {
+            "primary": "broadway",
+            "fallback": ["hudson", "goliath"],
+            "reason": "Broadway is the chronicler - he summarizes",
+        },
+        IntentType.RESEARCH: {
+            "primary": "hudson",
+            "fallback": ["broadway", "goliath"],
+            "reason": "Hudson is the archivist - he has the knowledge",
         },
         IntentType.UNKNOWN: {
             "primary": "goliath",

@@ -8,7 +8,6 @@ import time
 from eyrie.omni_parser import VisualAutomation, UIElement, ParsedScreen
 from eyrie.visual_automation_utils import VisualMacro, SessionRecorder, AutomationSession
 
-
 # --- Fixtures ---
 
 

@@ -220,7 +220,7 @@ class WebDashboard:
 
             try:
                 # Classify intent
-                intent_result = self.intent_router.classify_intent(message)
+                intent_result = self.intent_router.classify(message)
                 member = self._get_member_for_intent(intent_result.intent)
 
                 # Get response from AI

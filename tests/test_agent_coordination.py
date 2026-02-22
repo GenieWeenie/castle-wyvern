@@ -117,8 +117,11 @@ class TestCoordinationTask:
 
 
 class TestCoordinationLoop:
-    def setup_method(self):
-        self.loop = AgentCoordinationLoop(storage_dir="/tmp/test_coordination")
+    @pytest.fixture(autouse=True)
+    def setup_loop(self, tmp_path):
+        """Use a temp dir for storage so tests pass on Windows (no /tmp)."""
+        self.loop = AgentCoordinationLoop(storage_dir=str(tmp_path / "coordination"))
+        yield
 
     def test_register_agent(self):
         agent = self.loop.register_agent(

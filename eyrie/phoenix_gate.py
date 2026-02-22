@@ -50,6 +50,12 @@ class PhoenixGate:
         self.max_tokens = 2000
         self.temperature = 0.7
 
+        # Expose actual circuit breakers for API/server status (same instances used in call paths)
+        self.circuit_breakers = {
+            "primary": zai_circuit_breaker,
+            "fallback": openai_circuit_breaker,
+        }
+
         logger.info("Phoenix Gate initialized")
 
     def call_ai(self, prompt: str, system_message: str, mode: str = "cloud") -> str:

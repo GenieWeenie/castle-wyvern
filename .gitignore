@@ -59,6 +59,7 @@ grimoorum/nodes/
 # Test outputs
 tests/__pycache__/
 .pytest_cache/
+.pytest-tmp/
 .coverage
 htmlcov/
 

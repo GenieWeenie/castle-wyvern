@@ -67,7 +67,7 @@ class CastleWyvernAPI:
 
     def __init__(
         self,
-        host: str = "0.0.0.0",
+        host: str = "127.0.0.1",
         port: int = 18791,
         api_key: Optional[str] = None,
         rate_limit_per_minute: int = 60,
@@ -843,7 +843,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Castle Wyvern REST API Server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind to (default: localhost)")
     parser.add_argument("--port", type=int, default=18791, help="Port to listen on")
     parser.add_argument("--api-key", help="API key for authentication")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")

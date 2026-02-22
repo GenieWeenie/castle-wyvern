@@ -58,6 +58,33 @@ class PhoenixGate:
 
         logger.info("Phoenix Gate initialized")
 
+    def chat_completion(self, messages: list, mode: str = "cloud") -> str:
+        """
+        Process chat messages and return AI response.
+        Compatible with OpenAI-style message format.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content' keys
+            mode: 'cloud' (default), 'local', or 'openai'
+
+        Returns:
+            AI response text
+        """
+        # Extract system message and user prompt from messages
+        system_message = ""
+        user_prompt = ""
+
+        for msg in messages:
+            if msg.get("role") == "system":
+                system_message = msg.get("content", "")
+            elif msg.get("role") == "user":
+                user_prompt = msg.get("content", "")
+
+        if not user_prompt:
+            raise PhoenixGateError("No user message found", severity=ErrorSeverity.LOW)
+
+        return self.call_ai(user_prompt, system_message, mode)
+
     def call_ai(self, prompt: str, system_message: str, mode: str = "cloud") -> str:
         """
         Sends a request through the Gate to the chosen AI provider.

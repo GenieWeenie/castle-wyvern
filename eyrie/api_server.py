@@ -227,7 +227,11 @@ class CastleWyvernAPI:
                         "nodes": {
                             "count": len(self.node_manager.list_nodes()),
                             "nodes": [
-                                {"id": n.id, "name": n.name, "status": n.status}
+                                {
+                                    "id": n.get("id"),
+                                    "name": n.get("name"),
+                                    "status": n.get("status"),
+                                }
                                 for n in self.node_manager.list_nodes()
                             ],
                         },

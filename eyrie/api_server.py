@@ -510,6 +510,188 @@ Maintain the original meaning and key details."""
             except Exception as e:
                 return self._error(str(e), "server_error", 500)
 
+        @self.app.route("/clan/secure", methods=["POST"])
+        @self._require_api_key
+        def clan_secure():
+            """Security audit from Bronx (Watchdog)."""
+            data = request.get_json() or {}
+            target = data.get("target") or data.get("code") or data.get("system")
+
+            if not target:
+                return self._error(
+                    "Target is required (code, system, or description)", "missing_field", 400
+                )
+
+            try:
+                system_prompt = """You are Bronx, the watchdog of the Manhattan Clan.
+Your role is security monitoring and threat detection.
+Analyze the target for security vulnerabilities, risks, and threats.
+Provide specific findings and remediation steps."""
+
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Perform security audit on: {target}"},
+                ]
+
+                response = self.phoenix_gate.chat_completion(messages)
+
+                return jsonify(
+                    {
+                        "agent": "Bronx",
+                        "role": "Watchdog",
+                        "target": target,
+                        "audit": response,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            except Exception as e:
+                return self._error(str(e), "server_error", 500)
+
+        @self.app.route("/clan/search", methods=["POST"])
+        @self._require_api_key
+        def clan_search():
+            """Memory search from Hudson (Archivist)."""
+            data = request.get_json() or {}
+            query = data.get("query") or data.get("question")
+
+            if not query:
+                return self._error("Query is required", "missing_field", 400)
+
+            try:
+                system_prompt = """You are Hudson, the archivist of the Manhattan Clan.
+Your role is to search through historical records and memory.
+Provide context, history, and relevant information from the archives.
+Be thorough but concise in your findings."""
+
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Search archives for: {query}"},
+                ]
+
+                response = self.phoenix_gate.chat_completion(messages)
+
+                return jsonify(
+                    {
+                        "agent": "Hudson",
+                        "role": "Archivist",
+                        "query": query,
+                        "results": response,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            except Exception as e:
+                return self._error(str(e), "server_error", 500)
+
+        @self.app.route("/clan/ethics", methods=["POST"])
+        @self._require_api_key
+        def clan_ethics():
+            """Ethics advice from Elisa (Bridge)."""
+            data = request.get_json() or {}
+            scenario = data.get("scenario") or data.get("situation") or data.get("question")
+
+            if not scenario:
+                return self._error("Scenario is required", "missing_field", 400)
+
+            try:
+                system_prompt = """You are Elisa, the bridge between human and gargoyle worlds.
+Your role is to provide human context, ethics, and legal perspective.
+Consider moral implications, fairness, and human impact in your advice.
+Balance different viewpoints while upholding ethical standards."""
+
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Provide ethics perspective on: {scenario}"},
+                ]
+
+                response = self.phoenix_gate.chat_completion(messages)
+
+                return jsonify(
+                    {
+                        "agent": "Elisa",
+                        "role": "Bridge",
+                        "scenario": scenario,
+                        "advice": response,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            except Exception as e:
+                return self._error(str(e), "server_error", 500)
+
+        @self.app.route("/clan/risks", methods=["POST"])
+        @self._require_api_key
+        def clan_risks():
+            """Risk analysis from Demona (Failsafe)."""
+            data = request.get_json() or {}
+            plan = data.get("plan") or data.get("idea") or data.get("proposal")
+
+            if not plan:
+                return self._error("Plan or proposal is required", "missing_field", 400)
+
+            try:
+                system_prompt = """You are Demona, the failsafe of the Manhattan Clan.
+Your role is to predict errors and consider worst-case scenarios.
+Analyze plans for potential failures, edge cases, and risks.
+Be thorough in identifying what could go wrong and suggest mitigations."""
+
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Analyze risks and failure modes for: {plan}"},
+                ]
+
+                response = self.phoenix_gate.chat_completion(messages)
+
+                return jsonify(
+                    {
+                        "agent": "Demona",
+                        "role": "Failsafe",
+                        "plan": plan,
+                        "risk_analysis": response,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            except Exception as e:
+                return self._error(str(e), "server_error", 500)
+
+        @self.app.route("/clan/research", methods=["POST"])
+        @self._require_api_key
+        def clan_research():
+            """Web research from Jade (Web Surfer)."""
+            data = request.get_json() or {}
+            topic = data.get("topic") or data.get("query") or data.get("subject")
+
+            if not topic:
+                return self._error("Topic is required", "missing_field", 400)
+
+            try:
+                system_prompt = """You are Jade, the web surfer of the Manhattan Clan.
+Your role is autonomous web browsing and research.
+Provide comprehensive research findings, sources, and insights.
+Be thorough in exploring the topic from multiple angles."""
+
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Research and report on: {topic}"},
+                ]
+
+                response = self.phoenix_gate.chat_completion(messages)
+
+                return jsonify(
+                    {
+                        "agent": "Jade",
+                        "role": "Web Surfer",
+                        "topic": topic,
+                        "research": response,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+            except Exception as e:
+                return self._error(str(e), "server_error", 500)
+
         # ============ Node Management ============
 
         @self.app.route("/nodes", methods=["GET"])
@@ -822,11 +1004,16 @@ Provide specific line-by-line feedback."""
         print("   - GET  /health              Health check")
         print("   - GET  /status              System status")
         print("   - GET  /clan                List clan members")
-        print("   - POST /clan/ask            Ask the clan")
+        print("   - POST /clan/ask            Ask the clan (Goliath)")
         print("   - POST /clan/code           Request code (Lexington)")
         print("   - POST /clan/review         Code review (Xanatos)")
         print("   - POST /clan/plan           Architecture (Brooklyn)")
         print("   - POST /clan/summarize      Summarize (Broadway)")
+        print("   - POST /clan/secure         Security audit (Bronx)")
+        print("   - POST /clan/search         Memory search (Hudson)")
+        print("   - POST /clan/ethics         Ethics advice (Elisa)")
+        print("   - POST /clan/risks          Risk analysis (Demona)")
+        print("   - POST /clan/research       Web research (Jade)")
         print("   - GET  /nodes               List nodes")
         print("   - POST /nodes               Add node")
         print("   - POST /memory/search       Search memory")

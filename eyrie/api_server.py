@@ -323,7 +323,7 @@ class CastleWyvernAPI:
 
             try:
                 # Classify intent
-                intent_result = self.intent_router.classify_intent(question)
+                intent_result = self.intent_router.classify(question)
                 intent = intent_result.intent
                 confidence = intent_result.confidence
 

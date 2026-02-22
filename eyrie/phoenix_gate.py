@@ -50,6 +50,13 @@ class PhoenixGate:
         self.max_tokens = 2000
         self.temperature = 0.7
 
+        # Circuit breakers for resilience tracking (used by API server)
+        from eyrie.error_handler import CircuitBreaker
+        self.circuit_breakers = {
+            "primary": CircuitBreaker(failure_threshold=5, recovery_timeout=60.0),
+            "fallback": CircuitBreaker(failure_threshold=3, recovery_timeout=30.0),
+        }
+
         logger.info("Phoenix Gate initialized")
 
     def call_ai(self, prompt: str, system_message: str, mode: str = "cloud") -> str:
